@@ -1,0 +1,36 @@
+# --- Secrets (never commit) ---
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+*.pem
+*.key
+
+# --- macOS ---
+.DS_Store
+
+# --- VS Code (share only project settings and suggested extensions) ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# --- JavaScript / Node ---
+node_modules/
+.vite/
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+
+# --- Playwright ---
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# --- Cloudflare ---
+.wrangler/
+
+# --- Large data (keep in protoeln_resources instead) ---
+data/raw/
