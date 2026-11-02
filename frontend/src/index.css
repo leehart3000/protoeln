@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    'IBM Plex Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono: 'Source Code Pro Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-brand:
+    'Manrope Variable', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  --color-ink: #0e1b33;
+  --color-graph-green: #2d7a3e;
+  --color-pale-green: #a5d6a7;
+  --color-gold: #f2b33d;
+  --color-haze: #e1e3ee;
+  --color-snow: #fafafc;
+
+  --color-page: #fafafc;
+  --color-panel: #ffffff;
+  --color-fg: #24304a;
+  --color-muted: #4a5468;
+  --color-line: #e1e3ee;
+  --color-link: #2d7a3e;
+  --color-primary: #2d7a3e;
+  --color-primary-fg: #ffffff;
+  --color-danger: #a4262c;
+  --color-danger-bg: #fdeeee;
+  --color-danger-line: #f1b5b8;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+    --color-page: #0e1b33;
+    --color-panel: #13233f;
+    --color-fg: #d9e0ee;
+    --color-muted: #b4bfd6;
+    --color-line: #26375a;
+    --color-link: #a5d6a7;
+    --color-primary: #a5d6a7;
+    --color-primary-fg: #0e1b33;
+    --color-danger: #f5b5ba;
+    --color-danger-bg: #3b1a24;
+    --color-danger-line: #7d3340;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--color-primary);
+  }
+}
+
+/* Tailwind v4 gives buttons the default arrow; show a hand, as for links, so it's clear
+   they can be clicked. Disabled buttons keep the arrow. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}

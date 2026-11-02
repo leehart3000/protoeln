@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ProtoELN">
+  <title>ProtoELN</title>
+  <style>
+    .minor, .major { fill: none; stroke: #2D7A3E; stroke-width: 0.75; }
+    .minor { stroke-opacity: 0.35; }
+    .major { stroke-opacity: 0.7; }
+    .ink { fill: #2D7A3E; }
+    .gold { fill: #F2B33D; }
+  </style>
+  <path class="minor" d="M8.2812 0.375V63.625M0.375 8.2812H63.625"/>
+  <path class="minor" d="M24.0938 0.375V63.625M0.375 24.0938H63.625"/>
+  <path class="minor" d="M39.9062 0.375V63.625M0.375 39.9062H63.625"/>
+  <path class="minor" d="M55.7188 0.375V63.625M0.375 55.7188H63.625"/>
+  <path class="major" d="M0.375 0.375V63.625M0.375 0.375H63.625"/>
+  <path class="major" d="M16.1875 0.375V63.625M0.375 16.1875H63.625"/>
+  <path class="major" d="M32 0.375V63.625M0.375 32H63.625"/>
+  <path class="major" d="M47.8125 0.375V63.625M0.375 47.8125H63.625"/>
+  <path class="major" d="M63.625 0.375V63.625M0.375 63.625H63.625"/>
+  <rect class="ink" x="2.625" y="2.625" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="18.4375" y="2.625" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="34.25" y="2.625" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="2.625" y="18.4375" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="34.25" y="18.4375" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="2.625" y="34.25" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="18.4375" y="34.25" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="34.25" y="34.25" width="11.3125" height="11.3125"/>
+  <rect class="ink" x="2.625" y="50.0625" width="11.3125" height="11.3125"/>
+  <rect class="gold" x="50.0625" y="50.0625" width="11.3125" height="11.3125"/>
+</svg>

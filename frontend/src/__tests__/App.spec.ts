@@ -4,9 +4,11 @@ import { render, screen } from '@testing-library/vue'
 import App from '../App.vue'
 
 describe('App', () => {
-  it('shows the welcome heading', () => {
+  it('shows the page heading', () => {
     render(App)
 
-    expect(screen.getByRole('heading', { name: 'You did it!' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'A living lab notebook' }),
+    ).toBeInTheDocument()
   })
 })
