@@ -17,6 +17,7 @@
 
 # --- JavaScript / Node ---
 node_modules/
+.pnpm-store/
 .vite/
 dist/
 coverage/

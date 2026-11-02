@@ -1,0 +1,40 @@
+# ProtoELN CI. Mirrors ProtoLIMS's frontend checks: format, lint, type-check, test and build.
+
+workflow:
+  rules:
+    # Merge requests, pushes to main, and runs started by hand from the GitLab UI
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+stages:
+  - check
+
+default:
+  # Keep the major version in step with .node-version
+  image: node:24-slim
+  # A newer pipeline on the same branch cancels this one
+  interruptible: true
+
+frontend-checks:
+  stage: check
+  variables:
+    # Corepack installs the pnpm version pinned in package.json, without asking first
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store
+  before_script:
+    - corepack enable
+    - pnpm --version
+    - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm --dir frontend format:check
+    - pnpm --dir frontend lint
+    - pnpm --dir frontend typecheck
+    - pnpm --dir frontend coverage
+    - pnpm --dir frontend build
