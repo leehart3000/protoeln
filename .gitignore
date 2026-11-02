@@ -23,6 +23,7 @@ dist/
 coverage/
 *.log
 *.tsbuildinfo
+.eslintcache
 
 # --- Playwright ---
 test-results/
