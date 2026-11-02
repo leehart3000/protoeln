@@ -72,8 +72,8 @@ in `frontend/src/index.css`. Apart from `link` and `primary`, they match ProtoLI
 | `danger-bg` | `#FDEEEE` | `#3B1A24` | Error message background |
 | `danger-line` | `#F1B5B8` | `#7D3340` | Error message border |
 
-Dark mode follows the visitor's system setting until they choose otherwise; their choice is
-then remembered in the browser (`frontend/public/theme.js`).
+Dark mode follows the visitor's system setting until they use the toggle in the header; their
+choice is then remembered in the browser (`frontend/public/theme.js`, `frontend/src/theme.ts`).
 
 ## Type
 

@@ -2,7 +2,7 @@
 // else if their system prefers it. A file of its own, rather than inline in index.html, so the
 // security policy can allow only the site's own script files.
 try {
-  const stored = localStorage.getItem('theme')
+  const stored = localStorage.getItem('protoeln-theme')
   const dark = stored
     ? stored === 'dark'
     : window.matchMedia('(prefers-color-scheme: dark)').matches
