@@ -12,7 +12,8 @@
 
   --color-ink: #0e1b33;
   --color-graph-green: #2d7a3e;
-  --color-pale-green: #a5d6a7;
+  --color-grass: #6ccf7f;
+  --color-deep-teal: #0d1c22;
   --color-gold: #f2b33d;
   --color-haze: #e1e3ee;
   --color-snow: #fafafc;
@@ -37,14 +38,14 @@
 
   .dark {
     color-scheme: dark;
-    --color-page: #0e1b33;
-    --color-panel: #13233f;
-    --color-fg: #d9e0ee;
-    --color-muted: #b4bfd6;
-    --color-line: #26375a;
-    --color-link: #a5d6a7;
-    --color-primary: #a5d6a7;
-    --color-primary-fg: #0e1b33;
+    --color-page: #0d1c22;
+    --color-panel: #13272f;
+    --color-fg: #d8e4e8;
+    --color-muted: #aec1c8;
+    --color-line: #28414b;
+    --color-link: #6ccf7f;
+    --color-primary: #6ccf7f;
+    --color-primary-fg: #0d1c22;
     --color-danger: #f5b5ba;
     --color-danger-bg: #3b1a24;
     --color-danger-line: #7d3340;

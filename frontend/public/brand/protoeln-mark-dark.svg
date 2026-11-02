@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ProtoELN">
   <title>ProtoELN</title>
   <style>
-    .minor, .major { fill: none; stroke: #A5D6A7; stroke-width: 0.75; }
+    .minor, .major { fill: none; stroke: #6CCF7F; stroke-width: 0.75; }
     .minor { stroke-opacity: 0.35; }
     .major { stroke-opacity: 0.7; }
-    .ink { fill: #A5D6A7; }
+    .ink { fill: #6CCF7F; }
     .gold { fill: #F2B33D; }
   </style>
   <path class="minor" d="M8.2812 0.375V63.625M0.375 8.2812H63.625"/>
