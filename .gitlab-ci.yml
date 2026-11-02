@@ -1,4 +1,4 @@
-# ProtoELN CI. Mirrors ProtoLIMS's frontend checks: format, lint, type-check, test and build.
+# ProtoELN CI. Mirrors ProtoLIMS's checks: format, lint, type-check, test and (frontend) build.
 
 workflow:
   rules:
@@ -16,8 +16,8 @@ default:
   # A newer pipeline on the same branch cancels this one
   interruptible: true
 
-frontend-checks:
-  stage: check
+# Shared set-up for every job: install pnpm and the workspace packages
+.pnpm:
   variables:
     # Corepack installs the pnpm version pinned in package.json, without asking first
     COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
@@ -32,6 +32,19 @@ frontend-checks:
     - pnpm --version
     - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
     - pnpm install --frozen-lockfile
+
+backend-checks:
+  extends: .pnpm
+  stage: check
+  script:
+    - pnpm --dir backend format:check
+    - pnpm --dir backend lint
+    - pnpm --dir backend typecheck
+    - pnpm --dir backend coverage
+
+frontend-checks:
+  extends: .pnpm
+  stage: check
   script:
     - pnpm --dir frontend format:check
     - pnpm --dir frontend lint

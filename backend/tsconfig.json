@@ -1,0 +1,14 @@
+{
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "include": ["src", "test", "vitest.config.ts"],
+  "compilerOptions": {
+    // Node.js runs the TypeScript files directly by stripping the types, so tsc only checks them
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+
+    // Include Node.js types and avoid accidentally including other `@types/*` packages
+    "types": ["node"]
+  }
+}
