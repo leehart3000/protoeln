@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
+import { render, screen } from '@testing-library/vue'
 
-import { mount } from '@vue/test-utils'
 import App from '../App.vue'
 
 describe('App', () => {
-  it('mounts renders properly', () => {
-    const wrapper = mount(App)
-    expect(wrapper.text()).toContain('You did it!')
+  it('shows the welcome heading', () => {
+    render(App)
+
+    expect(screen.getByRole('heading', { name: 'You did it!' })).toBeInTheDocument()
   })
 })
