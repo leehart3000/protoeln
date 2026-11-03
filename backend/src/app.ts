@@ -11,6 +11,10 @@ export interface AppOptions {
   authenticate?: (req: Request) => Promise<CurrentUser | null>
 }
 
+// Every route is under a versioned prefix, as in ProtoLIMS, so a later, incompatible version of
+// the API can be served alongside this one
+export const API = '/api/v1'
+
 // Builds the API without starting a server, so the same app can run under Node.js locally,
 // on Cloudflare Workers, or inside tests.
 export function createApp(options: AppOptions = {}) {
@@ -20,16 +24,16 @@ export function createApp(options: AppOptions = {}) {
   app.disable('x-powered-by')
   app.use(express.json({ limit: '1mb' }))
 
-  app.get('/api/health', (_req, res) => {
+  app.get(`${API}/health`, (_req, res) => {
     res.json({ status: 'ok' })
   })
 
-  app.use('/api', async (req, res, next) => {
+  app.use(API, async (req, res, next) => {
     res.locals.user = await authenticate(req)
     next()
   })
-  app.use('/api', readRoutes())
-  app.use('/api', writeRoutes())
+  app.use(API, readRoutes())
+  app.use(API, writeRoutes())
 
   app.use(notFound)
   app.use(handleErrors)

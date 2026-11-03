@@ -1,6 +1,7 @@
 # API
 
-The API is served under `/api` and speaks JSON. It is built by `createApp` in
+The API is served under `/api/v1` and speaks JSON. The version is part of every address (as in
+ProtoLIMS), so a later, incompatible version can be served alongside this one. It is built by `createApp` in
 `backend/src/app.ts`, which doesn't start a server itself, so the same app runs under Node.js,
 on Cloudflare Workers and in tests.
 
@@ -27,16 +28,16 @@ projects don't reveal that they exist.
 
 | Request | Returns |
 | --- | --- |
-| `GET /api/health` | `{ "status": "ok" }` |
-| `GET /api/me` | `{ "user": … }`, or `{ "user": null }` if no one is signed in |
-| `GET /api/projects` | The projects the requester can read, by code |
-| `GET /api/projects/:code` | `{ project, notebooks }` |
-| `GET /api/notebooks/:id` | `{ notebook, project, entries }`; entries are summaries (no content), most recently changed first |
-| `GET /api/entries/:code` | `{ entry, notebook, project }` |
+| `GET /api/v1/health` | `{ "status": "ok" }` |
+| `GET /api/v1/me` | `{ "user": … }`, or `{ "user": null }` if no one is signed in |
+| `GET /api/v1/projects` | The projects the requester can read, by code |
+| `GET /api/v1/projects/:code` | `{ project, notebooks }` |
+| `GET /api/v1/notebooks/:id` | `{ notebook, project, entries }`; entries are summaries (no content), most recently changed first |
+| `GET /api/v1/entries/:code` | `{ entry, notebook, project }` |
 
-| `GET /api/entries/:code/versions` | Summaries of the entry's versions (no content), newest first |
-| `GET /api/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies |
-| `GET /api/entries/:code/history-check` | `{ intact, problems }`: recalculates every version's hash to check none has been changed |
+| `GET /api/v1/entries/:code/versions` | Summaries of the entry's versions (no content), newest first |
+| `GET /api/v1/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies |
+| `GET /api/v1/entries/:code/history-check` | `{ intact, problems }`: recalculates every version's hash to check none has been changed |
 
 ## Writing
 
@@ -44,10 +45,10 @@ Each write needs someone signed in (otherwise 401) who is a member or admin of t
 
 | Request | Body | Does |
 | --- | --- | --- |
-| `POST /api/projects/:code/notebooks` | `title`, optional `description` | Creates a notebook owned by the requester (201) |
-| `POST /api/notebooks/:id/entries` | `kind` (`experiment`, `protocol` or `note`), `title`, optional `content` | Creates a draft entry by the requester (201) |
-| `PUT /api/entries/:code/draft` | `basedOn` (the `updatedAt` of the draft being edited), `title`, `content` | Saves the draft and records what changed; author and co-authors only |
-| `POST /api/entries/:code/versions` | optional `note` | Creates the next version (201); author and co-authors only |
+| `POST /api/v1/projects/:code/notebooks` | `title`, optional `description` | Creates a notebook owned by the requester (201) |
+| `POST /api/v1/notebooks/:id/entries` | `kind` (`experiment`, `protocol` or `note`), `title`, optional `content` | Creates a draft entry by the requester (201) |
+| `PUT /api/v1/entries/:code/draft` | `basedOn` (the `updatedAt` of the draft being edited), `title`, `content` | Saves the draft and records what changed; author and co-authors only |
+| `POST /api/v1/entries/:code/versions` | optional `note` | Creates the next version (201); author and co-authors only |
 
 A save whose `basedOn` is out of date (someone else has saved since) is refused with 409, so
 work is never silently overwritten.

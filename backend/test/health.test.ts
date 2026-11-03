@@ -3,9 +3,9 @@ import request from 'supertest'
 
 import { createApp } from '../src/app.ts'
 
-describe('GET /api/health', () => {
+describe('GET /api/v1/health', () => {
   it('reports that the API is up', async () => {
-    const response = await request(createApp()).get('/api/health')
+    const response = await request(createApp()).get('/api/v1/health')
 
     expect(response.status).toBe(200)
     expect(response.body).toEqual({ status: 'ok' })

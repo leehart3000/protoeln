@@ -51,17 +51,17 @@ let entryCode = ''
 let savedAt = ''
 beforeEach(async () => {
   const response = await api()
-    .post(`/api/notebooks/${notebookId}/entries`)
+    .post(`/api/v1/notebooks/${notebookId}/entries`)
     .set('X-Test-User', ids.author)
     .send({ kind: 'experiment', title: 'Western blot' })
   entryCode = response.body.code
   savedAt = response.body.updatedAt
 })
 
-describe('POST /api/projects/:code/notebooks', () => {
+describe('POST /api/v1/projects/:code/notebooks', () => {
   it('lets a member create a notebook, which they own', async () => {
     const response = await api()
-      .post('/api/projects/LAB/notebooks')
+      .post('/api/v1/projects/LAB/notebooks')
       .set('X-Test-User', ids.colleague)
       .send({ title: 'PCR' })
 
@@ -75,7 +75,7 @@ describe('POST /api/projects/:code/notebooks', () => {
     ['the user is a viewer', 'viewer', 403],
     ['the user cannot read the project', 'outsider', 404],
   ] as const)('refuses when %s', async (_why, as, status) => {
-    const call = api().post('/api/projects/LAB/notebooks').send({ title: 'PCR' })
+    const call = api().post('/api/v1/projects/LAB/notebooks').send({ title: 'PCR' })
     const response = await (as ? call.set('X-Test-User', ids[as]) : call)
 
     expect(response.status).toBe(status)
@@ -83,7 +83,7 @@ describe('POST /api/projects/:code/notebooks', () => {
 
   it('says what is wrong with the request', async () => {
     const response = await api()
-      .post('/api/projects/LAB/notebooks')
+      .post('/api/v1/projects/LAB/notebooks')
       .set('X-Test-User', ids.author)
       .send({ title: '  ', description: 3 })
 
@@ -95,10 +95,10 @@ describe('POST /api/projects/:code/notebooks', () => {
   })
 })
 
-describe('POST /api/notebooks/:id/entries', () => {
+describe('POST /api/v1/notebooks/:id/entries', () => {
   it('creates a draft entry with the next code, authored by the member', async () => {
     const response = await api()
-      .post(`/api/notebooks/${notebookId}/entries`)
+      .post(`/api/v1/notebooks/${notebookId}/entries`)
       .set('X-Test-User', ids.colleague)
       .send({ kind: 'protocol', title: 'Transfer', content: paragraph('Use wet transfer.') })
 
@@ -110,11 +110,11 @@ describe('POST /api/notebooks/:id/entries', () => {
 
   it('refuses an unknown kind and content not in the content format', async () => {
     const kind = await api()
-      .post(`/api/notebooks/${notebookId}/entries`)
+      .post(`/api/v1/notebooks/${notebookId}/entries`)
       .set('X-Test-User', ids.author)
       .send({ kind: 'diary', title: 'T' })
     const content = await api()
-      .post(`/api/notebooks/${notebookId}/entries`)
+      .post(`/api/v1/notebooks/${notebookId}/entries`)
       .set('X-Test-User', ids.author)
       .send({ kind: 'note', title: 'T', content: { type: 'doc', content: [{ type: 'video' }] } })
 
@@ -126,7 +126,7 @@ describe('POST /api/notebooks/:id/entries', () => {
 
   it('refuses a viewer', async () => {
     const response = await api()
-      .post(`/api/notebooks/${notebookId}/entries`)
+      .post(`/api/v1/notebooks/${notebookId}/entries`)
       .set('X-Test-User', ids.viewer)
       .send({ kind: 'note', title: 'T' })
 
@@ -134,10 +134,10 @@ describe('POST /api/notebooks/:id/entries', () => {
   })
 })
 
-describe('PUT /api/entries/:code/draft', () => {
+describe('PUT /api/v1/entries/:code/draft', () => {
   it('saves the author’s draft', async () => {
     const response = await api()
-      .put(`/api/entries/${entryCode}/draft`)
+      .put(`/api/v1/entries/${entryCode}/draft`)
       .set('X-Test-User', ids.author)
       .send({ basedOn: savedAt, title: 'Western blot', content: paragraph('Lysates were run.') })
 
@@ -149,7 +149,7 @@ describe('PUT /api/entries/:code/draft', () => {
   it('refuses a save based on an out-of-date draft', async () => {
     const save = (text: string) =>
       api()
-        .put(`/api/entries/${entryCode}/draft`)
+        .put(`/api/v1/entries/${entryCode}/draft`)
         .set('X-Test-User', ids.author)
         .send({ basedOn: savedAt, title: 'Western blot', content: paragraph(text) })
 
@@ -159,7 +159,7 @@ describe('PUT /api/entries/:code/draft', () => {
 
   it('lets only the author edit, not other members', async () => {
     const response = await api()
-      .put(`/api/entries/${entryCode}/draft`)
+      .put(`/api/v1/entries/${entryCode}/draft`)
       .set('X-Test-User', ids.colleague)
       .send({ basedOn: savedAt, title: 'T', content: paragraph('x') })
 
@@ -170,7 +170,7 @@ describe('PUT /api/entries/:code/draft', () => {
     await EntryModel.updateOne({ code: entryCode }, { status: 'signed' })
 
     const response = await api()
-      .put(`/api/entries/${entryCode}/draft`)
+      .put(`/api/v1/entries/${entryCode}/draft`)
       .set('X-Test-User', ids.author)
       .send({ basedOn: savedAt, title: 'T', content: paragraph('x') })
 
@@ -179,7 +179,7 @@ describe('PUT /api/entries/:code/draft', () => {
 
   it('needs to know which saved draft the edit was based on', async () => {
     const response = await api()
-      .put(`/api/entries/${entryCode}/draft`)
+      .put(`/api/v1/entries/${entryCode}/draft`)
       .set('X-Test-User', ids.author)
       .send({ basedOn: 'yesterday', title: 'T', content: paragraph('x') })
 
@@ -191,19 +191,22 @@ describe('PUT /api/entries/:code/draft', () => {
 describe('versions', () => {
   it('creates, lists and shows versions, and checks the history', async () => {
     const created = await api()
-      .post(`/api/entries/${entryCode}/versions`)
+      .post(`/api/v1/entries/${entryCode}/versions`)
       .set('X-Test-User', ids.author)
       .send({ note: 'First draft' })
-    await api().post(`/api/entries/${entryCode}/versions`).set('X-Test-User', ids.author).send({})
+    await api()
+      .post(`/api/v1/entries/${entryCode}/versions`)
+      .set('X-Test-User', ids.author)
+      .send({})
 
     const list = await api()
-      .get(`/api/entries/${entryCode}/versions`)
+      .get(`/api/v1/entries/${entryCode}/versions`)
       .set('X-Test-User', ids.viewer)
     const first = await api()
-      .get(`/api/entries/${entryCode}/versions/1`)
+      .get(`/api/v1/entries/${entryCode}/versions/1`)
       .set('X-Test-User', ids.viewer)
     const check = await api()
-      .get(`/api/entries/${entryCode}/history-check`)
+      .get(`/api/v1/entries/${entryCode}/history-check`)
       .set('X-Test-User', ids.viewer)
 
     expect(created.status).toBe(201)
@@ -217,10 +220,10 @@ describe('versions', () => {
 
   it('says a version that does not exist is not found', async () => {
     const missing = await api()
-      .get(`/api/entries/${entryCode}/versions/9`)
+      .get(`/api/v1/entries/${entryCode}/versions/9`)
       .set('X-Test-User', ids.author)
     const notANumber = await api()
-      .get(`/api/entries/${entryCode}/versions/first`)
+      .get(`/api/v1/entries/${entryCode}/versions/first`)
       .set('X-Test-User', ids.author)
 
     expect(missing.status).toBe(404)
@@ -229,11 +232,11 @@ describe('versions', () => {
 
   it('lets only the author create versions, and hides versions from outsiders', async () => {
     const colleague = await api()
-      .post(`/api/entries/${entryCode}/versions`)
+      .post(`/api/v1/entries/${entryCode}/versions`)
       .set('X-Test-User', ids.colleague)
       .send({})
     const outsider = await api()
-      .get(`/api/entries/${entryCode}/versions`)
+      .get(`/api/v1/entries/${entryCode}/versions`)
       .set('X-Test-User', ids.outsider)
 
     expect(colleague.status).toBe(403)

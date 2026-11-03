@@ -51,21 +51,21 @@ beforeAll(async () => {
 })
 afterAll(stopDatabase)
 
-describe('GET /api/me', () => {
+describe('GET /api/v1/me', () => {
   it('says no one is signed in for an anonymous request', async () => {
-    const response = await api().get('/api/me')
+    const response = await api().get('/api/v1/me')
 
     expect(response.body).toEqual({ user: null })
   })
 
   it('names the signed-in user', async () => {
-    const response = await api().get('/api/me').set('X-Test-User', ids.member)
+    const response = await api().get('/api/v1/me').set('X-Test-User', ids.member)
 
     expect(response.body.user).toMatchObject({ name: 'Member', siteAdmin: false })
   })
 })
 
-describe('GET /api/projects', () => {
+describe('GET /api/v1/projects', () => {
   it.each([
     ['anyone', undefined, ['PUB']],
     ['a member', 'member', ['LAB', 'PUB']],
@@ -73,7 +73,7 @@ describe('GET /api/projects', () => {
     ['an outsider', 'outsider', ['PUB']],
     ['a site admin', 'admin', ['LAB', 'PUB']],
   ] as const)('lists the projects %s can read', async (_who, as, codes) => {
-    const call = api().get('/api/projects')
+    const call = api().get('/api/v1/projects')
     const response = await (as ? call.set('X-Test-User', ids[as]) : call)
 
     expect(response.status).toBe(200)
@@ -81,9 +81,9 @@ describe('GET /api/projects', () => {
   })
 })
 
-describe('GET /api/projects/:code', () => {
+describe('GET /api/v1/projects/:code', () => {
   it('shows a project and its notebooks to someone who can read it', async () => {
-    const response = await api().get('/api/projects/LAB').set('X-Test-User', ids.viewer)
+    const response = await api().get('/api/v1/projects/LAB').set('X-Test-User', ids.viewer)
 
     expect(response.status).toBe(200)
     expect(response.body.project.title).toBe('Private lab')
@@ -91,8 +91,8 @@ describe('GET /api/projects/:code', () => {
   })
 
   it('says a private project is not found, rather than forbidden, to others', async () => {
-    const anonymous = await api().get('/api/projects/LAB')
-    const outsider = await api().get('/api/projects/LAB').set('X-Test-User', ids.outsider)
+    const anonymous = await api().get('/api/v1/projects/LAB')
+    const outsider = await api().get('/api/v1/projects/LAB').set('X-Test-User', ids.outsider)
 
     expect(anonymous.status).toBe(404)
     expect(outsider.status).toBe(404)
@@ -100,10 +100,10 @@ describe('GET /api/projects/:code', () => {
   })
 })
 
-describe('GET /api/notebooks/:id', () => {
+describe('GET /api/v1/notebooks/:id', () => {
   it('shows a notebook with a summary of its entries', async () => {
     const response = await api()
-      .get(`/api/notebooks/${privateNotebookId}`)
+      .get(`/api/v1/notebooks/${privateNotebookId}`)
       .set('X-Test-User', ids.member)
 
     expect(response.status).toBe(200)
@@ -115,19 +115,19 @@ describe('GET /api/notebooks/:id', () => {
 
   it('is not found for an outsider, or for an id that is not valid', async () => {
     const outsider = await api()
-      .get(`/api/notebooks/${privateNotebookId}`)
+      .get(`/api/v1/notebooks/${privateNotebookId}`)
       .set('X-Test-User', ids.outsider)
-    const invalid = await api().get('/api/notebooks/not-an-id').set('X-Test-User', ids.admin)
+    const invalid = await api().get('/api/v1/notebooks/not-an-id').set('X-Test-User', ids.admin)
 
     expect(outsider.status).toBe(404)
     expect(invalid.status).toBe(404)
   })
 })
 
-describe('GET /api/entries/:code', () => {
+describe('GET /api/v1/entries/:code', () => {
   it('shows an entry, with its notebook and project', async () => {
     const response = await api()
-      .get(`/api/entries/${privateEntryCode}`)
+      .get(`/api/v1/entries/${privateEntryCode}`)
       .set('X-Test-User', ids.admin)
 
     expect(response.status).toBe(200)
@@ -137,7 +137,7 @@ describe('GET /api/entries/:code', () => {
   })
 
   it('is not found for someone who cannot read its project', async () => {
-    const response = await api().get(`/api/entries/${privateEntryCode}`)
+    const response = await api().get(`/api/v1/entries/${privateEntryCode}`)
 
     expect(response.status).toBe(404)
   })
@@ -145,7 +145,7 @@ describe('GET /api/entries/:code', () => {
 
 describe('errors', () => {
   it('answers an unknown address with a JSON "not found"', async () => {
-    const response = await api().get('/api/nothing-here')
+    const response = await api().get('/api/v1/nothing-here')
 
     expect(response.status).toBe(404)
     expect(response.body).toEqual({ error: 'Not found' })
@@ -153,7 +153,7 @@ describe('errors', () => {
 
   it('answers a request body that is not valid JSON with a 400', async () => {
     const response = await api()
-      .post('/api/projects')
+      .post('/api/v1/projects')
       .set('Content-Type', 'application/json')
       .send('{ not json')
 
