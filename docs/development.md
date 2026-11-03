@@ -32,6 +32,19 @@ The website runs on port 5174 and the API on 3000. The website passes requests f
 the API, so both share one address, as they will when deployed. ProtoLIMS uses ports 5173 and
 8000, so both can run at once.
 
+## Example data
+
+To have something to look at, add an example project, with a notebook and a few entries:
+
+```sh
+just backend-demo-data
+```
+
+It only writes to a development database (one whose name ends in `-dev`), and does nothing if
+the example project is there already. Everything in it is invented, and says so; its author is
+Josiah Carberry, a fictional researcher whose ORCID iD ORCID publishes for testing. The project
+is public, so anyone can read it, signed in or not.
+
 ## Checks
 
 ```sh

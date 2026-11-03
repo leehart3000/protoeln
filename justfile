@@ -65,6 +65,10 @@ content-check:
 backend-dev:
     {{api}} dev
 
+# Add the example project to the development database (only if it isn't there already)
+backend-demo-data:
+    {{api}} demo-data
+
 # Fix backend lint issues with ESLint
 backend-lint:
     {{api}} lint:fix
