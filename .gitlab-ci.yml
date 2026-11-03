@@ -1,4 +1,5 @@
-# ProtoELN CI. Mirrors ProtoLIMS's checks: format, lint, type-check, test and (frontend) build.
+# ProtoELN CI. Mirrors ProtoLIMS's checks: format, lint, type-check, test and (frontend) build,
+# for the shared content package, the backend and the frontend.
 
 workflow:
   rules:
@@ -32,6 +33,15 @@ default:
     - pnpm --version
     - pnpm config set store-dir "$CI_PROJECT_DIR/.pnpm-store"
     - pnpm install --frozen-lockfile
+
+content-checks:
+  extends: .pnpm
+  stage: check
+  script:
+    - pnpm --dir packages/content format:check
+    - pnpm --dir packages/content lint
+    - pnpm --dir packages/content typecheck
+    - pnpm --dir packages/content coverage
 
 backend-checks:
   extends: .pnpm

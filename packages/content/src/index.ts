@@ -1,0 +1,4 @@
+export * from './types.ts'
+export { checkDocument, isDocument, type Problem } from './check.ts'
+export { toPlainText } from './plain-text.ts'
+export { toMarkdown } from './markdown.ts'

@@ -1,0 +1,19 @@
+{
+  // Shared by the API (run by Node.js) and the website (bundled by Vite), so it uses only
+  // standard JavaScript and no Node.js or browser features
+  "compilerOptions": {
+    "target": "es2024",
+    "lib": ["es2024"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}

@@ -17,9 +17,10 @@ export function canonicalJson(value: unknown): string {
     return `[${value.map((item) => canonicalJson(item)).join(',')}]`
   }
   if (typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    // Object keys are unique, so two keys are never equal when sorting
     const entries = Object.entries(value as Record<string, unknown>)
       .filter(([, item]) => item !== undefined)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .sort(([a], [b]) => (a < b ? -1 : 1))
     return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(',')}}`
   }
   // Dates, ObjectIds and other objects must be converted to plain values (e.g. strings) first,

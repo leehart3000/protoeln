@@ -1,36 +1,63 @@
 # ProtoELN task runner. Run `just` on its own to list the recipes.
-# backend-* and web-* recipes do one half; lint, format, typecheck, test and check do both.
+# backend-*, web-* and content-* recipes do one part; lint, format, typecheck, test and check do all.
 
 api := "pnpm --dir backend"
 web := "pnpm --dir frontend"
+content := "pnpm --dir packages/content"
 
 # List available recipes
 default:
     @just --list --unsorted
 
-# --- Both halves ---
+# --- Everything ---
 
-# Install all packages (backend and frontend share one lockfile at the repo root)
+# Install all packages (they share one lockfile at the repo root)
 install:
     pnpm install
 
-# Fix lint issues in the backend and frontend
-lint: backend-lint web-lint
+# Fix lint issues everywhere
+lint: content-lint backend-lint web-lint
 
-# Format the backend and frontend
-format: backend-format web-format
+# Format everything
+format: content-format backend-format web-format
 
-# Type-check the backend and frontend
-typecheck: backend-typecheck web-typecheck
+# Type-check everything
+typecheck: content-typecheck backend-typecheck web-typecheck
 
-# Run the backend and frontend tests
-test: backend-test web-test
+# Run all the tests
+test: content-test backend-test web-test
 
-# Run every check CI runs, for both backend and frontend, without changing any files
+# Run every check CI runs, everywhere, without changing any files
 check:
     pnpm install --frozen-lockfile
+    just content-check
     just backend-check
     just web-check
+
+# --- Content format (packages/content, shared by backend and frontend) ---
+
+# Fix content package lint issues with ESLint
+content-lint:
+    {{content}} lint:fix
+
+# Format the content package with Prettier
+content-format:
+    {{content}} format
+
+# Type-check the content package
+content-typecheck:
+    {{content}} typecheck
+
+# Run the content package tests; extra arguments go to Vitest
+content-test *args:
+    {{content}} test {{args}}
+
+# Run every content package check CI runs, without changing any files
+content-check:
+    {{content}} format:check
+    {{content}} lint
+    {{content}} typecheck
+    {{content}} coverage
 
 # --- Backend ---
 
