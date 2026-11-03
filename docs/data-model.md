@@ -212,10 +212,17 @@ Three separate actions:
 | **Sign** | Deliberately, on a specific version | A `signatures` record; the author's signature locks the entry |
 
 Drafts are saved to the server, so closing the browser loses nothing. The `entry_changes`
-records make the audit trail complete without storing a full copy on every save.
+records make the audit trail complete without storing a full copy on every save: each records
+the change as a JSON Patch (RFC 6902), from which any earlier draft can be rebuilt. A save is
+refused if someone else has saved the entry since the editor loaded it, rather than silently
+overwriting their work.
+
+Writes that belong together (a draft and its change record; a version and the entry's version
+number) are made in a single database transaction, so either both are saved or neither is.
 
 Each version stores a hash (SHA-256) of its content together with the previous version's hash,
-so any later change to a stored version would be detectable.
+so any later change to a stored version would be detectable. ProtoELN can recalculate the hashes
+to check an entry's history, reporting any version that has been changed, removed or unchained.
 
 ## Signatures
 

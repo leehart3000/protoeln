@@ -20,6 +20,7 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@protoeln/content": "workspace:*",
     "express": "^5.3.0",
     "mongoose": "^9.11.4"
   },

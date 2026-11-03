@@ -1,9 +1,12 @@
 import type { TestProject } from 'vitest/node'
-import { MongoMemoryServer } from 'mongodb-memory-server-core'
+import { MongoMemoryReplSet } from 'mongodb-memory-server-core'
 
 // One temporary MongoDB server for the whole test run. Starting one per test file would make the
 // files race to download the MongoDB server program on the first run. Each test file still gets a
 // database of its own (see database.ts), so files running at the same time can't interfere.
+//
+// It runs as a one-member replica set, like MongoDB Atlas, because transactions (several changes
+// saved together, or not at all) only work on a replica set.
 
 declare module 'vitest' {
   export interface ProvidedContext {
@@ -12,7 +15,7 @@ declare module 'vitest' {
 }
 
 export default async function setup(project: TestProject) {
-  const server = await MongoMemoryServer.create()
+  const server = await MongoMemoryReplSet.create({ replSet: { count: 1 } })
   project.provide('mongoUri', server.getUri())
 
   return async () => {
