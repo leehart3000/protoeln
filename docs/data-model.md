@@ -14,7 +14,7 @@ S3-compatible object store; the database holds only their metadata.
 | --- | --- | --- |
 | Project | Project | Notebooks; members and their roles |
 | Notebook | Study | Entries; has an owner (usually the scientist whose notebook it is) |
-| Entry | — | One experiment, protocol or note |
+| Entry | — | One experiment, protocol or note, with a readable code such as `ELN-2026-0042`, numbered from 1 each year |
 
 Projects in ProtoELN and ProtoLIMS can be linked to each other (see [Links](#links)).
 
@@ -40,6 +40,7 @@ attached to with `target: { type, id }`.
 | `data_items` | Structured data: pasted tables, CSV and JSON files, API results, links to large raw data |
 | `files` | Images, PDFs and other files that are stored and shown, but not tidied |
 | `templates` | Starting points for new entries |
+| `counters` | Internal: the next number in each sequence, such as entry codes (`ELN-2026-0042`) |
 
 In the interface, data items are called **data** ("Add data").
 
@@ -88,7 +89,8 @@ erDiagram
         objectId authorId FK
         objectId[] coAuthorIds
         string status
-        object content "protoeln-doc/1"
+        string contentFormat "protoeln-doc/1"
+        object content
         string text "plain text, for search"
         string[] tags
         object[] entities "NER tags"
@@ -184,7 +186,8 @@ erDiagram
 
 An entry's content is stored in ProtoELN's own small, documented block format, tagged with its
 version (`protoeln-doc/1`). It uses the ProseMirror document structure that the Tiptap editor
-works with, but only a deliberately limited set of blocks:
+works with, but only a deliberately limited set of blocks. The format's name is stored with the
+content (`contentFormat`), so a later format can be introduced alongside it:
 
 - paragraph, heading, bulleted and numbered list, quote, code, table
 - **data block**: shows a data item
