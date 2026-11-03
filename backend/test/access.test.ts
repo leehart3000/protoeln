@@ -1,0 +1,43 @@
+import { describe, expect, it } from 'vitest'
+
+import { canContribute, canRead, roleIn, type CurrentUser } from '../src/access.ts'
+
+function user(id: string, siteAdmin = false): CurrentUser {
+  return { id, orcid: '0000-0002-1825-0097', name: id, siteAdmin }
+}
+
+const project = {
+  publicRead: false,
+  members: [
+    { userId: 'a', role: 'admin' },
+    { userId: 'm', role: 'member' },
+    { userId: 'v', role: 'viewer' },
+  ],
+}
+
+describe('access rules', () => {
+  it('finds a member’s role', () => {
+    expect(roleIn(project, user('m'))).toBe('member')
+    expect(roleIn(project, user('x'))).toBeNull()
+    expect(roleIn(project, null)).toBeNull()
+  })
+
+  it.each([
+    ['anyone', null, false, false],
+    ['an outsider', user('x'), false, false],
+    ['a viewer', user('v'), true, false],
+    ['a member', user('m'), true, true],
+    ['a project admin', user('a'), true, true],
+    ['a site admin', user('s', true), true, true],
+  ])('lets %s read (%s) and contribute (%s)', (_who, who, read, contribute) => {
+    expect(canRead(project, who)).toBe(read)
+    expect(canContribute(project, who)).toBe(contribute)
+  })
+
+  it('lets anyone read a public project, but not contribute to it', () => {
+    const open = { ...project, publicRead: true }
+
+    expect(canRead(open, null)).toBe(true)
+    expect(canContribute(open, null)).toBe(false)
+  })
+})

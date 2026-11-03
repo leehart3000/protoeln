@@ -1,0 +1,163 @@
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import { createEntry } from '../../src/data/entries.ts'
+import { NotebookModel } from '../../src/data/models/notebook.ts'
+import { ProjectModel } from '../../src/data/models/project.ts'
+import { UserModel } from '../../src/data/models/user.ts'
+import { startDatabase, stopDatabase } from '../database.ts'
+import { api } from './api.ts'
+
+// One small lab, set up once: a public project and a private one, with a member, a viewer,
+// an outsider and a site admin
+const ids = { member: '', viewer: '', outsider: '', admin: '' }
+let privateNotebookId = ''
+let privateEntryCode = ''
+
+beforeAll(async () => {
+  await startDatabase()
+  const [member, viewer, outsider, admin] = await UserModel.create([
+    { orcid: '0000-0002-1825-0097', name: 'Member' },
+    { orcid: '0000-0002-1694-233X', name: 'Viewer' },
+    { orcid: '0000-0001-5109-3700', name: 'Outsider' },
+    { orcid: '0000-0003-1415-9269', name: 'Admin', siteAdmin: true },
+  ])
+  ids.member = member!._id.toHexString()
+  ids.viewer = viewer!._id.toHexString()
+  ids.outsider = outsider!._id.toHexString()
+  ids.admin = admin!._id.toHexString()
+
+  await ProjectModel.create({ code: 'PUB', title: 'Public demo', publicRead: true })
+  const lab = await ProjectModel.create({
+    code: 'LAB',
+    title: 'Private lab',
+    members: [
+      { userId: member!._id, role: 'member' },
+      { userId: viewer!._id, role: 'viewer' },
+    ],
+  })
+  const notebook = await NotebookModel.create({
+    projectId: lab._id,
+    ownerId: member!._id,
+    title: 'Western blots',
+  })
+  privateNotebookId = notebook._id.toHexString()
+  const entry = await createEntry({
+    notebookId: notebook._id,
+    authorId: member!._id,
+    kind: 'experiment',
+    title: 'p53 after doxorubicin',
+  })
+  privateEntryCode = entry.code
+})
+afterAll(stopDatabase)
+
+describe('GET /api/me', () => {
+  it('says no one is signed in for an anonymous request', async () => {
+    const response = await api().get('/api/me')
+
+    expect(response.body).toEqual({ user: null })
+  })
+
+  it('names the signed-in user', async () => {
+    const response = await api().get('/api/me').set('X-Test-User', ids.member)
+
+    expect(response.body.user).toMatchObject({ name: 'Member', siteAdmin: false })
+  })
+})
+
+describe('GET /api/projects', () => {
+  it.each([
+    ['anyone', undefined, ['PUB']],
+    ['a member', 'member', ['LAB', 'PUB']],
+    ['a viewer', 'viewer', ['LAB', 'PUB']],
+    ['an outsider', 'outsider', ['PUB']],
+    ['a site admin', 'admin', ['LAB', 'PUB']],
+  ] as const)('lists the projects %s can read', async (_who, as, codes) => {
+    const call = api().get('/api/projects')
+    const response = await (as ? call.set('X-Test-User', ids[as]) : call)
+
+    expect(response.status).toBe(200)
+    expect(response.body.map((project: { code: string }) => project.code)).toEqual(codes)
+  })
+})
+
+describe('GET /api/projects/:code', () => {
+  it('shows a project and its notebooks to someone who can read it', async () => {
+    const response = await api().get('/api/projects/LAB').set('X-Test-User', ids.viewer)
+
+    expect(response.status).toBe(200)
+    expect(response.body.project.title).toBe('Private lab')
+    expect(response.body.notebooks).toHaveLength(1)
+  })
+
+  it('says a private project is not found, rather than forbidden, to others', async () => {
+    const anonymous = await api().get('/api/projects/LAB')
+    const outsider = await api().get('/api/projects/LAB').set('X-Test-User', ids.outsider)
+
+    expect(anonymous.status).toBe(404)
+    expect(outsider.status).toBe(404)
+    expect(outsider.body).toEqual({ error: 'Project not found' })
+  })
+})
+
+describe('GET /api/notebooks/:id', () => {
+  it('shows a notebook with a summary of its entries', async () => {
+    const response = await api()
+      .get(`/api/notebooks/${privateNotebookId}`)
+      .set('X-Test-User', ids.member)
+
+    expect(response.status).toBe(200)
+    expect(response.body.project.code).toBe('LAB')
+    expect(response.body.entries).toHaveLength(1)
+    expect(response.body.entries[0].code).toBe(privateEntryCode)
+    expect(response.body.entries[0].content).toBeUndefined()
+  })
+
+  it('is not found for an outsider, or for an id that is not valid', async () => {
+    const outsider = await api()
+      .get(`/api/notebooks/${privateNotebookId}`)
+      .set('X-Test-User', ids.outsider)
+    const invalid = await api().get('/api/notebooks/not-an-id').set('X-Test-User', ids.admin)
+
+    expect(outsider.status).toBe(404)
+    expect(invalid.status).toBe(404)
+  })
+})
+
+describe('GET /api/entries/:code', () => {
+  it('shows an entry, with its notebook and project', async () => {
+    const response = await api()
+      .get(`/api/entries/${privateEntryCode}`)
+      .set('X-Test-User', ids.admin)
+
+    expect(response.status).toBe(200)
+    expect(response.body.entry.content).toEqual({ type: 'doc', content: [] })
+    expect(response.body.notebook.title).toBe('Western blots')
+    expect(response.body.project.code).toBe('LAB')
+  })
+
+  it('is not found for someone who cannot read its project', async () => {
+    const response = await api().get(`/api/entries/${privateEntryCode}`)
+
+    expect(response.status).toBe(404)
+  })
+})
+
+describe('errors', () => {
+  it('answers an unknown address with a JSON "not found"', async () => {
+    const response = await api().get('/api/nothing-here')
+
+    expect(response.status).toBe(404)
+    expect(response.body).toEqual({ error: 'Not found' })
+  })
+
+  it('answers a request body that is not valid JSON with a 400', async () => {
+    const response = await api()
+      .post('/api/projects')
+      .set('Content-Type', 'application/json')
+      .send('{ not json')
+
+    expect(response.status).toBe(400)
+    expect(response.body).toEqual({ error: 'The request body is not valid JSON' })
+  })
+})

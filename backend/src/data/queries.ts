@@ -1,0 +1,62 @@
+import mongoose from 'mongoose'
+
+import { NotFoundError } from '../errors.ts'
+import { EntryModel } from './models/entry.ts'
+import { NotebookModel } from './models/notebook.ts'
+import { ProjectModel } from './models/project.ts'
+import { UserModel } from './models/user.ts'
+
+// Read-only lookups for the API. Each returns plain objects (not Mongoose documents), and
+// throws NotFoundError if a record doesn't exist, including when an id isn't a valid id at all.
+
+function checkId(id: string, what: string) {
+  if (!mongoose.isValidObjectId(id)) {
+    throw new NotFoundError(`${what} not found`)
+  }
+}
+
+export async function findUserById(id: string) {
+  if (!mongoose.isValidObjectId(id)) return null
+  return UserModel.findById(id).lean()
+}
+
+export async function listProjects() {
+  return ProjectModel.find().sort({ code: 1 }).lean()
+}
+
+export async function findProjectByCode(code: string) {
+  const project = await ProjectModel.findOne({ code }).lean()
+  if (project === null) throw new NotFoundError('Project not found')
+  return project
+}
+
+export async function findProjectById(id: mongoose.Types.ObjectId) {
+  const project = await ProjectModel.findById(id).lean()
+  if (project === null) throw new NotFoundError('Project not found')
+  return project
+}
+
+export async function listNotebooks(projectId: mongoose.Types.ObjectId) {
+  return NotebookModel.find({ projectId }).sort({ title: 1 }).lean()
+}
+
+export async function findNotebook(id: string) {
+  checkId(id, 'Notebook')
+  const notebook = await NotebookModel.findById(id).lean()
+  if (notebook === null) throw new NotFoundError('Notebook not found')
+  return notebook
+}
+
+// A summary of each entry in a notebook, most recently changed first (without content)
+export async function listEntries(notebookId: mongoose.Types.ObjectId) {
+  return EntryModel.find({ notebookId })
+    .select('code kind title status authorId latestVersion updatedAt')
+    .sort({ updatedAt: -1 })
+    .lean()
+}
+
+export async function findEntryByCode(code: string) {
+  const entry = await EntryModel.findOne({ code }).lean()
+  if (entry === null) throw new NotFoundError('Entry not found')
+  return entry
+}
