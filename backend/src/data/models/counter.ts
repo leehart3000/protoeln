@@ -20,9 +20,12 @@ export async function nextValue(name: string): Promise<number> {
     { $inc: { value: 1 } },
     { upsert: true, returnDocument: 'after' },
   )
+  // With upsert, a document is always returned; this only satisfies the type checker
+  /* v8 ignore start */
   if (counter === null) {
     throw new Error(`Counter ${name} could not be incremented`)
   }
+  /* v8 ignore stop */
   return counter.value
 }
 
