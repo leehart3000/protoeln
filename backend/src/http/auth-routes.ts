@@ -40,6 +40,7 @@ export function authRoutes(options: { api: string; config: Config; fetch?: typeo
   const { api, config } = options
   const router = Router()
   const redirectUri = `${config.publicUrl}${api}/auth/orcid/callback`
+  const publicHost = new URL(config.publicUrl).hostname
   const cookie = (path: string, maxAgeMs: number): CookieOptions => ({
     path,
     maxAge: maxAgeMs,
@@ -57,6 +58,14 @@ export function authRoutes(options: { api: string; config: Config; fetch?: typeo
 
   router.get('/auth/orcid/login', async (req, res) => {
     const settings = orcidSettings()
+    // Cookies belong to a host name (whatever the port), and ORCID only ever sends the browser
+    // back to the public address. So a browser on another name for this site (say, localhost
+    // rather than 127.0.0.1) is first moved to the public address, or the sign-in cookie would
+    // be left behind.
+    if (req.hostname !== publicHost) {
+      res.redirect(302, `${config.publicUrl}${req.originalUrl}`)
+      return
+    }
     const state = randomToken()
     const nonce = randomToken()
     await startSignIn(state, nonce, safeReturnTo(req.query.returnTo))

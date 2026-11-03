@@ -25,8 +25,8 @@ just backend-dev
 just web-dev
 ```
 
-Then open **http://127.0.0.1:5174** (use `127.0.0.1`, not `localhost`, so the sign-in cookie
-matches the address ORCID sends you back to).
+Then open **http://127.0.0.1:5174**. ORCID only sends you back to that address, and cookies
+belong to a host name, so signing in from `localhost` first moves you to `127.0.0.1`.
 
 The website runs on port 5174 and the API on 3000. The website passes requests for `/api` to
 the API, so both share one address, as they will when deployed. ProtoLIMS uses ports 5173 and

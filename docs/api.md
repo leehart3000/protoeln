@@ -18,7 +18,7 @@ itself, so the browser never holds any tokens:
 
 | Request | Does |
 | --- | --- |
-| `GET /api/v1/auth/orcid/login?returnTo=/page` | Sends the browser to ORCID, with a random state (also kept in a 10-minute cookie) and nonce |
+| `GET /api/v1/auth/orcid/login?returnTo=/page` | Sends the browser to ORCID, with a random state (also kept in a 10-minute cookie) and nonce. A browser on another host name for the site is first moved to the public address |
 | `GET /api/v1/auth/orcid/callback` | Where ORCID sends the browser back. Checks the state, swaps the one-time code for an ID token, checks the token's signature against ORCID's published keys (and its issuer, audience, age and nonce), remembers the person by their ORCID iD, sets the session cookie, and goes back to `returnTo` (a page on this site only) |
 | `POST /api/v1/auth/logout` | Ends the session (204) |
 

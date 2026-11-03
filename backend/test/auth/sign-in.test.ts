@@ -216,4 +216,18 @@ describe('signing in with ORCID', () => {
     expect(again.status).toBe(302)
     expect(again.headers.location).toBe('/')
   })
+
+  it('moves a browser on another name for this site to the public address first', async () => {
+    const app = createApp({ config })
+
+    const login = await request(app)
+      .get('/api/v1/auth/orcid/login?returnTo=%2Fnotebooks%2F1')
+      .set('Host', 'localhost:5174')
+
+    expect(login.status).toBe(302)
+    expect(login.headers.location).toBe(
+      'http://127.0.0.1:5174/api/v1/auth/orcid/login?returnTo=%2Fnotebooks%2F1',
+    )
+    expect(login.headers['set-cookie']).toBeUndefined()
+  })
 })
