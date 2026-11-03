@@ -46,15 +46,28 @@ projects don't reveal that they exist.
 | Request | Returns |
 | --- | --- |
 | `GET /api/v1/health` | `{ "status": "ok" }` |
-| `GET /api/v1/me` | `{ "user": … }`, or `{ "user": null }` if no one is signed in |
-| `GET /api/v1/projects` | The projects the requester can read, by code |
+| `GET /api/v1/me` | `{ "user": { name, orcid, siteAdmin } }`, or `{ "user": null }` if no one is signed in |
+| `GET /api/v1/projects` | The projects the requester can read, by code, each with `yourRole` (the requester's role in it, or `null`) |
 | `GET /api/v1/projects/:code` | `{ project, notebooks }` |
 | `GET /api/v1/notebooks/:id` | `{ notebook, project, entries }`; entries are summaries (no content), most recently changed first |
 | `GET /api/v1/entries/:code` | `{ entry, notebook, project }` |
-
 | `GET /api/v1/entries/:code/versions` | Summaries of the entry's versions (no content), newest first |
 | `GET /api/v1/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies |
 | `GET /api/v1/entries/:code/history-check` | `{ intact, problems }`: recalculates every version's hash to check none has been changed |
+
+### What responses show
+
+Records are never sent as stored. Each kind of record has a view (in
+`backend/src/http/views.ts`) listing exactly the fields the API shows, so internal details, such
+as the database ids of people and project members, stay inside. A field added to a model is only
+shown once its view includes it.
+
+- **People** (authors, notebook owners, who created a version) are shown by name and ORCID iD,
+  both public: `{ "name": "Josiah Carberry", "orcid": "0000-0002-1825-0097" }`.
+- **Projects** and **entries** are identified by their codes. **Notebooks**, which have no code,
+  are identified by `id`.
+- **Project members** aren't listed.
+- An entry's `updatedAt` is what a save sends back as `basedOn`.
 
 ## Writing
 

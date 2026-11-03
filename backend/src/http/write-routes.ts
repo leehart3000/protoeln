@@ -6,16 +6,19 @@ import { createNotebook } from '../data/notebooks.ts'
 import {
   findEntryByCode,
   findNotebook,
+  findPeople,
   findProjectByCode,
   findProjectById,
   findVersion,
   listVersions,
 } from '../data/queries.ts'
 import { BodyReader, checkCanContribute, checkCanRead, requireUser, userOf } from './context.ts'
+import { entryView, notebookView, versionSummary, versionView } from './views.ts'
 
 // Creating notebooks and entries, saving drafts, and creating and checking versions. Each
 // write needs someone signed in who is a member of the project; editing an entry is further
-// limited to its author and co-authors (checked in data/entries.ts).
+// limited to its author and co-authors (checked in data/entries.ts). Responses show records
+// through the views in views.ts, never as stored.
 
 async function projectOfEntry(code: string) {
   const entry = await findEntryByCode(code)
@@ -42,7 +45,7 @@ export function writeRoutes() {
       title,
       description,
     })
-    res.status(201).json(notebook)
+    res.status(201).json(notebookView(notebook, await findPeople([notebook.ownerId])))
   })
 
   router.post('/notebooks/:id/entries', async (req, res) => {
@@ -62,7 +65,7 @@ export function writeRoutes() {
       title,
       content,
     })
-    res.status(201).json(entry.toObject())
+    res.status(201).json(entryView(entry.toObject(), await findPeople([entry.authorId])))
   })
 
   router.put('/entries/:code/draft', async (req, res) => {
@@ -76,7 +79,9 @@ export function writeRoutes() {
     body.done()
 
     const result = await saveDraft({ entryId: entry._id, userId: user.id, basedOn, title, content })
-    res.json({ entry: result.entry.toObject(), changed: result.changed })
+    const saved = result.entry.toObject()
+    const people = await findPeople([saved.authorId, ...saved.coAuthorIds])
+    res.json({ entry: entryView(saved, people), changed: result.changed })
   })
 
   router.post('/entries/:code/versions', async (req, res) => {
@@ -87,20 +92,24 @@ export function writeRoutes() {
     const note = body.optionalText('note')
     body.done()
 
-    const version = await createVersion({ entryId: entry._id, userId: user.id, note })
-    res.status(201).json(version?.toObject())
+    const created = await createVersion({ entryId: entry._id, userId: user.id, note })
+    const version = created!.toObject()
+    res.status(201).json(versionView(version, await findPeople([version.createdBy])))
   })
 
   router.get('/entries/:code/versions', async (req, res) => {
     const { entry, project } = await projectOfEntry(req.params.code)
     checkCanRead(project, userOf(res))
-    res.json(await listVersions(entry._id))
+    const versions = await listVersions(entry._id)
+    const people = await findPeople(versions.map((version) => version.createdBy))
+    res.json(versions.map((version) => versionSummary(version, people)))
   })
 
   router.get('/entries/:code/versions/:number', async (req, res) => {
     const { entry, project } = await projectOfEntry(req.params.code)
     checkCanRead(project, userOf(res))
-    res.json(await findVersion(entry._id, Number(req.params.number)))
+    const version = await findVersion(entry._id, Number(req.params.number))
+    res.json(versionView(version, await findPeople([version.createdBy])))
   })
 
   // Recalculates the hashes of every version, reporting any that have been tampered with

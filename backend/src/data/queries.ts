@@ -21,6 +21,16 @@ export async function findUserById(id: string) {
   return UserModel.findById(id).lean()
 }
 
+// The names and ORCID iDs of the people with these ids, by id, for showing who did what
+export async function findPeople(ids: mongoose.Types.ObjectId[]) {
+  const users = await UserModel.find({ _id: { $in: ids } })
+    .select('name orcid')
+    .lean()
+  return new Map(
+    users.map((user) => [user._id.toHexString(), { name: user.name, orcid: user.orcid }]),
+  )
+}
+
 export async function listProjects() {
   return ProjectModel.find().sort({ code: 1 }).lean()
 }

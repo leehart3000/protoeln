@@ -61,7 +61,11 @@ describe('GET /api/v1/me', () => {
   it('names the signed-in user', async () => {
     const response = await api().get('/api/v1/me').set('X-Test-User', ids.member)
 
-    expect(response.body.user).toMatchObject({ name: 'Member', siteAdmin: false })
+    expect(response.body.user).toEqual({
+      name: 'Member',
+      orcid: '0000-0002-1825-0097',
+      siteAdmin: false,
+    })
   })
 })
 
@@ -79,6 +83,30 @@ describe('GET /api/v1/projects', () => {
     expect(response.status).toBe(200)
     expect(response.body.map((project: { code: string }) => project.code)).toEqual(codes)
   })
+
+  it('shows no internal details, such as members’ database ids', async () => {
+    const response = await api().get('/api/v1/projects')
+
+    expect(Object.keys(response.body[0]).sort()).toEqual([
+      'code',
+      'createdAt',
+      'description',
+      'links',
+      'publicRead',
+      'title',
+      'updatedAt',
+      'yourRole',
+    ])
+  })
+
+  it('tells each person their role in each project', async () => {
+    const response = await api().get('/api/v1/projects').set('X-Test-User', ids.viewer)
+
+    expect(response.body.map((project: { yourRole: string }) => project.yourRole)).toEqual([
+      'viewer',
+      null,
+    ])
+  })
 })
 
 describe('GET /api/v1/projects/:code', () => {
@@ -87,7 +115,13 @@ describe('GET /api/v1/projects/:code', () => {
 
     expect(response.status).toBe(200)
     expect(response.body.project.title).toBe('Private lab')
-    expect(response.body.notebooks).toHaveLength(1)
+    expect(response.body.notebooks).toEqual([
+      expect.objectContaining({
+        id: privateNotebookId,
+        title: 'Western blots',
+        owner: { name: 'Member', orcid: '0000-0002-1825-0097' },
+      }),
+    ])
   })
 
   it('says a private project is not found, rather than forbidden, to others', async () => {
@@ -110,6 +144,10 @@ describe('GET /api/v1/notebooks/:id', () => {
     expect(response.body.project.code).toBe('LAB')
     expect(response.body.entries).toHaveLength(1)
     expect(response.body.entries[0].code).toBe(privateEntryCode)
+    expect(response.body.entries[0].author).toEqual({
+      name: 'Member',
+      orcid: '0000-0002-1825-0097',
+    })
     expect(response.body.entries[0].content).toBeUndefined()
   })
 
@@ -132,8 +170,12 @@ describe('GET /api/v1/entries/:code', () => {
 
     expect(response.status).toBe(200)
     expect(response.body.entry.content).toEqual({ type: 'doc', content: [] })
-    expect(response.body.notebook.title).toBe('Western blots')
-    expect(response.body.project.code).toBe('LAB')
+    expect(response.body.entry.author.name).toBe('Member')
+    expect(response.body.entry.coAuthors).toEqual([])
+    expect(response.body.entry).not.toHaveProperty('_id')
+    expect(response.body.entry).not.toHaveProperty('authorId')
+    expect(response.body.notebook).toEqual({ id: privateNotebookId, title: 'Western blots' })
+    expect(response.body.project).toEqual({ code: 'LAB', title: 'Private lab' })
   })
 
   it('is not found for someone who cannot read its project', async () => {

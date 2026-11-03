@@ -66,7 +66,7 @@ describe('POST /api/v1/projects/:code/notebooks', () => {
       .send({ title: 'PCR' })
 
     expect(response.status).toBe(201)
-    expect(response.body.ownerId).toBe(ids.colleague)
+    expect(response.body.owner).toEqual({ name: 'Colleague', orcid: '0000-0002-1694-233X' })
     expect(response.body.description).toBe('')
   })
 
@@ -104,7 +104,7 @@ describe('POST /api/v1/notebooks/:id/entries', () => {
 
     expect(response.status).toBe(201)
     expect(response.body.code).toMatch(/^ELN-\d{4}-\d{4}$/)
-    expect(response.body.authorId).toBe(ids.colleague)
+    expect(response.body.author).toEqual({ name: 'Colleague', orcid: '0000-0002-1694-233X' })
     expect(response.body.text).toBe('Use wet transfer.')
   })
 
@@ -214,6 +214,7 @@ describe('versions', () => {
     expect(list.body.map((version: { number: number }) => version.number)).toEqual([2, 1])
     expect(list.body[0].content).toBeUndefined()
     expect(first.body.note).toBe('First draft')
+    expect(first.body.createdBy).toEqual({ name: 'Author', orcid: '0000-0002-1825-0097' })
     expect(first.body.markdown).toBe('')
     expect(check.body).toEqual({ intact: true, problems: [] })
   })
