@@ -61,6 +61,27 @@ export class BodyReader {
     return value
   }
 
+  // A required text field that must match a pattern, described in `rule` if it doesn't
+  matching(field: string, pattern: RegExp, rule: string): string {
+    const value = this.body[field]
+    if (typeof value !== 'string' || !pattern.test(value)) {
+      this.problems.push({ path: field, message: rule })
+      return ''
+    }
+    return value
+  }
+
+  // An optional true-or-false field, which is `fallback` if it's left out
+  optionalBoolean(field: string, fallback: boolean): boolean {
+    const value = this.body[field]
+    if (value === undefined) return fallback
+    if (typeof value !== 'boolean') {
+      this.problems.push({ path: field, message: 'should be true or false' })
+      return fallback
+    }
+    return value
+  }
+
   oneOf<T extends string>(field: string, allowed: readonly T[]): T {
     const value = this.body[field]
     if (!allowed.includes(value as T)) {

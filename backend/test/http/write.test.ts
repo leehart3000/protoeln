@@ -8,7 +8,7 @@ import { startDatabase, stopDatabase } from '../database.ts'
 import { api } from './api.ts'
 
 // A private lab with two members (an author and a colleague), a viewer and an outsider
-const ids = { author: '', colleague: '', viewer: '', outsider: '' }
+const ids = { author: '', colleague: '', viewer: '', outsider: '', admin: '' }
 let notebookId = ''
 
 function paragraph(text: string) {
@@ -17,16 +17,18 @@ function paragraph(text: string) {
 
 beforeAll(async () => {
   await startDatabase()
-  const [author, colleague, viewer, outsider] = await UserModel.create([
+  const [author, colleague, viewer, outsider, admin] = await UserModel.create([
     { orcid: '0000-0002-1825-0097', name: 'Author' },
     { orcid: '0000-0002-1694-233X', name: 'Colleague' },
     { orcid: '0000-0001-5109-3700', name: 'Viewer' },
     { orcid: '0000-0003-1415-9269', name: 'Outsider' },
+    { orcid: '0000-0001-5000-0007', name: 'Admin', siteAdmin: true },
   ])
   ids.author = author!._id.toHexString()
   ids.colleague = colleague!._id.toHexString()
   ids.viewer = viewer!._id.toHexString()
   ids.outsider = outsider!._id.toHexString()
+  ids.admin = admin!._id.toHexString()
 
   const lab = await ProjectModel.create({
     code: 'LAB',
@@ -56,6 +58,55 @@ beforeEach(async () => {
     .send({ kind: 'experiment', title: 'Western blot' })
   entryCode = response.body.code
   savedAt = response.body.updatedAt
+})
+
+describe('POST /api/v1/projects', () => {
+  it('lets a site admin create a project, of which they become an admin', async () => {
+    const response = await api()
+      .post('/api/v1/projects')
+      .set('X-Test-User', ids.admin)
+      .send({ code: 'NEW1', title: 'New project', publicRead: true })
+
+    expect(response.status).toBe(201)
+    expect(response.body).toMatchObject({
+      code: 'NEW1',
+      title: 'New project',
+      description: '',
+      publicRead: true,
+      yourRole: 'admin',
+      canContribute: true,
+    })
+    const project = await ProjectModel.findOne({ code: 'NEW1' }).orFail().lean()
+    expect(project.members.map((member) => [String(member.userId), member.role])).toEqual([
+      [ids.admin, 'admin'],
+    ])
+  })
+
+  it.each([
+    ['no one is signed in', undefined, 401],
+    ['the user is not a site admin', 'author', 403],
+  ] as const)('refuses when %s', async (_why, as, status) => {
+    const call = api().post('/api/v1/projects').send({ code: 'NEW2', title: 'New' })
+    const response = await (as ? call.set('X-Test-User', ids[as]) : call)
+
+    expect(response.status).toBe(status)
+  })
+
+  it('refuses a code already in use, or not in the right form', async () => {
+    const taken = await api()
+      .post('/api/v1/projects')
+      .set('X-Test-User', ids.admin)
+      .send({ code: 'LAB', title: 'Another lab' })
+    const badCode = await api()
+      .post('/api/v1/projects')
+      .set('X-Test-User', ids.admin)
+      .send({ code: 'lab-2', title: 'Another lab' })
+
+    expect(taken.status).toBe(409)
+    expect(taken.body.error).toBe('There is already a project with the code LAB')
+    expect(badCode.status).toBe(422)
+    expect(badCode.body.problems[0].path).toBe('code')
+  })
 })
 
 describe('POST /api/v1/projects/:code/notebooks', () => {

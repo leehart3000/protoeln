@@ -2,11 +2,13 @@
 import { useQuery } from '@tanstack/vue-query'
 
 import { fetchProjects, type Project } from '../api'
+import NewButton from '../components/NewButton.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import RowDetails from '../components/RowDetails.vue'
 import { ROLE_LABELS } from '../format'
 import { ProjectIcon } from '../icons'
+import { useMe } from '../useMe'
 import {
   badge,
   rowLink,
@@ -19,6 +21,7 @@ import {
 } from '../styles'
 
 // Every project the visitor can read: their own, and any that are public
+const me = useMe()
 const { data, isPending, isError } = useQuery({ queryKey: ['projects'], queryFn: fetchProjects })
 
 function access(project: Project) {
@@ -28,7 +31,10 @@ function access(project: Project) {
 </script>
 
 <template>
-  <PageTitle :icon="ProjectIcon">Projects</PageTitle>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <PageTitle :icon="ProjectIcon">Projects</PageTitle>
+    <NewButton v-if="me.data.value?.user?.siteAdmin" to="/projects/new">New project</NewButton>
+  </div>
   <div class="mt-6">
     <QueryStatus :pending="isPending" :failed="isError" what="projects">
       <template v-if="data">

@@ -45,8 +45,13 @@ export function projectRef(project: { code: string; title: string }) {
   return { code: project.code, title: project.title }
 }
 
-// `yourRole` is the requester's role in the project, or null if they aren't a member
-export function projectView(project: ProjectRecord, yourRole: ProjectRole | null) {
+// `yourRole` is the requester's role in the project (null if they aren't a member), and
+// `canContribute` whether they can add notebooks and entries to it, so pages know what to offer
+export function projectView(
+  project: ProjectRecord,
+  yourRole: ProjectRole | null,
+  canContribute: boolean,
+) {
   return {
     code: project.code,
     title: project.title,
@@ -60,6 +65,7 @@ export function projectView(project: ProjectRecord, yourRole: ProjectRole | null
       label: link.label ?? null,
     })),
     yourRole,
+    canContribute,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   }

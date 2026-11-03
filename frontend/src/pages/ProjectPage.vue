@@ -4,6 +4,7 @@ import { toRef } from 'vue'
 
 import { fetchProject } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import NewButton from '../components/NewButton.vue'
 import NotebookTable from '../components/NotebookTable.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
@@ -33,7 +34,12 @@ const { data, isPending, isError } = useQuery({
         {{ data.project.description }}
       </p>
 
-      <h2 :class="sectionHeading" class="mt-8 mb-3">Notebooks</h2>
+      <div class="mt-8 mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 :class="sectionHeading">Notebooks</h2>
+        <NewButton v-if="data.project.canContribute" :to="`/projects/${code}/notebooks/new`">
+          New notebook
+        </NewButton>
+      </div>
       <p v-if="data.notebooks.length === 0" class="text-muted">No notebooks yet.</p>
       <NotebookTable v-else :notebooks="data.notebooks" />
     </template>

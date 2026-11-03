@@ -91,6 +91,7 @@ describe('GET /api/v1/projects', () => {
     const response = await api().get('/api/v1/projects')
 
     expect(Object.keys(response.body[0]).sort()).toEqual([
+      'canContribute',
       'code',
       'createdAt',
       'description',

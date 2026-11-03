@@ -5,6 +5,7 @@ import { computed, toRef } from 'vue'
 import { fetchNotebook } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import EntryTable from '../components/EntryTable.vue'
+import NewButton from '../components/NewButton.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { NotebookIcon } from '../icons'
@@ -39,7 +40,12 @@ const crumbs = computed(() =>
         Kept by {{ data.notebook.owner.name }}.
       </p>
 
-      <h2 :class="sectionHeading" class="mt-8 mb-3">Entries</h2>
+      <div class="mt-8 mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h2 :class="sectionHeading">Entries</h2>
+        <NewButton v-if="data.project.canContribute" :to="`/notebooks/${id}/entries/new`">
+          New entry
+        </NewButton>
+      </div>
       <p v-if="data.entries.length === 0" class="text-muted">No entries yet.</p>
       <EntryTable v-else :entries="data.entries" />
     </template>

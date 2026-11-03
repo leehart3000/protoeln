@@ -1,6 +1,9 @@
 import mongoose, { type InferSchemaType } from 'mongoose'
 
 export const PROJECT_ROLES = ['admin', 'member', 'viewer'] as const
+
+// 2 to 10 capital letters and digits, starting with a letter, such as LAB or ONC2
+export const PROJECT_CODE = /^[A-Z][A-Z0-9]{1,9}$/
 export type ProjectRole = (typeof PROJECT_ROLES)[number]
 
 const memberSchema = new mongoose.Schema(
@@ -25,7 +28,7 @@ const linkSchema = new mongoose.Schema({
 const projectSchema = new mongoose.Schema(
   {
     // A short code, unique across ProtoELN: capital letters and digits, starting with a letter
-    code: { type: String, required: true, unique: true, match: /^[A-Z][A-Z0-9]{1,9}$/ },
+    code: { type: String, required: true, unique: true, match: PROJECT_CODE },
     title: { type: String, required: true },
     description: { type: String, default: '' },
     members: { type: [memberSchema], default: [] },

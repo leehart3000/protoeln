@@ -3,6 +3,9 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import EntriesPage from '../pages/EntriesPage.vue'
 import EntryPage from '../pages/EntryPage.vue'
 import HomePage from '../pages/HomePage.vue'
+import NewEntryPage from '../pages/NewEntryPage.vue'
+import NewNotebookPage from '../pages/NewNotebookPage.vue'
+import NewProjectPage from '../pages/NewProjectPage.vue'
 import NotebookPage from '../pages/NotebookPage.vue'
 import NotebooksPage from '../pages/NotebooksPage.vue'
 import NotFoundPage from '../pages/NotFoundPage.vue'
@@ -15,9 +18,12 @@ import ProjectsPage from '../pages/ProjectsPage.vue'
 export const routes: RouteRecordRaw[] = [
   { path: '/', component: HomePage },
   { path: '/projects', component: ProjectsPage },
+  { path: '/projects/new', component: NewProjectPage },
   { path: '/projects/:code', component: ProjectPage, props: true },
+  { path: '/projects/:code/notebooks/new', component: NewNotebookPage, props: true },
   { path: '/notebooks', component: NotebooksPage },
   { path: '/notebooks/:id', component: NotebookPage, props: true },
+  { path: '/notebooks/:id/entries/new', component: NewEntryPage, props: true },
   { path: '/entries', component: EntriesPage },
   { path: '/entries/:code', component: EntryPage, props: true },
   { path: '/profile', component: ProfilePage },

@@ -2,7 +2,10 @@ import { Router } from 'express'
 
 import { createEntry, createVersion, saveDraft, verifyVersions } from '../data/entries.ts'
 import { ENTRY_KINDS } from '../data/models/entry.ts'
+import { PROJECT_CODE } from '../data/models/project.ts'
 import { createNotebook } from '../data/notebooks.ts'
+import { createProject } from '../data/projects.ts'
+import { ForbiddenError } from '../errors.ts'
 import {
   findEntryByCode,
   findNotebook,
@@ -13,7 +16,7 @@ import {
   listVersions,
 } from '../data/queries.ts'
 import { BodyReader, checkCanContribute, checkCanRead, requireUser, userOf } from './context.ts'
-import { entryView, notebookView, versionSummary, versionView } from './views.ts'
+import { entryView, notebookView, projectView, versionSummary, versionView } from './views.ts'
 
 // Creating notebooks and entries, saving drafts, and creating and checking versions. Each
 // write needs someone signed in who is a member of the project; editing an entry is further
@@ -29,6 +32,33 @@ async function projectOfEntry(code: string) {
 
 export function writeRoutes() {
   const router = Router()
+
+  // Only site admins create projects (as in ProtoLIMS); the creator becomes the project's admin
+  router.post('/projects', async (req, res) => {
+    const user = requireUser(res)
+    if (!user.siteAdmin) {
+      throw new ForbiddenError('Only site admins can create projects')
+    }
+    const body = new BodyReader(req.body)
+    const code = body.matching(
+      'code',
+      PROJECT_CODE,
+      'should be 2 to 10 capital letters and digits, starting with a letter',
+    )
+    const title = body.text('title')
+    const description = body.optionalText('description')
+    const publicRead = body.optionalBoolean('publicRead', false)
+    body.done()
+
+    const project = await createProject({
+      code,
+      title,
+      description,
+      publicRead,
+      creatorId: user.id,
+    })
+    res.status(201).json(projectView(project, 'admin', true))
+  })
 
   router.post('/projects/:code/notebooks', async (req, res) => {
     const user = requireUser(res)

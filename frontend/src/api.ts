@@ -24,6 +24,7 @@ export interface Project {
     label: string | null
   }[]
   yourRole: ProjectRole | null
+  canContribute: boolean
   createdAt: string
   updatedAt: string
 }
@@ -108,6 +109,68 @@ export interface Me {
   } | null
 }
 
+// A request the API refused, with its reason and, for invalid details, what's wrong with each
+// field (by its name, as in { code: 'should be …' })
+export class ApiError extends Error {
+  readonly status: number
+  readonly problems: { path: string; message: string }[]
+
+  constructor(status: number, message: string, problems: { path: string; message: string }[]) {
+    super(message)
+    this.status = status
+    this.problems = problems
+  }
+}
+
+// What's wrong with each field, from an error from the API (none for any other error)
+export function fieldProblems(error: Error | null): Record<string, string> {
+  return error instanceof ApiError
+    ? Object.fromEntries(error.problems.map((problem) => [problem.path, problem.message]))
+    : {}
+}
+
+async function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown): Promise<T> {
+  const response = await fetch(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const data = (await response.json().catch(() => ({}))) as Record<string, unknown>
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      typeof data.error === 'string' ? data.error : `The API answered ${response.status}`,
+      Array.isArray(data.problems) ? (data.problems as ApiError['problems']) : [],
+    )
+  }
+  return data as T
+}
+
+export function createProject(body: {
+  code: string
+  title: string
+  description: string
+  publicRead: boolean
+}) {
+  return sendJson<Project>('POST', '/api/v1/projects', body)
+}
+
+export function createNotebook(projectCode: string, body: { title: string; description: string }) {
+  return sendJson<Notebook>(
+    'POST',
+    `/api/v1/projects/${encodeURIComponent(projectCode)}/notebooks`,
+    body,
+  )
+}
+
+export function createEntry(notebookId: string, body: { kind: EntryKind; title: string }) {
+  return sendJson<Entry>(
+    'POST',
+    `/api/v1/notebooks/${encodeURIComponent(notebookId)}/entries`,
+    body,
+  )
+}
+
 async function getJson<T>(path: string): Promise<T | null> {
   const response = await fetch(path)
   if (response.status === 404) {
@@ -154,9 +217,11 @@ export async function fetchAllEntries() {
 }
 
 export function fetchNotebook(id: string) {
-  return getJson<{ notebook: Notebook; project: ProjectRef; entries: EntrySummary[] }>(
-    `/api/v1/notebooks/${encodeURIComponent(id)}`,
-  )
+  return getJson<{
+    notebook: Notebook
+    project: ProjectRef & { canContribute: boolean }
+    entries: EntrySummary[]
+  }>(`/api/v1/notebooks/${encodeURIComponent(id)}`)
 }
 
 export function fetchEntry(code: string) {

@@ -1,6 +1,6 @@
 import { Router } from 'express'
 
-import { canRead, roleIn, type CurrentUser } from '../access.ts'
+import { canContribute, canRead, roleIn, type CurrentUser } from '../access.ts'
 import {
   findEntryByCode,
   findNotebook,
@@ -74,7 +74,9 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
     res.json(
       projects
         .filter((project) => canRead(project, user))
-        .map((project) => projectView(project, roleIn(project, user))),
+        .map((project) =>
+          projectView(project, roleIn(project, user), canContribute(project, user)),
+        ),
     )
   })
 
@@ -85,7 +87,7 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
     const notebooks = await listNotebooks(project._id)
     const people = await findPeople(notebooks.map((notebook) => notebook.ownerId))
     res.json({
-      project: projectView(project, roleIn(project, user)),
+      project: projectView(project, roleIn(project, user), canContribute(project, user)),
       notebooks: notebooks.map((notebook) => notebookView(notebook, people)),
     })
   })
@@ -103,14 +105,15 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
   })
 
   router.get('/notebooks/:id', async (req, res) => {
+    const user = userOf(res)
     const notebook = await findNotebook(req.params.id)
     const project = await findProjectById(notebook.projectId)
-    checkCanRead(project, userOf(res))
+    checkCanRead(project, user)
     const entries = await listEntries(notebook._id)
     const people = await findPeople([notebook.ownerId, ...entries.map((entry) => entry.authorId)])
     res.json({
       notebook: notebookView(notebook, people),
-      project: projectRef(project),
+      project: { ...projectRef(project), canContribute: canContribute(project, user) },
       entries: entries.map((entry) => entrySummary(entry, people)),
     })
   })

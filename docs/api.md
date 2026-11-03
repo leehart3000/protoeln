@@ -47,7 +47,7 @@ projects don't reveal that they exist.
 | --- | --- |
 | `GET /api/v1/health` | `{ "status": "ok" }` |
 | `GET /api/v1/me` | `{ "user": { name, orcid, orcidUrl, siteAdmin, since, roles } }`, where `roles` lists the projects the person is a member of, each with their role; or `{ "user": null }` if no one is signed in |
-| `GET /api/v1/projects` | The projects the requester can read, by code, each with `yourRole` (the requester's role in it, or `null`) |
+| `GET /api/v1/projects` | The projects the requester can read, by code, each with `yourRole` (the requester's role in it, or `null`) and `canContribute` (whether they can add notebooks and entries) |
 | `GET /api/v1/projects/:code` | `{ project, notebooks }` |
 | `GET /api/v1/notebooks` | Every notebook the requester can read, across projects, most recently changed first, each with its `project` |
 | `GET /api/v1/notebooks/:id` | `{ notebook, project, entries }`; entries are summaries (no content), most recently changed first |
@@ -73,10 +73,12 @@ shown once its view includes it.
 
 ## Writing
 
-Each write needs someone signed in (otherwise 401) who is a member or admin of the project.
+Each write needs someone signed in (otherwise 401). Creating a project needs a site admin;
+everything else needs a member or admin of the project (otherwise 403).
 
 | Request | Body | Does |
 | --- | --- | --- |
+| `POST /api/v1/projects` | `code` (2 to 10 capital letters and digits, starting with a letter), `title`, optional `description`, optional `publicRead` (default false) | Creates a project, with the requester as its project admin (201); site admins only. A code already in use is refused (409) |
 | `POST /api/v1/projects/:code/notebooks` | `title`, optional `description` | Creates a notebook owned by the requester (201) |
 | `POST /api/v1/notebooks/:id/entries` | `kind` (`experiment`, `protocol` or `note`), `title`, optional `content` | Creates a draft entry by the requester (201) |
 | `PUT /api/v1/entries/:code/draft` | `basedOn` (the `updatedAt` of the draft being edited), `title`, `content` | Saves the draft and records what changed; author and co-authors only |

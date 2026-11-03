@@ -9,6 +9,15 @@ export const primaryButton =
 export const secondaryButton =
   'rounded-md border border-line bg-panel px-3 py-1.5 text-sm font-medium text-fg hover:bg-line/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50'
 
+export const fieldLabel = 'block text-sm font-medium'
+
+export const inputClass =
+  'mt-1.5 block w-full rounded-md border bg-panel px-3 py-2 focus:outline-2 focus:outline-offset-1 focus:outline-link'
+
+export const fieldHint = 'mt-1 text-sm text-muted'
+
+export const fieldProblem = 'mt-1.5 text-sm font-medium text-danger'
+
 export const errorBox =
   'rounded-lg border border-danger-line bg-danger-bg px-4 py-3 font-medium text-danger'
 

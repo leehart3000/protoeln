@@ -12,6 +12,7 @@ export const project: Project = {
   publicRead: true,
   links: [],
   yourRole: null,
+  canContribute: false,
   createdAt: when,
   updatedAt: when,
 }

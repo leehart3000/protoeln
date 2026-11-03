@@ -32,7 +32,7 @@ describe('AccountMenu', () => {
   it('shows who is signed in, linking to their profile, and signs them out', async () => {
     const fetchMock = fakeApi({
       '/api/v1/me': { user: carberry },
-      '/api/v1/auth/logout': new Response(null, { status: 204 }),
+      'POST /api/v1/auth/logout': new Response(null, { status: 204 }),
     })
     const user = userEvent.setup()
     await renderAt('/')

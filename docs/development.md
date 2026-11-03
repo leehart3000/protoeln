@@ -38,9 +38,12 @@ the API, so both share one address, as they will when deployed. ProtoLIMS uses p
 | --- | --- |
 | `/` | Home: what ProtoELN is, and how many projects, notebooks and entries you can see |
 | `/projects` | The projects you can see: your own, and any that are public |
+| `/projects/new` | Creating a project (site admins) |
 | `/projects/:code` | A project and its notebooks |
+| `/projects/:code/notebooks/new` | Creating a notebook in a project (its members) |
 | `/notebooks` | Every notebook you can see, across projects |
 | `/notebooks/:id` | A notebook and its entries |
+| `/notebooks/:id/entries/new` | Creating an entry in a notebook (members of its project) |
 | `/entries` | Every entry you can see, across projects |
 | `/profile` | Who you're signed in as, your ORCID record, and your role in each project |
 | `/entries/:code` | An entry (read-only for now): its details, current draft and versions, and whether its version history checks out |
