@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EntrySummary, NotebookRef, ProjectRef } from '../api'
 import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
+import { KIND_ICONS } from '../kinds'
 import {
   badge,
   rowLink,
@@ -49,7 +50,16 @@ defineProps<{
             <span class="font-mono">{{ entry.project?.code }}</span> ·
             {{ entry.notebook?.title }}
           </td>
-          <td :class="tableCell" class="max-md:hidden">{{ KIND_LABELS[entry.kind] }}</td>
+          <td :class="tableCell" class="max-md:hidden">
+            <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
+              <component
+                :is="KIND_ICONS[entry.kind]"
+                aria-hidden="true"
+                class="size-4 shrink-0 text-primary"
+              />
+              {{ KIND_LABELS[entry.kind] }}
+            </span>
+          </td>
           <td :class="tableCell" class="max-sm:hidden">
             <span :class="badge">{{ STATUS_LABELS[entry.status] }}</span>
           </td>

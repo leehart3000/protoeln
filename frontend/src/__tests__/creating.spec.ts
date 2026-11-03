@@ -32,14 +32,32 @@ afterEach(() => {
 })
 
 describe('creating a project', () => {
-  it('offers site admins a "New project" button', async () => {
+  it('offers site admins an "Add" button by the heading, and a "New project" one below', async () => {
     fakeApi({ '/api/v1/me': someone(true), '/api/v1/projects': [project] })
     await renderAt('/projects')
 
-    expect(await screen.findByRole('link', { name: 'New project' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Add project' })).toHaveTextContent('Add')
+    expect(screen.getByRole('link', { name: 'Add project' })).toHaveAttribute(
       'href',
       '/projects/new',
     )
+    expect(screen.getByRole('link', { name: 'New project' })).toHaveAttribute(
+      'href',
+      '/projects/new',
+    )
+  })
+
+  it.each([
+    ['someone not signed in', { user: null }, 'Sign in to do this.'],
+    ['someone who is not a site admin', someone(false), 'Only site admins can do this.'],
+  ])('shows %s the buttons disabled, saying why', async (_who, me, reason) => {
+    fakeApi({ '/api/v1/me': me, '/api/v1/projects': [project] })
+    await renderAt('/projects')
+
+    const button = await screen.findByRole('button', { name: 'New project' })
+    expect(button).toHaveAttribute('aria-disabled', 'true')
+    expect(button).toHaveAccessibleDescription(reason)
+    expect(screen.queryByRole('link', { name: 'New project' })).not.toBeInTheDocument()
   })
 
   it('lets a site admin create a project, then shows it', async () => {
@@ -93,6 +111,35 @@ describe('creating a project', () => {
     await renderAt('/projects/new')
 
     expect(await screen.findByText('Only site admins can create projects.')).toBeInTheDocument()
+  })
+})
+
+describe('creating a notebook', () => {
+  it('creates a notebook in the project, then opens it', async () => {
+    const memberProject = { ...project, yourRole: 'member', canContribute: true }
+    const fetchMock = fakeApi({
+      '/api/v1/me': someone(false),
+      '/api/v1/projects/DEMO': { project: memberProject, notebooks: [] },
+      'POST /api/v1/projects/DEMO/notebooks': notebook,
+      [`/api/v1/notebooks/${notebook.id}`]: {
+        notebook,
+        project: { code: 'DEMO', title: 'Example project', canContribute: true },
+        entries: [],
+      },
+    })
+    const user = userEvent.setup()
+    await renderAt('/projects/DEMO/notebooks/new')
+
+    await user.type(await screen.findByLabelText('Title'), 'Protein assays')
+    await user.click(screen.getByRole('button', { name: 'Create notebook' }))
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Protein assays' }),
+    ).toBeInTheDocument()
+    expect(sentBody(fetchMock, 'POST', '/api/v1/projects/DEMO/notebooks')).toEqual({
+      title: 'Protein assays',
+      description: '',
+    })
   })
 })
 

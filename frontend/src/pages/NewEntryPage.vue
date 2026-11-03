@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, ref, toRef, type Component } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { createEntry, fetchNotebook, fieldProblems, type EntryKind } from '../api'
@@ -8,7 +8,8 @@ import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
-import { EntryIcon, ExperimentIcon, NoteIcon, ProtocolIcon } from '../icons'
+import { EntryIcon } from '../icons'
+import { KIND_ICONS } from '../kinds'
 import { fieldLabel, fieldProblem, inputClass, primaryButton, secondaryButton } from '../styles'
 
 // Creating an entry in a notebook, for members of its project. Its creator is its author, and
@@ -19,20 +20,18 @@ const id = toRef(props, 'id')
 const router = useRouter()
 const queryClient = useQueryClient()
 
-const KINDS: { value: EntryKind; label: string; hint: string; icon: Component }[] = [
+const KINDS: { value: EntryKind; label: string; hint: string }[] = [
   {
     value: 'experiment',
     label: 'Experiment',
     hint: 'What was done, what happened, and the results',
-    icon: ExperimentIcon,
   },
   {
     value: 'protocol',
     label: 'Protocol',
     hint: 'A method, with steps that can be ticked off at the bench',
-    icon: ProtocolIcon,
   },
-  { value: 'note', label: 'Note', hint: 'Anything else worth recording', icon: NoteIcon },
+  { value: 'note', label: 'Note', hint: 'Anything else worth recording' },
 ]
 
 const { data, isPending, isError } = useQuery({
@@ -101,7 +100,11 @@ const crumbs = computed(() =>
                 />
                 <span>
                   <span class="flex items-center gap-1.5 font-medium">
-                    <component :is="option.icon" aria-hidden="true" class="size-4 text-primary" />
+                    <component
+                      :is="KIND_ICONS[option.value]"
+                      aria-hidden="true"
+                      class="size-4 text-primary"
+                    />
                     {{ option.label }}
                   </span>
                   <span class="block text-sm text-muted">{{ option.hint }}</span>

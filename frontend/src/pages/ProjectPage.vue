@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { toRef } from 'vue'
+import { computed, toRef } from 'vue'
 
 import { fetchProject } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
@@ -9,7 +9,9 @@ import NotebookTable from '../components/NotebookTable.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { ProjectIcon } from '../icons'
+import { refusal } from '../permissions'
 import { sectionHeading } from '../styles'
+import { useMe } from '../useMe'
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
@@ -18,6 +20,11 @@ const { data, isPending, isError } = useQuery({
   queryKey: ['project', code],
   queryFn: () => fetchProject(code.value),
 })
+
+const me = useMe()
+const cannotAdd = computed(() =>
+  refusal(me.data.value, data.value?.project.canContribute === true, "the project's members"),
+)
 </script>
 
 <template>
@@ -34,14 +41,25 @@ const { data, isPending, isError } = useQuery({
         {{ data.project.description }}
       </p>
 
-      <div class="mt-8 mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="mt-8 mb-3 flex items-center gap-3">
         <h2 :class="sectionHeading">Notebooks</h2>
-        <NewButton v-if="data.project.canContribute" :to="`/projects/${code}/notebooks/new`">
-          New notebook
-        </NewButton>
+        <NewButton
+          short
+          :to="`/projects/${code}/notebooks/new`"
+          label="New notebook"
+          :refusal="cannotAdd"
+        />
       </div>
       <p v-if="data.notebooks.length === 0" class="text-muted">No notebooks yet.</p>
       <NotebookTable v-else :notebooks="data.notebooks" />
+      <p class="mt-4">
+        <NewButton
+          :to="`/projects/${code}/notebooks/new`"
+          label="New notebook"
+          :refusal="cannotAdd"
+          align="start"
+        />
+      </p>
     </template>
   </QueryStatus>
 </template>

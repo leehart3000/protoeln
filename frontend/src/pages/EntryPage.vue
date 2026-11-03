@@ -8,13 +8,8 @@ import ContentBlocks from '../components/ContentBlocks.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
-import {
-  ExperimentIcon,
-  HistoryIntactIcon,
-  HistoryProblemIcon,
-  NoteIcon,
-  ProtocolIcon,
-} from '../icons'
+import { HistoryIntactIcon, HistoryProblemIcon } from '../icons'
+import { KIND_ICONS } from '../kinds'
 import {
   badge,
   errorBox,
@@ -31,8 +26,6 @@ import {
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
-
-const KIND_ICONS = { experiment: ExperimentIcon, protocol: ProtocolIcon, note: NoteIcon }
 
 const { data, isPending, isError } = useQuery({
   queryKey: ['entry', code],

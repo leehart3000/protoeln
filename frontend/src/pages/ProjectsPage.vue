@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
+import { computed } from 'vue'
 
 import { fetchProjects, type Project } from '../api'
 import NewButton from '../components/NewButton.vue'
@@ -8,6 +9,7 @@ import QueryStatus from '../components/QueryStatus.vue'
 import RowDetails from '../components/RowDetails.vue'
 import { ROLE_LABELS } from '../format'
 import { ProjectIcon } from '../icons'
+import { refusal } from '../permissions'
 import { useMe } from '../useMe'
 import {
   badge,
@@ -23,6 +25,9 @@ import {
 // Every project the visitor can read: their own, and any that are public
 const me = useMe()
 const { data, isPending, isError } = useQuery({ queryKey: ['projects'], queryFn: fetchProjects })
+const cannotCreate = computed(() =>
+  refusal(me.data.value, me.data.value?.user?.siteAdmin === true, 'site admins'),
+)
 
 function access(project: Project) {
   if (project.yourRole) return ROLE_LABELS[project.yourRole]
@@ -31,9 +36,9 @@ function access(project: Project) {
 </script>
 
 <template>
-  <div class="flex flex-wrap items-start justify-between gap-3">
+  <div class="flex items-center gap-3">
     <PageTitle :icon="ProjectIcon">Projects</PageTitle>
-    <NewButton v-if="me.data.value?.user?.siteAdmin" to="/projects/new">New project</NewButton>
+    <NewButton short to="/projects/new" label="New project" :refusal="cannotCreate" />
   </div>
   <div class="mt-6">
     <QueryStatus :pending="isPending" :failed="isError" what="projects">
@@ -73,5 +78,8 @@ function access(project: Project) {
         </div>
       </template>
     </QueryStatus>
+    <p class="mt-4">
+      <NewButton to="/projects/new" label="New project" :refusal="cannotCreate" align="start" />
+    </p>
   </div>
 </template>

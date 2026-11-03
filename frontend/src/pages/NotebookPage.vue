@@ -9,7 +9,9 @@ import NewButton from '../components/NewButton.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { NotebookIcon } from '../icons'
+import { refusal } from '../permissions'
 import { sectionHeading } from '../styles'
+import { useMe } from '../useMe'
 
 const props = defineProps<{ id: string }>()
 const id = toRef(props, 'id')
@@ -18,6 +20,11 @@ const { data, isPending, isError } = useQuery({
   queryKey: ['notebook', id],
   queryFn: () => fetchNotebook(id.value),
 })
+
+const me = useMe()
+const cannotAdd = computed(() =>
+  refusal(me.data.value, data.value?.project.canContribute === true, "the project's members"),
+)
 
 const crumbs = computed(() =>
   data.value
@@ -40,14 +47,25 @@ const crumbs = computed(() =>
         Kept by {{ data.notebook.owner.name }}.
       </p>
 
-      <div class="mt-8 mb-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="mt-8 mb-3 flex items-center gap-3">
         <h2 :class="sectionHeading">Entries</h2>
-        <NewButton v-if="data.project.canContribute" :to="`/notebooks/${id}/entries/new`">
-          New entry
-        </NewButton>
+        <NewButton
+          short
+          :to="`/notebooks/${id}/entries/new`"
+          label="New entry"
+          :refusal="cannotAdd"
+        />
       </div>
       <p v-if="data.entries.length === 0" class="text-muted">No entries yet.</p>
       <EntryTable v-else :entries="data.entries" />
+      <p class="mt-4">
+        <NewButton
+          :to="`/notebooks/${id}/entries/new`"
+          label="New entry"
+          :refusal="cannotAdd"
+          align="start"
+        />
+      </p>
     </template>
   </QueryStatus>
 </template>
