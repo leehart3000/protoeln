@@ -42,7 +42,8 @@ export function createApp(options: AppOptions = {}) {
     res.locals.user = await authenticate(req)
     next()
   })
-  app.use(API, readRoutes())
+  // Where people's ORCID records are, for links to them (the sandbox's, in development)
+  app.use(API, readRoutes({ orcidBaseUrl: options.config?.orcid?.baseUrl ?? 'https://orcid.org' }))
   app.use(API, writeRoutes())
 
   app.use(notFound)

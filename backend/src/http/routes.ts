@@ -7,11 +7,13 @@ import {
   findPeople,
   findProjectByCode,
   findProjectById,
+  findUserById,
   listEntries,
   listEntriesIn,
   listNotebooks,
   listNotebooksIn,
   listProjects,
+  listProjectsOf,
 } from '../data/queries.ts'
 import { checkCanRead, userOf } from './context.ts'
 import {
@@ -37,14 +39,32 @@ async function readableNotebooks(user: CurrentUser | null) {
   return { notebooks, projectOf }
 }
 
-export function readRoutes() {
+export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
+  const orcidBaseUrl = options.orcidBaseUrl ?? 'https://orcid.org'
   const router = Router()
 
-  // The signed-in person (their own database id stays inside, like everyone else's)
-  router.get('/me', (_req, res) => {
+  // The signed-in person, for the header and their profile page: who they are, since when, and
+  // their role in each project they're a member of. Their own database id stays inside, like
+  // everyone else's.
+  router.get('/me', async (_req, res) => {
     const user = userOf(res)
+    if (user === null) {
+      res.json({ user: null })
+      return
+    }
+    const [record, projects] = await Promise.all([findUserById(user.id), listProjectsOf(user.id)])
     res.json({
-      user: user && { name: user.name, orcid: user.orcid, siteAdmin: user.siteAdmin },
+      user: {
+        name: user.name,
+        orcid: user.orcid,
+        orcidUrl: `${orcidBaseUrl}/${user.orcid}`,
+        siteAdmin: user.siteAdmin,
+        since: record?.createdAt ?? null,
+        roles: projects.map((project) => ({
+          project: projectRef(project),
+          role: roleIn(project, user),
+        })),
+      },
     })
   })
 

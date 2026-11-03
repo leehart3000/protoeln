@@ -29,7 +29,7 @@ const { data, isPending, isError } = useQuery({
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="project">
     <template v-if="data">
       <PageTitle :icon="ProjectIcon">{{ data.project.title }}</PageTitle>
-      <p v-if="data.project.description" class="mt-2 max-w-prose text-muted">
+      <p v-if="data.project.description" class="mt-2 max-w-2xl text-muted">
         {{ data.project.description }}
       </p>
 

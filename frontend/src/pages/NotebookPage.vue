@@ -34,7 +34,7 @@ const crumbs = computed(() =>
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="notebook">
     <template v-if="data">
       <PageTitle :icon="NotebookIcon">{{ data.notebook.title }}</PageTitle>
-      <p class="mt-2 max-w-prose text-muted">
+      <p class="mt-2 max-w-2xl text-muted">
         <template v-if="data.notebook.description">{{ data.notebook.description }} </template>
         Kept by {{ data.notebook.owner.name }}.
       </p>

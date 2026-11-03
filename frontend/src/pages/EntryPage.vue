@@ -96,7 +96,7 @@ const crumbs = computed(() =>
 
       <section aria-labelledby="versions-heading" class="mt-8">
         <h2 id="versions-heading" :class="sectionHeading">Versions</h2>
-        <p class="mt-1 max-w-prose text-sm text-muted">
+        <p class="mt-1 max-w-2xl text-sm text-muted">
           A version is a fixed, numbered copy of the entry. Each has a fingerprint (a SHA-256 hash,
           shortened here) that includes the fingerprint of the version before, so any later change
           would show.

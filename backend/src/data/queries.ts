@@ -35,6 +35,11 @@ export async function listProjects() {
   return ProjectModel.find().sort({ code: 1 }).lean()
 }
 
+// The projects someone is a member of, by code
+export async function listProjectsOf(userId: string) {
+  return ProjectModel.find({ 'members.userId': userId }).sort({ code: 1 }).lean()
+}
+
 export async function findProjectByCode(code: string) {
   const project = await ProjectModel.findOne({ code }).lean()
   if (project === null) throw new NotFoundError('Project not found')

@@ -42,6 +42,7 @@ the API, so both share one address, as they will when deployed. ProtoLIMS uses p
 | `/notebooks` | Every notebook you can see, across projects |
 | `/notebooks/:id` | A notebook and its entries |
 | `/entries` | Every entry you can see, across projects |
+| `/profile` | Who you're signed in as, your ORCID record, and your role in each project |
 | `/entries/:code` | An entry (read-only for now): its details, current draft and versions, and whether its version history checks out |
 
 Pages load data from the API with TanStack Query for Vue, which keeps answers for 30 seconds,

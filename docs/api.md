@@ -46,7 +46,7 @@ projects don't reveal that they exist.
 | Request | Returns |
 | --- | --- |
 | `GET /api/v1/health` | `{ "status": "ok" }` |
-| `GET /api/v1/me` | `{ "user": { name, orcid, siteAdmin } }`, or `{ "user": null }` if no one is signed in |
+| `GET /api/v1/me` | `{ "user": { name, orcid, orcidUrl, siteAdmin, since, roles } }`, where `roles` lists the projects the person is a member of, each with their role; or `{ "user": null }` if no one is signed in |
 | `GET /api/v1/projects` | The projects the requester can read, by code, each with `yourRole` (the requester's role in it, or `null`) |
 | `GET /api/v1/projects/:code` | `{ project, notebooks }` |
 | `GET /api/v1/notebooks` | Every notebook the requester can read, across projects, most recently changed first, each with its `project` |

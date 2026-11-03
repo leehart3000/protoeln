@@ -6,6 +6,7 @@ import HomePage from '../pages/HomePage.vue'
 import NotebookPage from '../pages/NotebookPage.vue'
 import NotebooksPage from '../pages/NotebooksPage.vue'
 import NotFoundPage from '../pages/NotFoundPage.vue'
+import ProfilePage from '../pages/ProfilePage.vue'
 import ProjectPage from '../pages/ProjectPage.vue'
 import ProjectsPage from '../pages/ProjectsPage.vue'
 
@@ -19,6 +20,7 @@ export const routes: RouteRecordRaw[] = [
   { path: '/notebooks/:id', component: NotebookPage, props: true },
   { path: '/entries', component: EntriesPage },
   { path: '/entries/:code', component: EntryPage, props: true },
+  { path: '/profile', component: ProfilePage },
   { path: '/:pathMatch(.*)*', component: NotFoundPage },
 ]
 

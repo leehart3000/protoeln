@@ -96,6 +96,18 @@ export interface HistoryCheck {
   problems: string[]
 }
 
+// The signed-in person (null if no one is), with their role in each project they're in
+export interface Me {
+  user: {
+    name: string
+    orcid: string
+    orcidUrl: string
+    siteAdmin: boolean
+    since: string | null
+    roles: { project: ProjectRef; role: ProjectRole }[]
+  } | null
+}
+
 async function getJson<T>(path: string): Promise<T | null> {
   const response = await fetch(path)
   if (response.status === 404) {
@@ -105,6 +117,22 @@ async function getJson<T>(path: string): Promise<T | null> {
     throw new Error(`The API answered ${response.status} for ${path}`)
   }
   return (await response.json()) as T
+}
+
+export async function fetchMe(): Promise<Me> {
+  return (await getJson<Me>('/api/v1/me')) ?? { user: null }
+}
+
+// Where "Sign in" goes: the API's ORCID sign-in, which comes back to `returnTo` (a path here)
+export function signInHref(returnTo: string) {
+  return `/api/v1/auth/orcid/login?returnTo=${encodeURIComponent(returnTo)}`
+}
+
+export async function signOut() {
+  const response = await fetch('/api/v1/auth/logout', { method: 'POST' })
+  if (!response.ok) {
+    throw new Error(`The API answered ${response.status} when signing out`)
+  }
 }
 
 export async function fetchProjects() {

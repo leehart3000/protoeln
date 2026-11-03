@@ -1,5 +1,14 @@
 import type { EntryKind, EntryStatus, ProjectRole } from './api'
 
+// A date, as in "3 November 2026" (as in ProtoLIMS)
+export function formatDate(value: string) {
+  return new Date(value).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 // A date and time, as in "3 Nov 2026, 18:22" (as in ProtoLIMS)
 export function formatDateTime(value: string) {
   return new Date(value).toLocaleString('en-GB', {

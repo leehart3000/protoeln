@@ -64,7 +64,10 @@ describe('GET /api/v1/me', () => {
     expect(response.body.user).toEqual({
       name: 'Member',
       orcid: '0000-0002-1825-0097',
+      orcidUrl: 'https://orcid.org/0000-0002-1825-0097',
       siteAdmin: false,
+      since: expect.any(String),
+      roles: [{ project: { code: 'LAB', title: 'Private lab' }, role: 'member' }],
     })
   })
 })

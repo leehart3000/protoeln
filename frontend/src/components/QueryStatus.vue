@@ -15,7 +15,7 @@ defineProps<{ pending: boolean; failed: boolean; missing?: boolean; what: string
   </p>
   <template v-else-if="missing">
     <PageTitle>{{ what.charAt(0).toUpperCase() + what.slice(1) }} not found</PageTitle>
-    <p class="mt-3 max-w-prose text-muted">
+    <p class="mt-3 max-w-2xl text-muted">
       There's no {{ what }} here, or it's in a private project you can't see. If it's yours, try
       signing in.
     </p>
