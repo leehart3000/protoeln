@@ -162,6 +162,38 @@ describe('GET /api/v1/notebooks/:id', () => {
   })
 })
 
+describe('GET /api/v1/notebooks and /api/v1/entries', () => {
+  it('list every notebook and entry the requester can read, with where each is', async () => {
+    const notebooks = await api().get('/api/v1/notebooks').set('X-Test-User', ids.viewer)
+    const entries = await api().get('/api/v1/entries').set('X-Test-User', ids.viewer)
+
+    expect(notebooks.body).toEqual([
+      expect.objectContaining({
+        id: privateNotebookId,
+        title: 'Western blots',
+        project: { code: 'LAB', title: 'Private lab' },
+      }),
+    ])
+    expect(entries.body).toEqual([
+      expect.objectContaining({
+        code: privateEntryCode,
+        author: { name: 'Member', orcid: '0000-0002-1825-0097' },
+        notebook: { id: privateNotebookId, title: 'Western blots' },
+        project: { code: 'LAB', title: 'Private lab' },
+      }),
+    ])
+    expect(entries.body[0]).not.toHaveProperty('content')
+  })
+
+  it('leave out notebooks and entries in projects the requester cannot read', async () => {
+    const notebooks = await api().get('/api/v1/notebooks').set('X-Test-User', ids.outsider)
+    const entries = await api().get('/api/v1/entries')
+
+    expect(notebooks.body).toEqual([])
+    expect(entries.body).toEqual([])
+  })
+})
+
 describe('GET /api/v1/entries/:code', () => {
   it('shows an entry, with its notebook and project', async () => {
     const response = await api()

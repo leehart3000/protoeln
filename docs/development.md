@@ -36,9 +36,12 @@ the API, so both share one address, as they will when deployed. ProtoLIMS uses p
 
 | Address | Shows |
 | --- | --- |
-| `/` | The projects you can see: your own, and any that are public |
+| `/` | Home: what ProtoELN is, and how many projects, notebooks and entries you can see |
+| `/projects` | The projects you can see: your own, and any that are public |
 | `/projects/:code` | A project and its notebooks |
+| `/notebooks` | Every notebook you can see, across projects |
 | `/notebooks/:id` | A notebook and its entries |
+| `/entries` | Every entry you can see, across projects |
 | `/entries/:code` | An entry (read-only for now): its details, current draft and versions, and whether its version history checks out |
 
 Pages load data from the API with TanStack Query for Vue, which keeps answers for 30 seconds,

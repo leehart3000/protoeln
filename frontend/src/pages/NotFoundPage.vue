@@ -7,6 +7,6 @@ import { textLink } from '../styles'
   <PageTitle>Page not found</PageTitle>
   <p class="mt-3 max-w-prose text-muted">
     There's nothing at this address.
-    <RouterLink to="/" :class="textLink">See the projects</RouterLink>.
+    <RouterLink to="/" :class="textLink">Go to the home page</RouterLink>.
   </p>
 </template>

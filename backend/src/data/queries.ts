@@ -51,6 +51,13 @@ export async function listNotebooks(projectId: mongoose.Types.ObjectId) {
   return NotebookModel.find({ projectId }).sort({ title: 1 }).lean()
 }
 
+// Every notebook in these projects, most recently changed first
+export async function listNotebooksIn(projectIds: mongoose.Types.ObjectId[]) {
+  return NotebookModel.find({ projectId: { $in: projectIds } })
+    .sort({ updatedAt: -1 })
+    .lean()
+}
+
 export async function findNotebook(id: string) {
   checkId(id, 'Notebook')
   const notebook = await NotebookModel.findById(id).lean()
@@ -62,6 +69,14 @@ export async function findNotebook(id: string) {
 export async function listEntries(notebookId: mongoose.Types.ObjectId) {
   return EntryModel.find({ notebookId })
     .select('code kind title status authorId latestVersion updatedAt')
+    .sort({ updatedAt: -1 })
+    .lean()
+}
+
+// A summary of every entry in these notebooks, most recently changed first (without content)
+export async function listEntriesIn(notebookIds: mongoose.Types.ObjectId[]) {
+  return EntryModel.find({ notebookId: { $in: notebookIds } })
+    .select('code kind title status authorId latestVersion updatedAt notebookId')
     .sort({ updatedAt: -1 })
     .lean()
 }

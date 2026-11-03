@@ -50,12 +50,12 @@ const historyCheck = useQuery({
 const crumbs = computed(() =>
   data.value
     ? [
-        { label: 'Projects', to: '/' },
+        { label: 'Projects', to: '/projects' },
         { label: data.value.project.code, to: `/projects/${data.value.project.code}`, mono: true },
         { label: data.value.notebook.title, to: `/notebooks/${data.value.notebook.id}` },
         { label: data.value.entry.code, mono: true },
       ]
-    : [{ label: 'Projects', to: '/' }],
+    : [{ label: 'Projects', to: '/projects' }],
 )
 </script>
 
@@ -97,8 +97,9 @@ const crumbs = computed(() =>
       <section aria-labelledby="versions-heading" class="mt-8">
         <h2 id="versions-heading" :class="sectionHeading">Versions</h2>
         <p class="mt-1 max-w-prose text-sm text-muted">
-          A version is a fixed, numbered copy of the entry. Each has a fingerprint (a SHA-256 hash)
-          that includes the fingerprint of the version before, so any later change would show.
+          A version is a fixed, numbered copy of the entry. Each has a fingerprint (a SHA-256 hash,
+          shortened here) that includes the fingerprint of the version before, so any later change
+          would show.
         </p>
         <div class="mt-3">
           <QueryStatus
@@ -140,7 +141,7 @@ const crumbs = computed(() =>
                         <th scope="col" :class="tableHeader">Note</th>
                         <th scope="col" :class="tableHeader" class="max-md:hidden">Made by</th>
                         <th scope="col" :class="tableHeader">Made</th>
-                        <th scope="col" :class="tableHeader" class="max-lg:hidden">Fingerprint</th>
+                        <th scope="col" :class="tableHeader">Fingerprint</th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-line">
@@ -153,8 +154,10 @@ const crumbs = computed(() =>
                         <td :class="tableCell" class="whitespace-nowrap">
                           {{ formatDateTime(version.createdAt) }}
                         </td>
-                        <td :class="tableCell" class="font-mono max-lg:hidden">
-                          <span :title="version.hash">{{ version.hash.slice(0, 12) }}…</span>
+                        <!-- The first 7 characters, like git's short commit ids: enough to
+                             tell versions apart. The whole hash shows on hover. -->
+                        <td :class="tableCell" class="font-mono">
+                          <span :title="version.hash">{{ version.hash.slice(0, 7) }}</span>
                         </td>
                       </tr>
                     </tbody>

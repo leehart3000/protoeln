@@ -49,7 +49,9 @@ projects don't reveal that they exist.
 | `GET /api/v1/me` | `{ "user": { name, orcid, siteAdmin } }`, or `{ "user": null }` if no one is signed in |
 | `GET /api/v1/projects` | The projects the requester can read, by code, each with `yourRole` (the requester's role in it, or `null`) |
 | `GET /api/v1/projects/:code` | `{ project, notebooks }` |
+| `GET /api/v1/notebooks` | Every notebook the requester can read, across projects, most recently changed first, each with its `project` |
 | `GET /api/v1/notebooks/:id` | `{ notebook, project, entries }`; entries are summaries (no content), most recently changed first |
+| `GET /api/v1/entries` | Summaries (no content) of every entry the requester can read, across projects, most recently changed first, each with its `notebook` and `project` |
 | `GET /api/v1/entries/:code` | `{ entry, notebook, project }` |
 | `GET /api/v1/entries/:code/versions` | Summaries of the entry's versions (no content), newest first |
 | `GET /api/v1/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies |

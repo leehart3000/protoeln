@@ -2,6 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { screen, within } from '@testing-library/vue'
 
 import { notebook, project, protocol, protocolSummary, versions } from './fixtures'
+
+const where = {
+  project: { code: 'DEMO', title: 'Example project' },
+  notebook: { id: notebook.id, title: notebook.title },
+}
 import { fakeApi, renderAt } from './helpers'
 
 afterEach(() => {
@@ -9,9 +14,33 @@ afterEach(() => {
 })
 
 describe('home page', () => {
+  it('has a card for each kind of record, saying how many there are', async () => {
+    fakeApi({
+      '/api/v1/projects': [project],
+      '/api/v1/notebooks': [{ ...notebook, project: where.project }],
+      '/api/v1/entries': [],
+    })
+    await renderAt('/')
+
+    expect(await screen.findByRole('link', { name: '1 Project' })).toHaveAttribute(
+      'href',
+      '/projects',
+    )
+    expect(await screen.findByRole('link', { name: '1 Notebook' })).toHaveAttribute(
+      'href',
+      '/notebooks',
+    )
+    expect(await screen.findByRole('link', { name: '0 Entries' })).toHaveAttribute(
+      'href',
+      '/entries',
+    )
+  })
+})
+
+describe('projects page', () => {
   it('shows a loading message, then the projects, each linking to its page', async () => {
     fakeApi({ '/api/v1/projects': [project] })
-    await renderAt('/')
+    await renderAt('/projects')
 
     expect(screen.getByText('Loading projects…')).toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Example project' })).toHaveAttribute(
@@ -23,14 +52,14 @@ describe('home page', () => {
 
   it('says when there are no projects to see', async () => {
     fakeApi({ '/api/v1/projects': [] })
-    await renderAt('/')
+    await renderAt('/projects')
 
     expect(await screen.findByText(/There are no projects you can see yet/)).toBeInTheDocument()
   })
 
   it('says when the projects could not be loaded', async () => {
     fakeApi({ '/api/v1/projects': new Response('', { status: 500 }) })
-    await renderAt('/')
+    await renderAt('/projects')
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't load the projects")
   })
@@ -66,7 +95,7 @@ describe('notebook page', () => {
     fakeApi({
       [`/api/v1/notebooks/${notebook.id}`]: {
         notebook,
-        project: { code: 'DEMO', title: 'Example project' },
+        project: where.project,
         entries: [protocolSummary],
       },
     })
@@ -83,6 +112,26 @@ describe('notebook page', () => {
       'href',
       '/projects/DEMO',
     )
+  })
+})
+
+describe('lists of every notebook and entry', () => {
+  it('lists every notebook, saying which project each is in', async () => {
+    fakeApi({ '/api/v1/notebooks': [{ ...notebook, project: where.project }] })
+    await renderAt('/notebooks')
+
+    const link = await screen.findByRole('link', { name: 'Protein assays' })
+    expect(link).toHaveAttribute('href', `/notebooks/${notebook.id}`)
+    expect(within(link.closest('tr')!).getByText('DEMO')).toBeInTheDocument()
+  })
+
+  it('lists every entry, saying where each is', async () => {
+    fakeApi({ '/api/v1/entries': [{ ...protocolSummary, ...where }] })
+    await renderAt('/entries')
+
+    const link = await screen.findByRole('link', { name: 'Bradford assay for total protein' })
+    expect(link).toHaveAttribute('href', '/entries/ELN-2026-0001')
+    expect(link.closest('tr')).toHaveTextContent('DEMO · Protein assays')
   })
 })
 
@@ -111,6 +160,7 @@ describe('entry page', () => {
     expect(screen.getByText('To do:')).toBeInTheDocument()
     expect(screen.getByText('Read absorbance at 595 nm.')).toBeInTheDocument()
     expect(await screen.findByText('First version')).toBeInTheDocument()
+    expect(screen.getByTitle(versions[0]!.hash)).toHaveTextContent(/^a1b2c3d$/)
     expect(
       await screen.findByText(/The history checks out: every version still matches/),
     ).toBeInTheDocument()

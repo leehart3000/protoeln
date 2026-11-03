@@ -28,3 +28,7 @@ export const rowLink =
 
 export const badge =
   'inline-block rounded-full border border-line px-2 py-0.5 text-xs font-medium whitespace-nowrap'
+
+// Looks like a button, but only shows where to click: the whole row is the link
+export const rowButton =
+  'inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line bg-panel px-2.5 py-1 text-sm font-medium text-fg'

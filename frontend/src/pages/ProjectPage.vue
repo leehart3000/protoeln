@@ -4,20 +4,11 @@ import { toRef } from 'vue'
 
 import { fetchProject } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import NotebookTable from '../components/NotebookTable.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
-import { formatDateTime } from '../format'
 import { ProjectIcon } from '../icons'
-import {
-  rowLink,
-  sectionHeading,
-  table,
-  tableCell,
-  tableHead,
-  tableHeader,
-  tableRow,
-  tableWrapper,
-} from '../styles'
+import { sectionHeading } from '../styles'
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
@@ -31,7 +22,7 @@ const { data, isPending, isError } = useQuery({
 <template>
   <BreadcrumbTrail
     :items="[
-      { label: 'Projects', to: '/' },
+      { label: 'Projects', to: '/projects' },
       { label: code, mono: true },
     ]"
   />
@@ -44,34 +35,7 @@ const { data, isPending, isError } = useQuery({
 
       <h2 :class="sectionHeading" class="mt-8 mb-3">Notebooks</h2>
       <p v-if="data.notebooks.length === 0" class="text-muted">No notebooks yet.</p>
-      <div v-else :class="tableWrapper">
-        <table :class="table">
-          <thead :class="tableHead">
-            <tr>
-              <th scope="col" :class="tableHeader">Notebook</th>
-              <th scope="col" :class="tableHeader" class="max-md:hidden">Description</th>
-              <th scope="col" :class="tableHeader">Owner</th>
-              <th scope="col" :class="tableHeader" class="max-sm:hidden">Last changed</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-line">
-            <tr v-for="notebook in data.notebooks" :key="notebook.id" :class="tableRow">
-              <td :class="tableCell">
-                <RouterLink :to="`/notebooks/${notebook.id}`" :class="rowLink">
-                  {{ notebook.title }}
-                </RouterLink>
-              </td>
-              <td :class="tableCell" class="text-muted max-md:hidden">
-                {{ notebook.description }}
-              </td>
-              <td :class="tableCell">{{ notebook.owner.name }}</td>
-              <td :class="tableCell" class="whitespace-nowrap max-sm:hidden">
-                {{ formatDateTime(notebook.updatedAt) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <NotebookTable v-else :notebooks="data.notebooks" />
     </template>
   </QueryStatus>
 </template>

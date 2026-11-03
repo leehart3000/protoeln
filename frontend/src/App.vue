@@ -1,6 +1,33 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
+
 import AccountMenu from './components/AccountMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
+import { EntryIcon, NotebookIcon, ProjectIcon } from './icons'
+
+// The main navigation, as in ProtoLIMS: a link to the list of each kind of record. A link is
+// marked as the current one on its list and on the pages of its records (so "Notebooks" is
+// marked on a notebook's page). On phones, only the icons show.
+const NAV_LINKS = [
+  { to: '/projects', label: 'Projects', icon: ProjectIcon },
+  { to: '/notebooks', label: 'Notebooks', icon: NotebookIcon },
+  { to: '/entries', label: 'Entries', icon: EntryIcon },
+]
+
+const route = useRoute()
+
+function isCurrent(to: string) {
+  return route.path === to || route.path.startsWith(`${to}/`)
+}
+
+function navLinkClass(current: boolean) {
+  return [
+    '-mb-px flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 text-sm font-medium md:px-3',
+    current
+      ? 'border-primary text-primary'
+      : 'border-transparent text-muted hover:border-gold hover:text-fg dark:hover:text-gold',
+  ]
+}
 </script>
 
 <template>
@@ -20,6 +47,20 @@ import ThemeToggle from './components/ThemeToggle.vue'
           <ThemeToggle />
         </div>
       </div>
+      <nav aria-label="Main" class="border-t border-line">
+        <div class="mx-auto flex max-w-6xl justify-around px-2 md:justify-start md:gap-1">
+          <RouterLink
+            v-for="link in NAV_LINKS"
+            :key="link.to"
+            :to="link.to"
+            :class="navLinkClass(isCurrent(link.to))"
+            :aria-current="isCurrent(link.to) ? 'page' : undefined"
+          >
+            <component :is="link.icon" aria-hidden="true" class="size-5 shrink-0 md:size-4" />
+            <span class="max-md:sr-only">{{ link.label }}</span>
+          </RouterLink>
+        </div>
+      </nav>
     </header>
 
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-10">

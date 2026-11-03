@@ -81,6 +81,16 @@ export interface VersionSummary {
   hash: string
 }
 
+// In the lists of every notebook and entry, each says where it is
+export interface NotebookListItem extends Notebook {
+  project: ProjectRef
+}
+
+export interface EntryListItem extends EntrySummary {
+  notebook: NotebookRef
+  project: ProjectRef
+}
+
 export interface HistoryCheck {
   intact: boolean
   problems: string[]
@@ -105,6 +115,14 @@ export function fetchProject(code: string) {
   return getJson<{ project: Project; notebooks: Notebook[] }>(
     `/api/v1/projects/${encodeURIComponent(code)}`,
   )
+}
+
+export async function fetchAllNotebooks() {
+  return (await getJson<NotebookListItem[]>('/api/v1/notebooks')) ?? []
+}
+
+export async function fetchAllEntries() {
+  return (await getJson<EntryListItem[]>('/api/v1/entries')) ?? []
 }
 
 export function fetchNotebook(id: string) {

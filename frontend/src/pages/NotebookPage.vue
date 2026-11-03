@@ -4,21 +4,11 @@ import { computed, toRef } from 'vue'
 
 import { fetchNotebook } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import EntryTable from '../components/EntryTable.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
-import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
 import { NotebookIcon } from '../icons'
-import {
-  badge,
-  rowLink,
-  sectionHeading,
-  table,
-  tableCell,
-  tableHead,
-  tableHeader,
-  tableRow,
-  tableWrapper,
-} from '../styles'
+import { sectionHeading } from '../styles'
 
 const props = defineProps<{ id: string }>()
 const id = toRef(props, 'id')
@@ -31,11 +21,11 @@ const { data, isPending, isError } = useQuery({
 const crumbs = computed(() =>
   data.value
     ? [
-        { label: 'Projects', to: '/' },
+        { label: 'Projects', to: '/projects' },
         { label: data.value.project.code, to: `/projects/${data.value.project.code}`, mono: true },
         { label: data.value.notebook.title },
       ]
-    : [{ label: 'Projects', to: '/' }],
+    : [{ label: 'Projects', to: '/projects' }],
 )
 </script>
 
@@ -51,40 +41,7 @@ const crumbs = computed(() =>
 
       <h2 :class="sectionHeading" class="mt-8 mb-3">Entries</h2>
       <p v-if="data.entries.length === 0" class="text-muted">No entries yet.</p>
-      <div v-else :class="tableWrapper">
-        <table :class="table">
-          <thead :class="tableHead">
-            <tr>
-              <th scope="col" :class="tableHeader">Code</th>
-              <th scope="col" :class="tableHeader">Entry</th>
-              <th scope="col" :class="tableHeader" class="max-md:hidden">Kind</th>
-              <th scope="col" :class="tableHeader">Status</th>
-              <th scope="col" :class="tableHeader" class="max-lg:hidden">Author</th>
-              <th scope="col" :class="tableHeader" class="max-lg:hidden">Versions</th>
-              <th scope="col" :class="tableHeader" class="max-sm:hidden">Last saved</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-line">
-            <tr v-for="entry in data.entries" :key="entry.code" :class="tableRow">
-              <td :class="tableCell" class="font-mono whitespace-nowrap">{{ entry.code }}</td>
-              <td :class="tableCell">
-                <RouterLink :to="`/entries/${entry.code}`" :class="rowLink">
-                  {{ entry.title }}
-                </RouterLink>
-              </td>
-              <td :class="tableCell" class="max-md:hidden">{{ KIND_LABELS[entry.kind] }}</td>
-              <td :class="tableCell">
-                <span :class="badge">{{ STATUS_LABELS[entry.status] }}</span>
-              </td>
-              <td :class="tableCell" class="max-lg:hidden">{{ entry.author.name }}</td>
-              <td :class="tableCell" class="max-lg:hidden">{{ entry.latestVersion }}</td>
-              <td :class="tableCell" class="whitespace-nowrap max-sm:hidden">
-                {{ formatDateTime(entry.updatedAt) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <EntryTable v-else :entries="data.entries" />
     </template>
   </QueryStatus>
 </template>

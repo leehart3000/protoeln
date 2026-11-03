@@ -1,71 +1,84 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
+import { computed, type Component } from 'vue'
 
-import { fetchProjects, type Project } from '../api'
-import PageTitle from '../components/PageTitle.vue'
-import QueryStatus from '../components/QueryStatus.vue'
-import { ROLE_LABELS } from '../format'
-import { ProjectIcon } from '../icons'
-import {
-  badge,
-  rowLink,
-  table,
-  tableCell,
-  tableHead,
-  tableHeader,
-  tableRow,
-  tableWrapper,
-} from '../styles'
+import { fetchAllEntries, fetchAllNotebooks, fetchProjects } from '../api'
+import { EntryIcon, NotebookIcon, ProjectIcon } from '../icons'
 
-// The projects the visitor can read: their own, and any that are public
-const { data, isPending, isError } = useQuery({ queryKey: ['projects'], queryFn: fetchProjects })
+// The home page: what ProtoELN is, and a card for each kind of record with how many the
+// visitor can see, each linking to the list of them (as on protolims.org). The cards share
+// their lists' queries, so going on to a list is instant.
+const KINDS: {
+  label: string
+  one: string
+  to: string
+  icon: Component
+  queryKey: string
+  fetchAll: () => Promise<unknown[]>
+}[] = [
+  {
+    label: 'Projects',
+    one: 'Project',
+    to: '/projects',
+    icon: ProjectIcon,
+    queryKey: 'projects',
+    fetchAll: fetchProjects,
+  },
+  {
+    label: 'Notebooks',
+    one: 'Notebook',
+    to: '/notebooks',
+    icon: NotebookIcon,
+    queryKey: 'notebooks',
+    fetchAll: fetchAllNotebooks,
+  },
+  {
+    label: 'Entries',
+    one: 'Entry',
+    to: '/entries',
+    icon: EntryIcon,
+    queryKey: 'entries',
+    fetchAll: fetchAllEntries,
+  },
+]
 
-function access(project: Project) {
-  if (project.yourRole) return ROLE_LABELS[project.yourRole]
-  return project.publicRead ? 'Public' : ''
-}
+const lists = KINDS.map((kind) => useQuery({ queryKey: [kind.queryKey], queryFn: kind.fetchAll }))
+
+// Each card's count, as in "3 Entries" or "1 Entry". Until the count arrives (or if it can't be
+// loaded), a dash stands in for it.
+const cards = computed(() =>
+  KINDS.map((kind, index) => {
+    const count = lists[index]?.data.value?.length
+    return {
+      ...kind,
+      count: count === undefined ? '–' : count.toLocaleString('en-GB'),
+      name: count === 1 ? kind.one : kind.label,
+    }
+  }),
+)
 </script>
 
 <template>
-  <PageTitle :icon="ProjectIcon">Projects</PageTitle>
-  <p class="mt-2 max-w-prose text-muted">
-    Write up experiments, paste in tables and JSON results, and keep every revision.
+  <h1 class="font-brand text-2xl tracking-tight sm:text-3xl">
+    <span class="text-fg">Welcome to Proto</span><span class="font-bold">ELN</span>
+  </h1>
+  <p class="mt-3 max-w-2xl text-lg text-muted">
+    A prototype electronic lab notebook: write up experiments and protocols, keep the data with
+    them, and keep every version, so the record can always be checked.
   </p>
-  <div class="mt-6">
-    <QueryStatus :pending="isPending" :failed="isError" what="projects">
-      <template v-if="data">
-        <p v-if="data.length === 0" class="text-muted">
-          There are no projects you can see yet. Sign in to see your own.
-        </p>
-        <div v-else :class="tableWrapper">
-          <table :class="table">
-            <thead :class="tableHead">
-              <tr>
-                <th scope="col" :class="tableHeader">Code</th>
-                <th scope="col" :class="tableHeader">Project</th>
-                <th scope="col" :class="tableHeader" class="max-md:hidden">Description</th>
-                <th scope="col" :class="tableHeader">Access</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-line">
-              <tr v-for="project in data" :key="project.code" :class="tableRow">
-                <td :class="tableCell" class="font-mono whitespace-nowrap">{{ project.code }}</td>
-                <td :class="tableCell">
-                  <RouterLink :to="`/projects/${project.code}`" :class="rowLink">
-                    {{ project.title }}
-                  </RouterLink>
-                </td>
-                <td :class="tableCell" class="text-muted max-md:hidden">
-                  {{ project.description }}
-                </td>
-                <td :class="tableCell">
-                  <span v-if="access(project)" :class="badge">{{ access(project) }}</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </template>
-    </QueryStatus>
-  </div>
+  <ul aria-label="What's here" class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <li v-for="card in cards" :key="card.to" class="flex">
+      <RouterLink
+        :to="card.to"
+        class="flex flex-1 items-start gap-3 rounded-lg border border-line bg-panel p-4 font-medium hover:border-gold hover:bg-gold/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-link sm:text-lg"
+      >
+        <component :is="card.icon" aria-hidden="true" class="size-6 shrink-0 text-primary" />
+        <!-- The space is inside the {{ }}, so Vue keeps it however the lines are wrapped -->
+        <span class="whitespace-nowrap">
+          <span class="tabular-nums">{{ card.count }}</span
+          >{{ ` ${card.name}` }}
+        </span>
+      </RouterLink>
+    </li>
+  </ul>
 </template>
