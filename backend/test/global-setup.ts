@@ -1,0 +1,21 @@
+import type { TestProject } from 'vitest/node'
+import { MongoMemoryServer } from 'mongodb-memory-server-core'
+
+// One temporary MongoDB server for the whole test run. Starting one per test file would make the
+// files race to download the MongoDB server program on the first run. Each test file still gets a
+// database of its own (see database.ts), so files running at the same time can't interfere.
+
+declare module 'vitest' {
+  export interface ProvidedContext {
+    mongoUri: string
+  }
+}
+
+export default async function setup(project: TestProject) {
+  const server = await MongoMemoryServer.create()
+  project.provide('mongoUri', server.getUri())
+
+  return async () => {
+    await server.stop()
+  }
+}

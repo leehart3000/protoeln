@@ -18,6 +18,7 @@
 # --- JavaScript / Node ---
 node_modules/
 .pnpm-store/
+.mongodb-binaries/
 .vite/
 dist/
 coverage/

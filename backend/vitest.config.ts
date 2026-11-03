@@ -3,6 +3,10 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'node',
+    // Starts one temporary MongoDB server for the whole run
+    globalSetup: ['./test/global-setup.ts'],
+    // The first run downloads the MongoDB server program, which can take a minute or two
+    hookTimeout: 180_000,
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],

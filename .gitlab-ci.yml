@@ -36,7 +36,21 @@ default:
 backend-checks:
   extends: .pnpm
   stage: check
+  variables:
+    # Keep the MongoDB server program the tests download, so later runs needn't fetch it again
+    MONGOMS_DOWNLOAD_DIR: $CI_PROJECT_DIR/.mongodb-binaries
+  cache:
+    - key:
+        files:
+          - pnpm-lock.yaml
+      paths:
+        - .pnpm-store
+    - key: mongodb-binaries
+      paths:
+        - .mongodb-binaries
   script:
+    # The temporary MongoDB server used by the tests needs libcurl, which the slim image lacks
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends libcurl4 > /dev/null
     - pnpm --dir backend format:check
     - pnpm --dir backend lint
     - pnpm --dir backend typecheck
