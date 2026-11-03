@@ -1,5 +1,10 @@
 // Errors that explain why a request can't be done. The API turns each into a matching HTTP status.
 
+// No one is signed in, and the request needs someone to be
+export class UnauthorizedError extends Error {
+  readonly status = 401
+}
+
 export class NotFoundError extends Error {
   readonly status = 404
 }

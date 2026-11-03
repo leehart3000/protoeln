@@ -1,6 +1,6 @@
-import { Router, type Response } from 'express'
+import { Router } from 'express'
 
-import { canRead, type CurrentUser, type ProjectAccess } from '../access.ts'
+import { canRead } from '../access.ts'
 import {
   findEntryByCode,
   findNotebook,
@@ -10,21 +10,10 @@ import {
   listNotebooks,
   listProjects,
 } from '../data/queries.ts'
-import { NotFoundError } from '../errors.ts'
+import { checkCanRead, userOf } from './context.ts'
 
 // The read-only API: projects, their notebooks and entries. People who can't read a project
 // get "not found" rather than "forbidden", so private projects don't reveal they exist.
-
-// Who made the request, as worked out by the app's authenticate option (see app.ts)
-function userOf(res: Response): CurrentUser | null {
-  return (res.locals.user as CurrentUser | null | undefined) ?? null
-}
-
-function checkCanRead(project: ProjectAccess, user: CurrentUser | null) {
-  if (!canRead(project, user)) {
-    throw new NotFoundError('Project not found')
-  }
-}
 
 export function readRoutes() {
   const router = Router()

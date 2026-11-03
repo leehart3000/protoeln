@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 
 import { NotFoundError } from '../errors.ts'
+import { EntryVersionModel } from './models/entry-version.ts'
 import { EntryModel } from './models/entry.ts'
 import { NotebookModel } from './models/notebook.ts'
 import { ProjectModel } from './models/project.ts'
@@ -59,4 +60,20 @@ export async function findEntryByCode(code: string) {
   const entry = await EntryModel.findOne({ code }).lean()
   if (entry === null) throw new NotFoundError('Entry not found')
   return entry
+}
+
+// A summary of each version of an entry, newest first (without content)
+export async function listVersions(entryId: mongoose.Types.ObjectId) {
+  return EntryVersionModel.find({ entryId })
+    .select('number title note createdBy createdAt hash previousHash')
+    .sort({ number: -1 })
+    .lean()
+}
+
+export async function findVersion(entryId: mongoose.Types.ObjectId, number: number) {
+  const version = Number.isInteger(number)
+    ? await EntryVersionModel.findOne({ entryId, number }).lean()
+    : null
+  if (version === null) throw new NotFoundError('Version not found')
+  return version
 }

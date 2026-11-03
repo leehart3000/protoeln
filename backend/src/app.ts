@@ -3,6 +3,7 @@ import express, { type Request } from 'express'
 import type { CurrentUser } from './access.ts'
 import { handleErrors, notFound } from './http/errors.ts'
 import { readRoutes } from './http/routes.ts'
+import { writeRoutes } from './http/write-routes.ts'
 
 export interface AppOptions {
   // Works out who made a request (null if no one is signed in). Sign-in with ORCID will provide
@@ -28,6 +29,7 @@ export function createApp(options: AppOptions = {}) {
     next()
   })
   app.use('/api', readRoutes())
+  app.use('/api', writeRoutes())
 
   app.use(notFound)
   app.use(handleErrors)
