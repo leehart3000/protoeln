@@ -8,7 +8,24 @@ on Cloudflare Workers and in tests.
 ## Who is asking
 
 `createApp` takes an `authenticate` function that works out who made each request, or `null`
-for an anonymous request. Sign-in with ORCID will provide it; tests provide their own.
+for an anonymous request. When running for real, it reads the session cookie that signing in
+with ORCID sets; tests provide their own.
+
+## Signing in and out
+
+People sign in with ORCID (OpenID Connect), as in ProtoLIMS. The API does the whole sign-in
+itself, so the browser never holds any tokens:
+
+| Request | Does |
+| --- | --- |
+| `GET /api/v1/auth/orcid/login?returnTo=/page` | Sends the browser to ORCID, with a random state (also kept in a 10-minute cookie) and nonce |
+| `GET /api/v1/auth/orcid/callback` | Where ORCID sends the browser back. Checks the state, swaps the one-time code for an ID token, checks the token's signature against ORCID's published keys (and its issuer, audience, age and nonce), remembers the person by their ORCID iD, sets the session cookie, and goes back to `returnTo` (a page on this site only) |
+| `POST /api/v1/auth/logout` | Ends the session (204) |
+
+The session cookie (`protoeln_session`) is HttpOnly, so page scripts can't read it, and
+SameSite=Lax, so other sites can't make changes with it; it is Secure when the site is served
+over HTTPS. Only a hash of its token is stored. If the person cancels at ORCID, nobody is
+signed in. Without an ORCID client ID and secret, sign-in answers 503.
 
 ## Access
 
@@ -67,3 +84,5 @@ submitted content is invalid.
 | 409 | Conflicts with the record's current state (e.g. saved by someone else meanwhile, or signed) |
 | 422 | Invalid, e.g. content not in the content format |
 | 500 | Something went wrong on the server (details are logged, not sent) |
+| 502 | ORCID didn't complete a sign-in |
+| 503 | Sign-in with ORCID isn't set up on this server |

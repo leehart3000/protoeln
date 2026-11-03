@@ -22,6 +22,7 @@
     "@fontsource-variable/ibm-plex-sans": "^5.3.0",
     "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource-variable/source-code-pro": "^5.3.1",
+    "@lucide/vue": "^1.66.0",
     "vue": "^3.5.42",
     "vue-router": "^5.3.1"
   },

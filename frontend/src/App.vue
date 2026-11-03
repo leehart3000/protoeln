@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AccountMenu from './components/AccountMenu.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 </script>
 
@@ -15,6 +16,7 @@ import ThemeToggle from './components/ThemeToggle.vue'
           </span>
         </a>
         <div class="ml-auto flex items-center gap-1">
+          <AccountMenu />
           <ThemeToggle />
         </div>
       </div>
