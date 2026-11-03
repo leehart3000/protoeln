@@ -2,3 +2,8 @@ packages:
   - frontend
   - backend
   - packages/*
+
+allowBuilds:
+  # Comes with @tanstack/vue-query. Its install script only switches vue-demi between Vue 2 and
+  # Vue 3, and it's already set up for Vue 3, so it's never run.
+  vue-demi: false

@@ -32,6 +32,19 @@ The website runs on port 5174 and the API on 3000. The website passes requests f
 the API, so both share one address, as they will when deployed. ProtoLIMS uses ports 5173 and
 8000, so both can run at once.
 
+## The website's pages
+
+| Address | Shows |
+| --- | --- |
+| `/` | The projects you can see: your own, and any that are public |
+| `/projects/:code` | A project and its notebooks |
+| `/notebooks/:id` | A notebook and its entries |
+| `/entries/:code` | An entry (read-only for now): its details, current draft and versions, and whether its version history checks out |
+
+Pages load data from the API with TanStack Query for Vue, which keeps answers for 30 seconds,
+so moving between pages is quick. As in ProtoLIMS, the page tests replace `fetch` with a fake
+API (`frontend/src/__tests__/helpers.ts`) rather than using a mocking library.
+
 ## Example data
 
 To have something to look at, add an example project, with a notebook and a few entries:

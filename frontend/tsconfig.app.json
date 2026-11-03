@@ -3,6 +3,11 @@
   "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
   "exclude": ["src/**/__tests__/*"],
   "compilerOptions": {
+    // The JavaScript features the website (and the shared @protoeln/content package) may use:
+    // ES2022, which every browser Vite builds for supports. Code using anything newer fails the
+    // type-check, rather than failing in some browsers.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
     // Extra safety for array and object lookups, but may have false positives.
     "noUncheckedIndexedAccess": true,
 

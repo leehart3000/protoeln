@@ -23,6 +23,8 @@
     "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource-variable/source-code-pro": "^5.3.1",
     "@lucide/vue": "^1.66.0",
+    "@protoeln/content": "workspace:*",
+    "@tanstack/vue-query": "^5.105.2",
     "vue": "^3.5.42",
     "vue-router": "^5.3.1"
   },

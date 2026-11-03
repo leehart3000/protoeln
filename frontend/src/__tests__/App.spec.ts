@@ -1,14 +1,18 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/vue'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { screen } from '@testing-library/vue'
 
-import App from '../App.vue'
+import { fakeApi, renderAt } from './helpers'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('App', () => {
-  it('shows the page heading', () => {
-    render(App)
+  it('has a header whose wordmark goes to the home page, which lists the projects', async () => {
+    fakeApi({ '/api/v1/projects': [] })
+    await renderAt('/')
 
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'A living lab notebook' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'ProtoELN' })).toHaveAttribute('href', '/')
+    expect(screen.getByRole('heading', { level: 1, name: 'Projects' })).toBeInTheDocument()
   })
 })
