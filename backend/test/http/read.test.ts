@@ -215,6 +215,18 @@ describe('GET /api/v1/entries/:code', () => {
     expect(response.body.project).toEqual({ code: 'LAB', title: 'Private lab' })
   })
 
+  it('says whether the requester can edit it: its author can, others cannot', async () => {
+    const author = await api()
+      .get(`/api/v1/entries/${privateEntryCode}`)
+      .set('X-Test-User', ids.member)
+    const siteAdmin = await api()
+      .get(`/api/v1/entries/${privateEntryCode}`)
+      .set('X-Test-User', ids.admin)
+
+    expect(author.body.entry.canEdit).toBe(true)
+    expect(siteAdmin.body.entry.canEdit).toBe(false)
+  })
+
   it('is not found for someone who cannot read its project', async () => {
     const response = await api().get(`/api/v1/entries/${privateEntryCode}`)
 

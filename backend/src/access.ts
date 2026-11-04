@@ -38,3 +38,25 @@ export function canContribute(project: ProjectAccess, user: CurrentUser | null):
 export function canManageMembers(project: ProjectAccess, user: CurrentUser | null): boolean {
   return user?.siteAdmin === true || roleIn(project, user) === 'admin'
 }
+
+// Signed and witnessed entries are locked: corrections are made with an addendum
+export function isLocked(status: string): boolean {
+  return status === 'signed' || status === 'witnessed'
+}
+
+// Changing an entry: its author and co-authors, while they can contribute to its project and
+// the entry isn't locked
+export function canEditEntry(
+  entry: {
+    authorId: { toString(): string }
+    coAuthorIds: { toString(): string }[]
+    status: string
+  },
+  project: ProjectAccess,
+  user: CurrentUser | null,
+): boolean {
+  if (user === null || !canContribute(project, user) || isLocked(entry.status)) {
+    return false
+  }
+  return [entry.authorId, ...entry.coAuthorIds].some((id) => id.toString() === user.id)
+}

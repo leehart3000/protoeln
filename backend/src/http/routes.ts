@@ -2,6 +2,7 @@ import { Router } from 'express'
 
 import {
   canContribute,
+  canEditEntry,
   canManageMembers,
   canRead,
   roleIn,
@@ -156,10 +157,11 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
     const entry = await findEntryByCode(req.params.code)
     const notebook = await findNotebook(entry.notebookId.toHexString())
     const project = await findProjectById(notebook.projectId)
-    checkCanRead(project, userOf(res))
+    const user = userOf(res)
+    checkCanRead(project, user)
     const people = await findPeople([entry.authorId, ...entry.coAuthorIds])
     res.json({
-      entry: entryView(entry, people),
+      entry: entryView(entry, people, canEditEntry(entry, project, user)),
       notebook: notebookRef(notebook),
       project: projectRef(project),
     })

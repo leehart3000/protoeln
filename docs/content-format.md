@@ -35,6 +35,15 @@ Inline content is `text` (which must not be empty) and `hardBreak` (a line break
 Text can carry these marks: `bold`, `italic`, `code`, `subscript`, `superscript` and `link`
 (with `attrs.href`).
 
+## From an editor
+
+`fromProseMirror` turns a document from a ProseMirror-based editor, such as Tiptap's
+`getJSON()`, into this format. It keeps exactly what the format holds: attributes an editor adds
+at their defaults (a code block's language, a link's target, a table cell's colspan), nulls for
+optional attributes, and empty content lists are left out, as are empty paragraphs at the very
+end of the document (editors keep one there to type into). Anything the format doesn't list is
+passed on unchanged, so checking reports it rather than losing it.
+
 ## Checking
 
 `checkDocument` lists every problem in a document, each with its location (for example

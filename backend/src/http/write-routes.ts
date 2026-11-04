@@ -99,7 +99,7 @@ export function writeRoutes() {
       title,
       content,
     })
-    res.status(201).json(entryView(entry.toObject(), await findPeople([entry.authorId])))
+    res.status(201).json(entryView(entry.toObject(), await findPeople([entry.authorId]), true))
   })
 
   router.put('/entries/:code/draft', async (req, res) => {
@@ -115,7 +115,7 @@ export function writeRoutes() {
     const result = await saveDraft({ entryId: entry._id, userId: user.id, basedOn, title, content })
     const saved = result.entry.toObject()
     const people = await findPeople([saved.authorId, ...saved.coAuthorIds])
-    res.json({ entry: entryView(saved, people), changed: result.changed })
+    res.json({ entry: entryView(saved, people, true), changed: result.changed })
   })
 
   router.post('/entries/:code/versions', async (req, res) => {

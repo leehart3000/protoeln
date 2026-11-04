@@ -134,9 +134,11 @@ export function entrySummary(entry: EntrySummaryRecord, people: People) {
 }
 
 // `updatedAt` is also what a save sends back as `basedOn`
-export function entryView(entry: EntryRecord, people: People) {
+// `canEdit` is whether the requester can change it (see canEditEntry in access.ts)
+export function entryView(entry: EntryRecord, people: People, canEdit: boolean) {
   return {
     ...entrySummary(entry, people),
+    canEdit,
     coAuthors: entry.coAuthorIds.map((id) => person(people, id)),
     contentFormat: entry.contentFormat,
     content: entry.content,

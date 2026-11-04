@@ -7,6 +7,7 @@ import {
   type DocNode,
 } from '@protoeln/content'
 
+import { isLocked } from '../access.ts'
 import { ConflictError, ForbiddenError, InvalidError, NotFoundError } from '../errors.ts'
 import { diffJson } from '../integrity/json-patch.ts'
 import { versionHash } from '../integrity/version-hash.ts'
@@ -21,9 +22,6 @@ import { EntryModel, ENTRY_KINDS } from './models/entry.ts'
 // version without the entry knowing about it.
 
 type Id = mongoose.Types.ObjectId | string
-
-// Signed and witnessed entries are locked: corrections are made with an addendum
-const LOCKED_STATUSES = new Set(['signed', 'witnessed'])
 
 function checkContent(content: unknown): DocNode {
   const problems = checkDocument(content)
@@ -52,7 +50,7 @@ function checkCanEdit(entry: Editable, userId: Id) {
   if (!editors.includes(String(userId))) {
     throw new ForbiddenError('Only the author and co-authors can change this entry')
   }
-  if (LOCKED_STATUSES.has(entry.status)) {
+  if (isLocked(entry.status)) {
     throw new ConflictError('This entry is signed, so it can no longer be changed; add an addendum')
   }
 }

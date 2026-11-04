@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   canContribute,
+  canEditEntry,
   canManageMembers,
   canRead,
   roleIn,
@@ -52,5 +53,16 @@ describe('access rules', () => {
     expect(canManageMembers(project, user('x', true))).toBe(true)
     expect(canManageMembers(project, user('m'))).toBe(false)
     expect(canManageMembers(project, null)).toBe(false)
+  })
+
+  it('lets only an entry’s authors edit it, while they can contribute and it is not signed', () => {
+    const entry = { authorId: 'm', coAuthorIds: ['v'], status: 'draft' }
+
+    expect(canEditEntry(entry, project, user('m'))).toBe(true)
+    expect(canEditEntry(entry, project, user('a'))).toBe(false)
+    // A co-author who is now only a viewer
+    expect(canEditEntry(entry, project, user('v'))).toBe(false)
+    expect(canEditEntry({ ...entry, status: 'signed' }, project, user('m'))).toBe(false)
+    expect(canEditEntry(entry, project, null)).toBe(false)
   })
 })

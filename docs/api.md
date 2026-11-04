@@ -52,7 +52,7 @@ projects don't reveal that they exist.
 | `GET /api/v1/notebooks` | Every notebook the requester can read, across projects, most recently changed first, each with its `project` |
 | `GET /api/v1/notebooks/:id` | `{ notebook, project, entries }`; entries are summaries (no content), most recently changed first |
 | `GET /api/v1/entries` | Summaries (no content) of every entry the requester can read, across projects, most recently changed first, each with its `notebook` and `project` |
-| `GET /api/v1/entries/:code` | `{ entry, notebook, project }` |
+| `GET /api/v1/entries/:code` | `{ entry, notebook, project }`; `entry.canEdit` says whether the requester can change it (its author or a co-author, who can contribute to the project, while it isn't signed) |
 | `GET /api/v1/entries/:code/versions` | Summaries of the entry's versions (no content), newest first |
 | `GET /api/v1/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies |
 | `GET /api/v1/entries/:code/history-check` | `{ intact, problems }`: recalculates every version's hash to check none has been changed |
