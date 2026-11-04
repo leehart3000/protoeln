@@ -22,7 +22,11 @@ export async function finishSignIn(state: string) {
 // Finds the person by their ORCID iD, or adds them. Their name is updated if ORCID shared one;
 // someone new who keeps their name private is named by their ORCID iD.
 export async function rememberUser(orcid: string, name: string | null) {
-  const update = name === null ? { $setOnInsert: { name: orcid } } : { $set: { name } }
+  const lastSignedInAt = new Date()
+  const update =
+    name === null
+      ? { $setOnInsert: { name: orcid }, $set: { lastSignedInAt } }
+      : { $set: { name, lastSignedInAt } }
   return UserModel.findOneAndUpdate({ orcid }, update, {
     upsert: true,
     returnDocument: 'after',

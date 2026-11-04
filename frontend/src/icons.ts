@@ -14,7 +14,11 @@ export {
   ShieldCheck as HistoryIntactIcon,
   Square as StepIcon,
   SquareCheck as StepDoneIcon,
+  Save as SaveIcon,
   SquareMenu as DetailsIcon,
   StickyNote as NoteIcon,
   UserRound as ProfileIcon,
+  UserRoundPlus as AddPersonIcon,
+  UserRoundX as RemovePersonIcon,
+  UsersRound as MembersIcon,
 } from '@lucide/vue'

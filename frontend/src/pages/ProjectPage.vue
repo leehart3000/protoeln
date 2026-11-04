@@ -4,6 +4,7 @@ import { computed, toRef } from 'vue'
 
 import { fetchProject } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import MembersSection from '../components/MembersSection.vue'
 import NewButton from '../components/NewButton.vue'
 import NotebookTable from '../components/NotebookTable.vue'
 import PageTitle from '../components/PageTitle.vue'
@@ -60,6 +61,7 @@ const cannotAdd = computed(() =>
           align="start"
         />
       </p>
+      <MembersSection v-if="data.project.canManageMembers" :code="code" />
     </template>
   </QueryStatus>
 </template>

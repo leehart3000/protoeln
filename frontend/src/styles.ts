@@ -47,3 +47,12 @@ export const badge =
 // Looks like a button, but only shows where to click: the whole row is the link
 export const rowButton =
   'inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line bg-panel px-2.5 py-1 text-sm font-medium text-fg'
+
+// For a button that takes something away, such as someone's role
+export const dangerButton =
+  'rounded-md border border-danger-line bg-danger-bg px-3 py-1.5 text-sm font-medium text-danger hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
+
+// Gold, for a button with something waiting to be done, such as an unsaved change. Dark text
+// on gold reads well in both themes.
+export const unsavedButton =
+  'rounded-md border border-gold bg-gold px-3 py-1.5 text-sm font-medium text-ink hover:bg-gold/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'

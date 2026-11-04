@@ -4,6 +4,7 @@ import type { CurrentUser } from './access.ts'
 import type { Config } from './config.ts'
 import { authRoutes } from './http/auth-routes.ts'
 import { handleErrors, notFound } from './http/errors.ts'
+import { memberRoutes } from './http/member-routes.ts'
 import { readRoutes } from './http/routes.ts'
 import { writeRoutes } from './http/write-routes.ts'
 
@@ -43,8 +44,10 @@ export function createApp(options: AppOptions = {}) {
     next()
   })
   // Where people's ORCID records are, for links to them (the sandbox's, in development)
-  app.use(API, readRoutes({ orcidBaseUrl: options.config?.orcid?.baseUrl ?? 'https://orcid.org' }))
+  const orcidBaseUrl = options.config?.orcid?.baseUrl ?? 'https://orcid.org'
+  app.use(API, readRoutes({ orcidBaseUrl }))
   app.use(API, writeRoutes())
+  app.use(API, memberRoutes({ orcidBaseUrl }))
 
   app.use(notFound)
   app.use(handleErrors)

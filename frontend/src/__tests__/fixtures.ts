@@ -13,6 +13,7 @@ export const project: Project = {
   links: [],
   yourRole: null,
   canContribute: false,
+  canManageMembers: false,
   createdAt: when,
   updatedAt: when,
 }

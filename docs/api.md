@@ -87,6 +87,22 @@ everything else needs a member or admin of the project (otherwise 403).
 A save whose `basedOn` is out of date (someone else has saved since) is refused with 409, so
 work is never silently overwritten.
 
+## Members
+
+A project's admins, and site admins, can see and choose its members. Giving or taking away the
+project admin role is for site admins only, and a project always keeps at least one admin.
+People are found by ORCID iD, and can be added before they first sign in: they're named by their
+iD until they do, and their role is waiting for them. Each change answers with the members as
+they now are.
+
+| Request | Body | Does |
+| --- | --- | --- |
+| `GET /api/v1/projects/:code/members` | | The members, admins first, each with `name`, `orcid`, `orcidUrl`, `signedIn` and `role` |
+| `PUT /api/v1/projects/:code/members/:orcid` | `role` (`admin`, `member` or `viewer`) | Gives the person that role, or changes theirs |
+| `DELETE /api/v1/projects/:code/members/:orcid` | | Takes away the person's role (404 if they don't have one) |
+
+Projects also say `canManageMembers`: whether the requester can do this.
+
 ## Errors
 
 Errors are JSON: `{ "error": "…" }`, plus `"problems"` (each with a `path` and `message`) when

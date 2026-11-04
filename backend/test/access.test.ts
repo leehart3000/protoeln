@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { canContribute, canRead, roleIn, type CurrentUser } from '../src/access.ts'
+import {
+  canContribute,
+  canManageMembers,
+  canRead,
+  roleIn,
+  type CurrentUser,
+} from '../src/access.ts'
 
 function user(id: string, siteAdmin = false): CurrentUser {
   return { id, orcid: '0000-0002-1825-0097', name: id, siteAdmin }
@@ -39,5 +45,12 @@ describe('access rules', () => {
 
     expect(canRead(open, null)).toBe(true)
     expect(canContribute(open, null)).toBe(false)
+  })
+
+  it('lets only project admins and site admins manage members', () => {
+    expect(canManageMembers(project, user('a'))).toBe(true)
+    expect(canManageMembers(project, user('x', true))).toBe(true)
+    expect(canManageMembers(project, user('m'))).toBe(false)
+    expect(canManageMembers(project, null)).toBe(false)
   })
 })

@@ -32,3 +32,9 @@ export function canContribute(project: ProjectAccess, user: CurrentUser | null):
   const role = roleIn(project, user)
   return role === 'admin' || role === 'member'
 }
+
+// Choosing a project's members and their roles: its admins, and site admins. Giving or taking
+// away the admin role itself is for site admins only (as in ProtoLIMS).
+export function canManageMembers(project: ProjectAccess, user: CurrentUser | null): boolean {
+  return user?.siteAdmin === true || roleIn(project, user) === 'admin'
+}

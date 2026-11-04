@@ -1,6 +1,13 @@
 import { Router } from 'express'
 
-import { canContribute, canRead, roleIn, type CurrentUser } from '../access.ts'
+import {
+  canContribute,
+  canManageMembers,
+  canRead,
+  roleIn,
+  type CurrentUser,
+  type ProjectAccess,
+} from '../access.ts'
 import {
   findEntryByCode,
   findNotebook,
@@ -28,6 +35,15 @@ import {
 // The read-only API: projects, their notebooks and entries. People who can't read a project
 // get "not found" rather than "forbidden", so private projects don't reveal they exist.
 // Responses show records through the views in views.ts, never as stored.
+
+// What the requester can do in a project
+export function accessIn(project: ProjectAccess, user: CurrentUser | null) {
+  return {
+    yourRole: roleIn(project, user),
+    canContribute: canContribute(project, user),
+    canManageMembers: canManageMembers(project, user),
+  }
+}
 
 // The projects the requester can read, and their notebooks, each found by its id
 async function readableNotebooks(user: CurrentUser | null) {
@@ -74,9 +90,7 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
     res.json(
       projects
         .filter((project) => canRead(project, user))
-        .map((project) =>
-          projectView(project, roleIn(project, user), canContribute(project, user)),
-        ),
+        .map((project) => projectView(project, accessIn(project, user))),
     )
   })
 
@@ -87,7 +101,7 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
     const notebooks = await listNotebooks(project._id)
     const people = await findPeople(notebooks.map((notebook) => notebook.ownerId))
     res.json({
-      project: projectView(project, roleIn(project, user), canContribute(project, user)),
+      project: projectView(project, accessIn(project, user)),
       notebooks: notebooks.map((notebook) => notebookView(notebook, people)),
     })
   })

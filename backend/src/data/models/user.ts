@@ -16,6 +16,9 @@ const userSchema = new mongoose.Schema(
     },
     name: { type: String, required: true },
     siteAdmin: { type: Boolean, default: false },
+    // When they last signed in: null for someone added to a project before signing in, whose
+    // name is their ORCID iD until they do
+    lastSignedInAt: { type: Date, default: null },
   },
   { collection: 'users', timestamps: true },
 )

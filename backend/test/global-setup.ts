@@ -15,7 +15,11 @@ declare module 'vitest' {
 }
 
 export default async function setup(project: TestProject) {
-  const server = await MongoMemoryReplSet.create({ replSet: { count: 1 } })
+  // Starting the server can take more than the usual 10 seconds on a busy machine
+  const server = await MongoMemoryReplSet.create({
+    replSet: { count: 1 },
+    instanceOpts: [{ launchTimeout: 30_000 }],
+  })
   project.provide('mongoUri', server.getUri())
 
   return async () => {

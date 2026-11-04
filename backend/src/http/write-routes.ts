@@ -57,7 +57,11 @@ export function writeRoutes() {
       publicRead,
       creatorId: user.id,
     })
-    res.status(201).json(projectView(project, 'admin', true))
+    res
+      .status(201)
+      .json(
+        projectView(project, { yourRole: 'admin', canContribute: true, canManageMembers: true }),
+      )
   })
 
   router.post('/projects/:code/notebooks', async (req, res) => {

@@ -25,8 +25,18 @@ export interface Project {
   }[]
   yourRole: ProjectRole | null
   canContribute: boolean
+  canManageMembers: boolean
   createdAt: string
   updatedAt: string
+}
+
+// A project member: named by their ORCID iD until they first sign in
+export interface Member {
+  name: string
+  orcid: string
+  orcidUrl: string
+  signedIn: boolean
+  role: ProjectRole
 }
 
 export interface ProjectRef {
@@ -129,12 +139,17 @@ export function fieldProblems(error: Error | null): Record<string, string> {
     : {}
 }
 
-async function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown): Promise<T> {
-  const response = await fetch(path, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+async function sendJson<T>(
+  method: 'POST' | 'PUT' | 'DELETE',
+  path: string,
+  body?: unknown,
+): Promise<T> {
+  const response = await fetch(
+    path,
+    body === undefined
+      ? { method }
+      : { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) },
+  )
   const data = (await response.json().catch(() => ({}))) as Record<string, unknown>
   if (!response.ok) {
     throw new ApiError(
@@ -144,6 +159,23 @@ async function sendJson<T>(method: 'POST' | 'PUT', path: string, body: unknown):
     )
   }
   return data as T
+}
+
+function membersPath(projectCode: string, orcid?: string) {
+  const base = `/api/v1/projects/${encodeURIComponent(projectCode)}/members`
+  return orcid === undefined ? base : `${base}/${encodeURIComponent(orcid)}`
+}
+
+export async function fetchMembers(projectCode: string) {
+  return (await getJson<Member[]>(membersPath(projectCode))) ?? []
+}
+
+// Gives someone a role in the project, changes it, or takes it away (null), answering with the
+// members as they now are
+export function changeRole(projectCode: string, orcid: string, role: ProjectRole | null) {
+  return role === null
+    ? sendJson<Member[]>('DELETE', membersPath(projectCode, orcid))
+    : sendJson<Member[]>('PUT', membersPath(projectCode, orcid), { role })
 }
 
 export function createProject(body: {

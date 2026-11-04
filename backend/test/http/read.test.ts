@@ -92,6 +92,7 @@ describe('GET /api/v1/projects', () => {
 
     expect(Object.keys(response.body[0]).sort()).toEqual([
       'canContribute',
+      'canManageMembers',
       'code',
       'createdAt',
       'description',

@@ -45,13 +45,16 @@ export function projectRef(project: { code: string; title: string }) {
   return { code: project.code, title: project.title }
 }
 
-// `yourRole` is the requester's role in the project (null if they aren't a member), and
-// `canContribute` whether they can add notebooks and entries to it, so pages know what to offer
-export function projectView(
-  project: ProjectRecord,
-  yourRole: ProjectRole | null,
-  canContribute: boolean,
-) {
+// What the requester can do in a project, so pages know what to offer: their role (null if
+// they aren't a member), whether they can add notebooks and entries, and whether they can
+// choose its members
+export interface ProjectAccessView {
+  yourRole: ProjectRole | null
+  canContribute: boolean
+  canManageMembers: boolean
+}
+
+export function projectView(project: ProjectRecord, access: ProjectAccessView) {
   return {
     code: project.code,
     title: project.title,
@@ -64,8 +67,7 @@ export function projectView(
       url: link.url,
       label: link.label ?? null,
     })),
-    yourRole,
-    canContribute,
+    ...access,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   }
@@ -184,4 +186,13 @@ export function versionView(version: VersionRecord, people: People) {
     text: version.text,
     markdown: version.markdown,
   }
+}
+
+// Project members, by name and ORCID iD, with whether they've signed in yet (someone can be
+// added before they first sign in)
+export function memberView(
+  member: { name: string; orcid: string; signedIn: boolean; role: ProjectRole },
+  orcidBaseUrl: string,
+) {
+  return { ...member, orcidUrl: `${orcidBaseUrl}/${member.orcid}` }
 }
