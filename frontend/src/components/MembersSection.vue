@@ -20,7 +20,7 @@ import { useMe } from '../useMe'
 import MemberRow from './MemberRow.vue'
 
 // Who has a role in the project, and changing that (as in ProtoLIMS). Only the project's admins
-// and site admins see it. Only site admins can give or take away the project admin role.
+// and site admins see it. Only site admins can give or take away a project's admin role.
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
@@ -30,7 +30,7 @@ const queryClient = useQueryClient()
 const adminLocked = computed(() =>
   me.data.value?.user?.siteAdmin
     ? undefined
-    : 'Only site admins can give or take away the project admin role.',
+    : "Only site admins can give or take away a project's admin role.",
 )
 
 const members = useQuery({
@@ -73,7 +73,7 @@ function add() {
 
 const orcidId = useId()
 const roleId = useId()
-const ROLE_ORDER: ProjectRole[] = ['viewer', 'member', 'admin']
+const ROLE_ORDER: ProjectRole[] = ['viewer', 'contributor', 'admin']
 const header = `${tableHeader} max-sm:px-2`
 </script>
 
@@ -84,8 +84,8 @@ const header = `${tableHeader} max-sm:px-2`
       Members
     </h2>
     <p class="mt-2 max-w-2xl text-muted">
-      Viewers can read the project; members can also add notebooks and entries; project admins can
-      also choose its members.
+      Viewers can read the project. Contributors can also add notebooks and entries, and edit their
+      own. Admins can also choose the project's members.
     </p>
 
     <!-- Always present, so screen readers announce each new notice -->

@@ -10,7 +10,7 @@ const carberry = {
   orcidUrl: 'https://orcid.org/0000-0002-1825-0097',
   siteAdmin: false,
   since: '2026-11-03T18:22:31.985Z',
-  roles: [{ project: { code: 'DEMO', title: 'Example project' }, role: 'member' }],
+  roles: [{ project: { code: 'DEMO', title: 'Example project' }, role: 'contributor' }],
 }
 
 afterEach(() => {
@@ -64,7 +64,7 @@ describe('profile page', () => {
       await screen.findByRole('link', { name: '0000-0002-1825-0097 (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://orcid.org/0000-0002-1825-0097')
     expect(screen.getByRole('link', { name: 'DEMO' })).toHaveAttribute('href', '/projects/DEMO')
-    expect(screen.getByText('Member')).toBeInTheDocument()
+    expect(screen.getByText('Contributor')).toBeInTheDocument()
     expect(screen.getByText('3 November 2026')).toBeInTheDocument()
   })
 

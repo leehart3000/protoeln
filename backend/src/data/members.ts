@@ -10,11 +10,11 @@ import { UserModel } from './models/user.ts'
 
 type Id = mongoose.Types.ObjectId
 
-const RANKS: Record<ProjectRole, number> = { admin: 0, member: 1, viewer: 2 }
+const RANKS: Record<ProjectRole, number> = { admin: 0, contributor: 1, viewer: 2 }
 
-const ADMINS_ONLY = 'Only site admins can give or take away the project admin role'
+const ADMINS_ONLY = "Only site admins can give or take away a project's admin role"
 
-// Admins first, then members, then viewers, each by name
+// Admins first, then contributors, then viewers, each by name
 export async function membersOf(projectId: Id) {
   const project = await ProjectModel.findById(projectId).orFail().lean()
   const users = await UserModel.find({ _id: { $in: project.members.map((m) => m.userId) } })

@@ -1,7 +1,7 @@
 import { ConflictError } from '../errors.ts'
 import { ProjectModel } from './models/project.ts'
 
-// Creates a project, whose creator becomes its first project admin. Codes are unique, so a code
+// Creates a project, whose creator becomes its first admin. Codes are unique, so a code
 // already in use is refused.
 export async function createProject(input: {
   code: string

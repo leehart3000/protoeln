@@ -5,7 +5,7 @@ import { UserModel } from '../../src/data/models/user.ts'
 import { clearDatabase, startDatabase, stopDatabase } from '../database.ts'
 import { api } from './api.ts'
 
-// A lab with a project admin and a member, and a site admin who isn't in it
+// A lab with an admin and a contributor, and a site admin who isn't in it
 const ids = { admin: '', member: '', siteAdmin: '' }
 const NEWCOMER = '0000-0001-5109-3700'
 
@@ -28,7 +28,7 @@ beforeEach(async () => {
     title: 'Lab',
     members: [
       { userId: admin!._id, role: 'admin' },
-      { userId: member!._id, role: 'member' },
+      { userId: member!._id, role: 'contributor' },
     ],
   })
 })
@@ -49,7 +49,7 @@ describe('project members', () => {
         signedIn: true,
         role: 'admin',
       },
-      expect.objectContaining({ name: 'Mo Member', role: 'member' }),
+      expect.objectContaining({ name: 'Mo Member', role: 'contributor' }),
     ])
   })
 
@@ -87,12 +87,12 @@ describe('project members', () => {
     expect(removed.body.map((m: { name: string }) => m.name)).toEqual(['Ada Admin'])
   })
 
-  it('leaves the project admin role to site admins', async () => {
+  it('leaves the admin role to site admins', async () => {
     const byAdmin = await put(NEWCOMER, ids.admin, 'admin')
     const bySiteAdmin = await put(NEWCOMER, ids.siteAdmin, 'admin')
 
     expect(byAdmin.status).toBe(403)
-    expect(byAdmin.body.error).toBe('Only site admins can give or take away the project admin role')
+    expect(byAdmin.body.error).toBe("Only site admins can give or take away a project's admin role")
     expect(bySiteAdmin.status).toBe(200)
   })
 

@@ -33,7 +33,7 @@ signed in. Without an ORCID client ID and secret, sign-in answers 503.
 | --- | --- | --- |
 | Anyone, if the project is public | Yes | No |
 | Project viewer | Yes | No |
-| Project member or admin | Yes | Yes |
+| Project contributor or admin | Yes | Yes |
 | Site admin | Yes | Yes |
 
 Editing an entry is further limited to its author and co-authors, and signed entries are locked.
@@ -74,11 +74,11 @@ shown once its view includes it.
 ## Writing
 
 Each write needs someone signed in (otherwise 401). Creating a project needs a site admin;
-everything else needs a member or admin of the project (otherwise 403).
+everything else needs a contributor or admin of the project (otherwise 403).
 
 | Request | Body | Does |
 | --- | --- | --- |
-| `POST /api/v1/projects` | `code` (2 to 10 capital letters and digits, starting with a letter), `title`, optional `description`, optional `publicRead` (default false) | Creates a project, with the requester as its project admin (201); site admins only. A code already in use is refused (409) |
+| `POST /api/v1/projects` | `code` (2 to 10 capital letters and digits, starting with a letter), `title`, optional `description`, optional `publicRead` (default false) | Creates a project, with the requester as its admin (201); site admins only. A code already in use is refused (409) |
 | `POST /api/v1/projects/:code/notebooks` | `title`, optional `description` | Creates a notebook owned by the requester (201) |
 | `POST /api/v1/notebooks/:id/entries` | `kind` (`experiment`, `protocol` or `note`), `title`, optional `content` | Creates a draft entry by the requester (201) |
 | `PUT /api/v1/entries/:code/draft` | `basedOn` (the `updatedAt` of the draft being edited), `title`, `content` | Saves the draft and records what changed; author and co-authors only |
@@ -90,7 +90,7 @@ work is never silently overwritten.
 ## Members
 
 A project's admins, and site admins, can see and choose its members. Giving or taking away the
-project admin role is for site admins only, and a project always keeps at least one admin.
+admin role is for site admins only, and a project always keeps at least one admin.
 People are found by ORCID iD, and can be added before they first sign in: they're named by their
 iD until they do, and their role is waiting for them. Each change answers with the members as
 they now are.
@@ -98,7 +98,7 @@ they now are.
 | Request | Body | Does |
 | --- | --- | --- |
 | `GET /api/v1/projects/:code/members` | | The members, admins first, each with `name`, `orcid`, `orcidUrl`, `signedIn` and `role` |
-| `PUT /api/v1/projects/:code/members/:orcid` | `role` (`admin`, `member` or `viewer`) | Gives the person that role, or changes theirs |
+| `PUT /api/v1/projects/:code/members/:orcid` | `role` (`admin`, `contributor` or `viewer`) | Gives the person that role, or changes theirs |
 | `DELETE /api/v1/projects/:code/members/:orcid` | | Takes away the person's role (404 if they don't have one) |
 
 Projects also say `canManageMembers`: whether the requester can do this.

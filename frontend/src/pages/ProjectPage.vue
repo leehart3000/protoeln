@@ -24,7 +24,11 @@ const { data, isPending, isError } = useQuery({
 
 const me = useMe()
 const cannotAdd = computed(() =>
-  refusal(me.data.value, data.value?.project.canContribute === true, "the project's members"),
+  refusal(
+    me.data.value,
+    data.value?.project.canContribute === true,
+    "the project's contributors and admins",
+  ),
 )
 </script>
 

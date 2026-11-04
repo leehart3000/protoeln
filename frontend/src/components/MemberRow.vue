@@ -9,12 +9,12 @@ import DisabledButton from './DisabledButton.vue'
 
 // One member's row (as in ProtoLIMS): a new role is chosen, then saved; or they're removed, once
 // that's confirmed. For anyone who can't give or take away the admin role (`adminLocked` says
-// why), an admin's row is read-only, and "Project admin" can't be chosen for anyone else.
+// why), an admin's row is read-only, and "Admin" can't be chosen for anyone else.
 
 const props = defineProps<{ member: Member; busy: boolean; adminLocked?: string }>()
 const emit = defineEmits<{ change: [role: ProjectRole | null] }>()
 
-const ROLE_ORDER: ProjectRole[] = ['viewer', 'member', 'admin']
+const ROLE_ORDER: ProjectRole[] = ['viewer', 'contributor', 'admin']
 
 const chosen = ref<ProjectRole>(props.member.role)
 const unsaved = computed(() => chosen.value !== props.member.role)

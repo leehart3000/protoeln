@@ -9,7 +9,7 @@ export interface Person {
   orcid: string | null
 }
 
-export type ProjectRole = 'admin' | 'member' | 'viewer'
+export type ProjectRole = 'admin' | 'contributor' | 'viewer'
 
 export interface Project {
   code: string

@@ -16,14 +16,14 @@ const project = {
   publicRead: false,
   members: [
     { userId: 'a', role: 'admin' },
-    { userId: 'm', role: 'member' },
+    { userId: 'm', role: 'contributor' },
     { userId: 'v', role: 'viewer' },
   ],
 }
 
 describe('access rules', () => {
   it('finds a member’s role', () => {
-    expect(roleIn(project, user('m'))).toBe('member')
+    expect(roleIn(project, user('m'))).toBe('contributor')
     expect(roleIn(project, user('x'))).toBeNull()
     expect(roleIn(project, null)).toBeNull()
   })
@@ -32,8 +32,8 @@ describe('access rules', () => {
     ['anyone', null, false, false],
     ['an outsider', user('x'), false, false],
     ['a viewer', user('v'), true, false],
-    ['a member', user('m'), true, true],
-    ['a project admin', user('a'), true, true],
+    ['a contributor', user('m'), true, true],
+    ['an admin', user('a'), true, true],
     ['a site admin', user('s', true), true, true],
   ])('lets %s read (%s) and contribute (%s)', (_who, who, read, contribute) => {
     expect(canRead(project, who)).toBe(read)
@@ -47,7 +47,7 @@ describe('access rules', () => {
     expect(canContribute(open, null)).toBe(false)
   })
 
-  it('lets only project admins and site admins manage members', () => {
+  it('lets only admins and site admins manage members', () => {
     expect(canManageMembers(project, user('a'))).toBe(true)
     expect(canManageMembers(project, user('x', true))).toBe(true)
     expect(canManageMembers(project, user('m'))).toBe(false)

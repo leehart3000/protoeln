@@ -28,8 +28,8 @@ const user = computed(() => me.data.value?.user ?? null)
 
 // What a role lets someone do in its project
 const ALLOWS: Record<ProjectRole, string> = {
-  admin: 'You can read it, add notebooks and entries, and manage its members.',
-  member: 'You can read it, and add notebooks and entries.',
+  admin: 'You can read it, add notebooks and entries, and choose its members.',
+  contributor: 'You can read it, add notebooks and entries, and edit your own.',
   viewer: 'You can read it.',
 }
 </script>
@@ -84,8 +84,8 @@ const ALLOWS: Record<ProjectRole, string> = {
         As a site admin you don't need roles: you can read every project, and add to any of them.
       </template>
       <template v-else>
-        You have no roles yet, so you can read public projects but not add to them. A project admin
-        can give you a role.
+        You have no roles yet, so you can read public projects but not add to them. A project's
+        admin can give you a role.
       </template>
     </p>
     <div v-else :class="tableWrapper" class="mt-4">

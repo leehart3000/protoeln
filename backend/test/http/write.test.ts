@@ -34,8 +34,8 @@ beforeAll(async () => {
     code: 'LAB',
     title: 'Private lab',
     members: [
-      { userId: author!._id, role: 'member' },
-      { userId: colleague!._id, role: 'member' },
+      { userId: author!._id, role: 'contributor' },
+      { userId: colleague!._id, role: 'contributor' },
       { userId: viewer!._id, role: 'viewer' },
     ],
   })

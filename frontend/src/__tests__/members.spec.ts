@@ -15,7 +15,7 @@ const newcomer = { name: NEW, orcid: NEW, orcidUrl: `https://orcid.org/${NEW}`, 
 
 const members = [
   { ...ada, role: 'admin' },
-  { ...mo, role: 'member' },
+  { ...mo, role: 'contributor' },
 ]
 
 function me(siteAdmin: boolean) {
@@ -59,7 +59,7 @@ afterEach(() => {
 })
 
 describe('project members', () => {
-  it('lets a project admin change someone’s role, saying what changed', async () => {
+  it('lets an admin change someone’s role, saying what changed', async () => {
     const fetchMock = fakeLab({
       [`PUT /api/v1/projects/LAB/members/${MO}`]: [
         { ...ada, role: 'admin' },
@@ -83,19 +83,22 @@ describe('project members', () => {
 
   it('adds someone by ORCID iD, even before they first sign in', async () => {
     const fetchMock = fakeLab({
-      [`PUT /api/v1/projects/LAB/members/${NEW}`]: [...members, { ...newcomer, role: 'member' }],
+      [`PUT /api/v1/projects/LAB/members/${NEW}`]: [
+        ...members,
+        { ...newcomer, role: 'contributor' },
+      ],
     })
     const user = userEvent.setup()
     await renderAt('/projects/LAB')
 
     await user.type(await screen.findByLabelText('ORCID iD'), NEW)
-    await user.selectOptions(screen.getByLabelText('Role'), 'member')
+    await user.selectOptions(screen.getByLabelText('Role'), 'contributor')
     await user.click(screen.getByRole('button', { name: 'Add member' }))
 
-    expect(await screen.findByText(`${NEW} now has the Member role.`)).toBeInTheDocument()
+    expect(await screen.findByText(`${NEW} now has the Contributor role.`)).toBeInTheDocument()
     expect(screen.getByText('Not signed in yet')).toBeInTheDocument()
     expect(sentBody(fetchMock, 'PUT', `/api/v1/projects/LAB/members/${NEW}`)).toEqual({
-      role: 'member',
+      role: 'contributor',
     })
   })
 
@@ -117,16 +120,16 @@ describe('project members', () => {
     })
   })
 
-  it('leaves the project admin role to site admins', async () => {
+  it('leaves the admin role to site admins', async () => {
     fakeLab()
     await renderAt('/projects/LAB')
 
     const remove = await screen.findByRole('button', { name: 'Remove Ada Admin' })
     expect(remove).toHaveAttribute('aria-disabled', 'true')
     expect(remove).toHaveAccessibleDescription(
-      'Only site admins can give or take away the project admin role.',
+      "Only site admins can give or take away a project's admin role.",
     )
-    for (const option of screen.getAllByRole('option', { name: 'Project admin' })) {
+    for (const option of screen.getAllByRole('option', { name: 'Admin' })) {
       expect(option).toBeDisabled()
     }
   })

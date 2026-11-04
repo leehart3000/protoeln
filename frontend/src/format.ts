@@ -36,7 +36,7 @@ export const STATUS_LABELS: Record<EntryStatus, string> = {
 }
 
 export const ROLE_LABELS: Record<ProjectRole, string> = {
-  admin: 'Project admin',
-  member: 'Member',
+  admin: 'Admin',
+  contributor: 'Contributor',
   viewer: 'Viewer',
 }

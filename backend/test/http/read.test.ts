@@ -31,7 +31,7 @@ beforeAll(async () => {
     code: 'LAB',
     title: 'Private lab',
     members: [
-      { userId: member!._id, role: 'member' },
+      { userId: member!._id, role: 'contributor' },
       { userId: viewer!._id, role: 'viewer' },
     ],
   })
@@ -67,7 +67,7 @@ describe('GET /api/v1/me', () => {
       orcidUrl: 'https://orcid.org/0000-0002-1825-0097',
       siteAdmin: false,
       since: expect.any(String),
-      roles: [{ project: { code: 'LAB', title: 'Private lab' }, role: 'member' }],
+      roles: [{ project: { code: 'LAB', title: 'Private lab' }, role: 'contributor' }],
     })
   })
 })
@@ -75,7 +75,7 @@ describe('GET /api/v1/me', () => {
 describe('GET /api/v1/projects', () => {
   it.each([
     ['anyone', undefined, ['PUB']],
-    ['a member', 'member', ['LAB', 'PUB']],
+    ['a contributor', 'member', ['LAB', 'PUB']],
     ['a viewer', 'viewer', ['LAB', 'PUB']],
     ['an outsider', 'outsider', ['PUB']],
     ['a site admin', 'admin', ['LAB', 'PUB']],

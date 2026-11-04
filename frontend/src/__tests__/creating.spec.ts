@@ -116,7 +116,7 @@ describe('creating a project', () => {
 
 describe('creating a notebook', () => {
   it('creates a notebook in the project, then opens it', async () => {
-    const memberProject = { ...project, yourRole: 'member', canContribute: true }
+    const memberProject = { ...project, yourRole: 'contributor', canContribute: true }
     const fetchMock = fakeApi({
       '/api/v1/me': someone(false),
       '/api/v1/projects/DEMO': { project: memberProject, notebooks: [] },

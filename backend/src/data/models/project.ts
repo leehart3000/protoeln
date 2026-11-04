@@ -1,6 +1,6 @@
 import mongoose, { type InferSchemaType } from 'mongoose'
 
-export const PROJECT_ROLES = ['admin', 'member', 'viewer'] as const
+export const PROJECT_ROLES = ['admin', 'contributor', 'viewer'] as const
 
 // 2 to 10 capital letters and digits, starting with a letter, such as LAB or ONC2
 export const PROJECT_CODE = /^[A-Z][A-Z0-9]{1,9}$/

@@ -18,7 +18,7 @@ import {
 } from '../styles'
 import { useMe } from '../useMe'
 
-// Creating a project, for site admins (as in ProtoLIMS). Its creator becomes its project admin.
+// Creating a project, for site admins (as in ProtoLIMS). Its creator becomes its admin.
 
 const me = useMe()
 const router = useRouter()
@@ -104,7 +104,7 @@ const problems = computed(() => fieldProblems(creating.error.value))
       <span>
         <span class="font-medium">Public</span>
         <span class="block text-sm text-muted">
-          Anyone can read it, without signing in. Only its members can add to it.
+          Anyone can read it, without signing in. Only its contributors and admins can add to it.
         </span>
       </span>
     </label>

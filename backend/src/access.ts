@@ -13,7 +13,7 @@ export interface ProjectAccess {
   members: { userId: { toString(): string }; role: string }[]
 }
 
-export type ProjectRole = 'admin' | 'member' | 'viewer'
+export type ProjectRole = 'admin' | 'contributor' | 'viewer'
 
 // The user's role in the project, if they are a member
 export function roleIn(project: ProjectAccess, user: CurrentUser | null): ProjectRole | null {
@@ -30,7 +30,7 @@ export function canRead(project: ProjectAccess, user: CurrentUser | null): boole
 export function canContribute(project: ProjectAccess, user: CurrentUser | null): boolean {
   if (user?.siteAdmin) return true
   const role = roleIn(project, user)
-  return role === 'admin' || role === 'member'
+  return role === 'admin' || role === 'contributor'
 }
 
 // Choosing a project's members and their roles: its admins, and site admins. Giving or taking

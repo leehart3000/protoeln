@@ -27,7 +27,7 @@ export function checkCanRead(project: ProjectAccess, user: CurrentUser | null) {
 export function checkCanContribute(project: ProjectAccess, user: CurrentUser) {
   checkCanRead(project, user)
   if (!canContribute(project, user)) {
-    throw new ForbiddenError('Only project members can do this')
+    throw new ForbiddenError("Only the project's contributors and admins can do this")
   }
 }
 

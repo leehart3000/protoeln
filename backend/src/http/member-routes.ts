@@ -11,8 +11,8 @@ import { BodyReader, checkCanRead, requireUser } from './context.ts'
 import { memberView } from './views.ts'
 
 // A project's members: who has which role. Only its admins and site admins can see or change
-// them; giving or taking away the admin role is for site admins only. Each change answers with
-// the members as they now are.
+// them; giving or taking away a project's admin role is for site admins only. Each change
+// answers with the members as they now are.
 
 export function memberRoutes(options: { orcidBaseUrl?: string } = {}) {
   const orcidBaseUrl = options.orcidBaseUrl ?? 'https://orcid.org'
@@ -34,7 +34,11 @@ export function memberRoutes(options: { orcidBaseUrl?: string } = {}) {
   function checkOrcid(orcid: string) {
     if (!isValidOrcid(orcid)) {
       throw new InvalidError('The request has problems', [
-        { path: 'orcid', message: 'should be an ORCID iD, such as 0000-0002-1825-0097' },
+        {
+          path: 'orcid',
+          message:
+            'should look like 0000-0002-1825-0097: four groups of four digits, the last of which may be X',
+        },
       ])
     }
   }

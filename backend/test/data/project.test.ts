@@ -38,7 +38,7 @@ describe('ProjectModel', () => {
     const valid = new ProjectModel({
       code: 'ONC',
       title: 'Oncology',
-      members: [{ userId: someone, role: 'member' }],
+      members: [{ userId: someone, role: 'contributor' }],
     })
     const invalid = new ProjectModel({
       code: 'ONC',

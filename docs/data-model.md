@@ -338,9 +338,11 @@ Planned integration with ProtoLIMS, in stages:
 | Role | Can |
 | --- | --- |
 | Site admin | Everything, including redaction |
-| Project admin | Manage the project, its members and its notebooks |
-| Project member | Create notebooks and entries, edit their own entries, comment, review and sign |
-| Project viewer | Read |
+| Admin (of a project) | Everything a contributor can, and choose the project's members (giving or taking away the admin role is for site admins) |
+| Contributor | Create notebooks and entries, edit their own entries, comment, review and sign |
+| Viewer | Read |
+
+Everyone with a role in a project is one of its *members*.
 
 Entries belong to their authors: only the author and any co-authors they add can edit an entry.
 
