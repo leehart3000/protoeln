@@ -74,6 +74,8 @@ export interface EntrySummary {
 }
 
 export interface Entry extends EntrySummary {
+  // Whether the requester can change it: its author or a co-author, while it isn't signed
+  canEdit: boolean
   coAuthors: Person[]
   contentFormat: string
   content: DocNode
@@ -193,6 +195,26 @@ export function createNotebook(projectCode: string, body: { title: string; descr
     `/api/v1/projects/${encodeURIComponent(projectCode)}/notebooks`,
     body,
   )
+}
+
+// Saves an entry's draft. `basedOn` is the updatedAt of the draft being edited: if someone else
+// has saved since, the API refuses (409) rather than overwrite their work.
+export function saveDraft(
+  code: string,
+  body: { basedOn: string; title: string; content: DocNode },
+) {
+  return sendJson<{ entry: Entry; changed: boolean }>(
+    'PUT',
+    `/api/v1/entries/${encodeURIComponent(code)}/draft`,
+    body,
+  )
+}
+
+// Makes the next numbered, fingerprinted version of the entry's current draft
+export function createVersion(code: string, note: string) {
+  return sendJson<VersionSummary>('POST', `/api/v1/entries/${encodeURIComponent(code)}/versions`, {
+    note,
+  })
 }
 
 export function createEntry(notebookId: string, body: { kind: EntryKind; title: string }) {

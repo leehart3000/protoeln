@@ -46,7 +46,7 @@ the API, so both share one address, as they will when deployed. ProtoLIMS uses p
 | `/notebooks/:id/entries/new` | Creating an entry in a notebook (members of its project) |
 | `/entries` | Every entry you can see, across projects |
 | `/profile` | Who you're signed in as, your ORCID record, and your role in each project |
-| `/entries/:code` | An entry (read-only for now): its details, current draft and versions, and whether its version history checks out |
+| `/entries/:code` | An entry: its details, current draft and versions, and whether its version history checks out. Its author can edit the draft (in the Tiptap editor) and create versions |
 
 Pages load data from the API with TanStack Query for Vue, which keeps answers for 30 seconds,
 so moving between pages is quick. As in ProtoLIMS, the page tests replace `fetch` with a fake

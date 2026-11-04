@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { computed, toRef } from 'vue'
+import { computed, ref, toRef } from 'vue'
 
 import { fetchEntry, fetchHistoryCheck, fetchVersions } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import ContentBlocks from '../components/ContentBlocks.vue'
+import EntryEditor from '../components/EntryEditor.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
+import VersionForm from '../components/VersionForm.vue'
 import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
-import { HistoryIntactIcon, HistoryProblemIcon } from '../icons'
+import { EditIcon, HistoryIntactIcon, HistoryProblemIcon, VersionIcon } from '../icons'
 import { KIND_ICONS } from '../kinds'
 import {
   badge,
   errorBox,
+  secondaryButton,
   sectionHeading,
   table,
   tableCell,
@@ -21,8 +24,9 @@ import {
   tableWrapper,
 } from '../styles'
 
-// One entry, for reading: its details, its current draft, and its versions, with a check that
-// none of the versions has been changed since it was made
+// One entry: its details, its current draft, and its versions, with a check that none of the
+// versions has been changed since it was made. Its author can edit the draft (in the editor)
+// and create versions.
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
@@ -39,6 +43,10 @@ const historyCheck = useQuery({
   queryKey: ['entry', code, 'history-check'],
   queryFn: () => fetchHistoryCheck(code.value),
 })
+
+// The editor, or the form for a new version, when open (one at a time)
+const editing = ref(false)
+const versioning = ref(false)
 
 const crumbs = computed(() =>
   data.value
@@ -77,8 +85,35 @@ const crumbs = computed(() =>
       </dl>
 
       <section aria-labelledby="draft-heading" class="mt-8">
-        <h2 id="draft-heading" :class="sectionHeading">Current draft</h2>
-        <div class="mt-3 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 sm:p-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <h2 id="draft-heading" :class="sectionHeading">Current draft</h2>
+          <template v-if="data.entry.canEdit && !editing && !versioning">
+            <button
+              type="button"
+              :class="secondaryButton"
+              class="inline-flex items-center gap-2"
+              @click="editing = true"
+            >
+              <EditIcon aria-hidden="true" class="size-4 shrink-0" />
+              Edit
+            </button>
+            <button
+              type="button"
+              :class="secondaryButton"
+              class="inline-flex items-center gap-2"
+              @click="versioning = true"
+            >
+              <VersionIcon aria-hidden="true" class="size-4 shrink-0" />
+              Create version
+            </button>
+          </template>
+        </div>
+        <VersionForm v-if="versioning" :code="data.entry.code" @close="versioning = false" />
+        <EntryEditor v-if="editing" :entry="data.entry" @close="editing = false" />
+        <div
+          v-else
+          class="mt-3 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 sm:p-6"
+        >
           <ContentBlocks
             v-if="data.entry.content.content.length > 0"
             :blocks="data.entry.content.content"

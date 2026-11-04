@@ -39,6 +39,7 @@ export const protocolSummary: EntrySummary = {
 
 export const protocol: Entry = {
   ...protocolSummary,
+  canEdit: false,
   coAuthors: [],
   contentFormat: 'protoeln-doc/1',
   content: {
