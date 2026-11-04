@@ -128,3 +128,16 @@ web-check:
 # Build the frontend for production
 web-build:
     {{web}} build
+
+# --- Cloudflare (see docs/deployment.md) ---
+
+# Build the website, and run it with the API as Cloudflare will, at http://127.0.0.1:8787
+worker-dev:
+    {{web}} build
+    {{api}} worker:dev
+
+# Check everything, build the website, and deploy it with the API to staging.protoeln.org
+deploy:
+    just check
+    {{web}} build
+    {{api}} deploy

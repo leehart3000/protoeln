@@ -52,6 +52,11 @@ Pages load data from the API with TanStack Query for Vue, which keeps answers fo
 so moving between pages is quick. As in ProtoLIMS, the page tests replace `fetch` with a fake
 API (`frontend/src/__tests__/helpers.ts`) rather than using a mocking library.
 
+## On Cloudflare
+
+To run the website and API as they run on Cloudflare, and to deploy them, see
+[deployment.md](deployment.md).
+
 ## Example data
 
 To have something to look at, add an example project, with a notebook and a few entries:

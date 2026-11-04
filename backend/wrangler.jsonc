@@ -1,0 +1,32 @@
+// Cloudflare Workers set-up for ProtoELN (see docs/deployment.md). One Worker serves the
+// website's files and passes /api requests to the API, so both share one address, as in
+// development. Secrets (the MongoDB connection string and the ORCID client secret) are set with
+// `wrangler secret put`, never written here.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "protoeln-staging",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "staging.protoeln.org", "custom_domain": true }],
+  "assets": {
+    "directory": "../frontend/dist",
+    "binding": "ASSETS",
+    // Any address that isn't a file is a page of the website (Vue Router finds it)
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "API", "class_name": "Api" }],
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Api"] }],
+  "observability": { "enabled": true },
+  "vars": {
+    "PROTOELN_PUBLIC_URL": "https://staging.protoeln.org",
+    "PROTOELN_MONGODB_DATABASE": "protoeln-staging",
+    // Staging signs in with the ORCID sandbox, like development
+    "PROTOELN_ORCID_BASE_URL": "https://sandbox.orcid.org",
+  },
+}

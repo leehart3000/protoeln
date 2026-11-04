@@ -7,3 +7,8 @@ allowBuilds:
   # Comes with @tanstack/vue-query. Its install script only switches vue-demi between Vue 2 and
   # Vue 3, and it's already set up for Vue 3, so it's never run.
   vue-demi: false
+  # Come with Wrangler (Cloudflare's tool): esbuild bundles the Worker, and workerd is
+  # Cloudflare's runtime, for running the Worker locally. Their install scripts fetch the
+  # program for this computer, so they're run (as in ProtoLIMS).
+  esbuild: true
+  workerd: true

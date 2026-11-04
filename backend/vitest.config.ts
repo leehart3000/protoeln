@@ -13,8 +13,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      // Only starts the server; everything it uses is tested through the app
-      exclude: ['src/server.ts'],
+      // Only start the server (under Node.js, or on Cloudflare); everything they use is tested
+      // through the app
+      exclude: ['src/server.ts', 'src/worker.ts'],
     },
   },
 })
