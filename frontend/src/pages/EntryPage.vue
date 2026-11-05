@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import { computed, ref, toRef } from 'vue'
+import { computed, defineAsyncComponent, ref, toRef } from 'vue'
 
 import { fetchEntry, fetchHistoryCheck, fetchVersions } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import ContentBlocks from '../components/ContentBlocks.vue'
-import EntryEditor from '../components/EntryEditor.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import VersionForm from '../components/VersionForm.vue'
@@ -43,6 +42,10 @@ const historyCheck = useQuery({
   queryKey: ['entry', code, 'history-check'],
   queryFn: () => fetchHistoryCheck(code.value),
 })
+
+// The editor is loaded only when someone opens it, as it's most of the website's code and most
+// visitors only read
+const EntryEditor = defineAsyncComponent(() => import('../components/EntryEditor.vue'))
 
 // The editor, or the form for a new version, when open (one at a time)
 const editing = ref(false)

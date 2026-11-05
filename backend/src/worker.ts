@@ -5,6 +5,7 @@ import mongoose from 'mongoose'
 import { createApp } from './app.ts'
 import { readConfig } from './config.ts'
 import { sessionAuthenticate } from './http/session-auth.ts'
+import { withSecurityHeaders } from './security-headers.ts'
 
 // Runs ProtoELN on Cloudflare Workers (see docs/deployment.md): the website's files are served
 // by Cloudflare, and requests to /api go to the API, which is the same Express app as under
@@ -72,7 +73,7 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (isApiPath(new URL(request.url).pathname)) {
       const api = env.API.get(env.API.idFromName('api'), { locationHint: 'weur' })
-      return api.fetch(request)
+      return withSecurityHeaders(await api.fetch(request))
     }
     return env.ASSETS.fetch(request)
   },

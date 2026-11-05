@@ -3,6 +3,10 @@ import { screen } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 import { fromProseMirror } from '@protoeln/content'
 
+// The entry page loads the editor only when Edit is clicked. Loading it here first means
+// the first test that opens it doesn't wait for the editor's code to be read and compiled.
+import '../components/EntryEditor.vue'
+
 import { notebook, protocol, versions } from './fixtures'
 import { fakeApi, renderAt, sentBody } from './helpers'
 
@@ -119,5 +123,33 @@ describe('editing an entry', () => {
       'type',
       'submit',
     )
+  })
+
+  it('offers Create version while editing, once the changes are saved', async () => {
+    const saved = { ...mine, title: 'Bradford assay', updatedAt: '2026-11-04T10:00:00.000Z' }
+    const fetchMock = fakeApi(
+      entryAnswers(mine, {
+        [`PUT ${ENTRY}/draft`]: { entry: saved, changed: true },
+        [`POST ${ENTRY}/versions`]: versions[0],
+      }),
+    )
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.type(await screen.findByLabelText('Title'), '!')
+    const waiting = screen.getByRole('button', { name: 'Create version' })
+    expect(waiting).toHaveAttribute('aria-disabled', 'true')
+    expect(waiting).toHaveAccessibleDescription(
+      'Save your changes first: a version is of the draft as last saved.',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('Saved.')
+    await user.click(screen.getByRole('button', { name: 'Create version' }))
+    await user.type(screen.getByLabelText(/Note/), 'Title changed')
+    await user.click(screen.getByRole('button', { name: 'Create version' }))
+
+    expect(sentBody(fetchMock, 'POST', `${ENTRY}/versions`)).toEqual({ note: 'Title changed' })
   })
 })

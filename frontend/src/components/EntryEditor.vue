@@ -7,7 +7,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 
 import { saveDraft, type Entry } from '../api'
 import { editorExtensions } from '../editor/extensions'
-import { SaveIcon } from '../icons'
+import { SaveIcon, VersionIcon } from '../icons'
 import {
   dangerButton,
   fieldLabel,
@@ -16,12 +16,15 @@ import {
   secondaryButton,
   unsavedButton,
 } from '../styles'
+import DisabledButton from './DisabledButton.vue'
 import EditorToolbar from './EditorToolbar.vue'
 import FormProblem from './FormProblem.vue'
+import VersionForm from './VersionForm.vue'
 
 // Editing an entry's title and draft, for its author. Save stores the draft, and the API records
 // exactly what changed. If someone else saved since this draft was opened, the save is refused
-// rather than overwriting their work. Leaving with unsaved changes asks first.
+// rather than overwriting their work. Leaving with unsaved changes asks first. A version can be
+// made while editing, once the changes are saved (a version is of the draft as last saved).
 
 const props = defineProps<{ entry: Entry }>()
 const emit = defineEmits<{ close: [] }>()
@@ -77,6 +80,7 @@ const saving = useMutation({
 
 // Closing with unsaved changes asks first, on the page
 const confirmingClose = ref(false)
+const versioning = ref(false)
 
 function close() {
   if (unsaved.value) {
@@ -125,12 +129,32 @@ onBeforeUnmount(() => {
         <SaveIcon aria-hidden="true" class="size-4 shrink-0" />
         {{ saving.isPending.value ? 'Saving…' : 'Save' }}
       </button>
+      <DisabledButton
+        v-if="unsaved"
+        :icon="VersionIcon"
+        :button-class="secondaryButton"
+        reason="Save your changes first: a version is of the draft as last saved."
+        align="start"
+      >
+        Create version
+      </DisabledButton>
+      <button
+        v-else-if="!versioning"
+        type="button"
+        :class="secondaryButton"
+        class="inline-flex items-center gap-2"
+        @click="versioning = true"
+      >
+        <VersionIcon aria-hidden="true" class="size-4 shrink-0" />
+        Create version
+      </button>
       <button type="button" :class="secondaryButton" @click="close">Close editor</button>
       <!-- Always present, so screen readers announce each new notice -->
       <p role="status" class="text-sm font-medium empty:hidden">
         {{ unsaved ? 'Unsaved changes' : notice }}
       </p>
     </div>
+    <VersionForm v-if="versioning && !unsaved" :code="entry.code" @close="versioning = false" />
     <div
       v-if="confirmingClose"
       class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-danger-bg px-4 py-3"

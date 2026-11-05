@@ -47,6 +47,21 @@ pnpm exec wrangler secret put PROTOELN_SITE_ADMINS
 - **ORCID:** staging uses the sandbox client, which needs the redirect URI
   `https://staging.protoeln.org/api/v1/auth/orcid/callback`.
 
+## Who can reach staging
+
+Staging can be written to, so it's behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/):
+the whole address, website and API, asks for an email address on an allowed list, and emails a
+one-time PIN. The Worker has no other address (`workers_dev` and `preview_urls` are off), so
+Access can't be got round. Signing in with ORCID works behind it, as the browser carries
+Access's cookie when ORCID sends it back.
+
+## Security headers
+
+Every response carries the same security headers as ProtoLIMS's (a content security policy that
+lets pages run only the site's own scripts, no framing, and so on): the website's files from
+`frontend/public/_headers`, and the API's from `backend/src/security-headers.ts`, which a test
+checks match.
+
 ## Deploying
 
 ```sh
