@@ -24,7 +24,7 @@ can be introduced alongside this one.
 | `table` | Rows (`tableRow`) of cells (`tableCell` or `tableHeader`), each holding blocks; cells have no attributes, so there are no merged cells |
 | `dataBlock` | Shows a data item: `attrs.dataItemId` |
 | `fileBlock` | Shows an image or links to a file: `attrs.fileId`, optional `attrs.caption` |
-| `protocolStep` | A step that can be ticked off: `attrs.done`, optional `attrs.doneBy` and `attrs.doneAt`; inline content |
+| `protocolStep` | A step that can be ticked off: `attrs.done`; once ticked, `attrs.doneBy` (the ORCID iD of who ticked it) and `attrs.doneAt` (when, in UTC, ISO 8601), both set by the server; inline content |
 | `materials` | Reagents and consumables: `attrs.items`, each with a `name` and optional `supplier`, `catalogueNumber`, `lotNumber` and `amount` |
 | `recordLink` | A link to a record elsewhere (e.g. a ProtoLIMS sample): `attrs.system`, `kind`, `url`, `label`, optional `externalId` |
 

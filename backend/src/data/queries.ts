@@ -1,4 +1,5 @@
 import mongoose from 'mongoose'
+import { stepsOf, type DocNode } from '@protoeln/content'
 
 import { NotFoundError } from '../errors.ts'
 import { EntryVersionModel } from './models/entry-version.ts'
@@ -29,6 +30,17 @@ export async function findPeople(ids: mongoose.Types.ObjectId[]) {
   return new Map(
     users.map((user) => [user._id.toHexString(), { name: user.name, orcid: user.orcid }]),
   )
+}
+
+// The names of the people who ticked an entry's protocol steps, by ORCID iD (which is how
+// steps record who ticked them)
+export async function findPeopleNamedIn(content: DocNode) {
+  const orcids = [...new Set(stepsOf(content).flatMap(({ step }) => step.attrs.doneBy ?? []))]
+  if (orcids.length === 0) return new Map<string, string>()
+  const users = await UserModel.find({ orcid: { $in: orcids } })
+    .select('name orcid')
+    .lean()
+  return new Map(users.map((user) => [String(user.orcid), user.name]))
 }
 
 export async function listProjects() {

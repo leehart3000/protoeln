@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { DocNode } from '@protoeln/content'
 
 import {
   canContribute,
@@ -13,6 +14,7 @@ import {
   findEntryByCode,
   findNotebook,
   findPeople,
+  findPeopleNamedIn,
   findProjectByCode,
   findProjectById,
   findUserById,
@@ -160,8 +162,9 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
     const user = userOf(res)
     checkCanRead(project, user)
     const people = await findPeople([entry.authorId, ...entry.coAuthorIds])
+    const named = await findPeopleNamedIn(entry.content as DocNode)
     res.json({
-      entry: entryView(entry, people, canEditEntry(entry, project, user)),
+      entry: entryView(entry, people, canEditEntry(entry, project, user), named),
       notebook: notebookRef(notebook),
       project: projectRef(project),
     })

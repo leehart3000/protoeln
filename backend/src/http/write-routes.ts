@@ -1,6 +1,7 @@
 import { Router } from 'express'
+import type { DocNode } from '@protoeln/content'
 
-import { createEntry, createVersion, saveDraft, verifyVersions } from '../data/entries.ts'
+import { createEntry, createVersion, saveDraft, tickStep, verifyVersions } from '../data/entries.ts'
 import { ENTRY_KINDS } from '../data/models/entry.ts'
 import { PROJECT_CODE } from '../data/models/project.ts'
 import { createNotebook } from '../data/notebooks.ts'
@@ -10,6 +11,7 @@ import {
   findEntryByCode,
   findNotebook,
   findPeople,
+  findPeopleNamedIn,
   findProjectByCode,
   findProjectById,
   findVersion,
@@ -18,16 +20,25 @@ import {
 import { BodyReader, checkCanContribute, checkCanRead, requireUser, userOf } from './context.ts'
 import { entryView, notebookView, projectView, versionSummary, versionView } from './views.ts'
 
-// Creating notebooks and entries, saving drafts, and creating and checking versions. Each
-// write needs someone signed in who is a member of the project; editing an entry is further
-// limited to its author and co-authors (checked in data/entries.ts). Responses show records
-// through the views in views.ts, never as stored.
+// Creating notebooks and entries, saving drafts, ticking protocol steps, and creating and
+// checking versions. Each write needs someone signed in who is a member of the project; editing
+// an entry (including ticking its steps) is further limited to its author and co-authors
+// (checked in data/entries.ts). Responses show records through the views in views.ts, never as
+// stored.
 
 async function projectOfEntry(code: string) {
   const entry = await findEntryByCode(code)
   const notebook = await findNotebook(entry.notebookId.toHexString())
   const project = await findProjectById(notebook.projectId)
   return { entry, project }
+}
+
+// An entry as the API shows it to its author, just after they changed it
+async function savedEntryView(entry: Awaited<ReturnType<typeof saveDraft>>['entry']) {
+  const saved = entry.toObject()
+  const people = await findPeople([saved.authorId, ...saved.coAuthorIds])
+  const named = await findPeopleNamedIn(saved.content as DocNode)
+  return entryView(saved, people, true, named)
 }
 
 export function writeRoutes() {
@@ -113,9 +124,23 @@ export function writeRoutes() {
     body.done()
 
     const result = await saveDraft({ entryId: entry._id, userId: user.id, basedOn, title, content })
-    const saved = result.entry.toObject()
-    const people = await findPeople([saved.authorId, ...saved.coAuthorIds])
-    res.json({ entry: entryView(saved, people, true), changed: result.changed })
+    res.json({ entry: await savedEntryView(result.entry), changed: result.changed })
+  })
+
+  // Ticks or unticks a protocol step in the draft, found by its path (see stepsOf in
+  // @protoeln/content); the server records who ticked it and when
+  router.put('/entries/:code/steps', async (req, res) => {
+    const user = requireUser(res)
+    const { entry, project } = await projectOfEntry(req.params.code)
+    checkCanContribute(project, user)
+    const body = new BodyReader(req.body)
+    const basedOn = body.date('basedOn')
+    const path = body.indexPath('path')
+    const done = body.boolean('done')
+    body.done()
+
+    const result = await tickStep({ entryId: entry._id, user, basedOn, path, done })
+    res.json({ entry: await savedEntryView(result.entry), changed: result.changed })
   })
 
   router.post('/entries/:code/versions', async (req, res) => {

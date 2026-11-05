@@ -70,6 +70,8 @@ shown once its view includes it.
   are identified by `id`.
 - **Project members** aren't listed.
 - An entry's `updatedAt` is what a save sends back as `basedOn`.
+- A ticked protocol step records who ticked it by ORCID iD (`attrs.doneBy`). An entry's
+  `contentPeople` gives their names, by ORCID iD.
 
 ## Writing
 
@@ -82,10 +84,15 @@ everything else needs a contributor or admin of the project (otherwise 403).
 | `POST /api/v1/projects/:code/notebooks` | `title`, optional `description` | Creates a notebook owned by the requester (201) |
 | `POST /api/v1/notebooks/:id/entries` | `kind` (`experiment`, `protocol` or `note`), `title`, optional `content` | Creates a draft entry by the requester (201) |
 | `PUT /api/v1/entries/:code/draft` | `basedOn` (the `updatedAt` of the draft being edited), `title`, `content` | Saves the draft and records what changed; author and co-authors only |
+| `PUT /api/v1/entries/:code/steps` | `basedOn`, `path` (where the step is in the draft, e.g. `[2, 0, 1]`), `done` (true or false) | Ticks or unticks a protocol step, and records what changed; the server sets who ticked it (`doneBy`) and when (`doneAt`); author and co-authors only |
 | `POST /api/v1/entries/:code/versions` | optional `note` | Creates the next version (201); author and co-authors only |
 
-A save whose `basedOn` is out of date (someone else has saved since) is refused with 409, so
-work is never silently overwritten.
+A save or tick whose `basedOn` is out of date (someone else has saved since) is refused with
+409, so work is never silently overwritten, and a step is never ticked in the wrong place.
+
+Ticks are only made by `PUT …/steps`, so they can be trusted. Content saved as a draft, or given
+when creating an entry, can keep the ticks the draft already has (when steps are moved, copied
+or deleted), but can't add or change one (422).
 
 ## Members
 

@@ -79,6 +79,8 @@ export interface Entry extends EntrySummary {
   coAuthors: Person[]
   contentFormat: string
   content: DocNode
+  // The names of the people the content refers to by ORCID iD (who ticked each step)
+  contentPeople: Record<string, string>
   text: string
   tags: string[]
   createdAt: string
@@ -206,6 +208,17 @@ export function saveDraft(
   return sendJson<{ entry: Entry; changed: boolean }>(
     'PUT',
     `/api/v1/entries/${encodeURIComponent(code)}/draft`,
+    body,
+  )
+}
+
+// Ticks or unticks the protocol step at `path` in the draft (see stepsOf in @protoeln/content).
+// The API records who ticked it and when; like a save, it's refused (409) if the draft has been
+// saved since `basedOn`.
+export function tickStep(code: string, body: { basedOn: string; path: number[]; done: boolean }) {
+  return sendJson<{ entry: Entry; changed: boolean }>(
+    'PUT',
+    `/api/v1/entries/${encodeURIComponent(code)}/steps`,
     body,
   )
 }

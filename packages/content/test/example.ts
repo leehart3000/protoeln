@@ -91,7 +91,7 @@ export const example: DocNode = {
     { type: 'fileBlock', attrs: { fileId: 'F1', caption: 'Gel photo' } },
     {
       type: 'protocolStep',
-      attrs: { done: true, doneBy: 'U1', doneAt: '2026-11-03T12:00:00Z' },
+      attrs: { done: true, doneBy: '0000-0002-1825-0097', doneAt: '2026-11-03T12:00:00Z' },
       content: [{ type: 'text', text: 'Transfer to membrane' }],
     },
     { type: 'protocolStep', attrs: { done: false }, content: [{ type: 'text', text: 'Block' }] },

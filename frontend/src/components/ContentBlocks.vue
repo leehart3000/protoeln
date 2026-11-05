@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { BlockNode } from '@protoeln/content'
+import { computed } from 'vue'
 
 import { InlineContent, isSafeHref } from '../content'
+import { formatDateTime } from '../format'
 import { StepDoneIcon, StepIcon } from '../icons'
 import { table, tableCell, tableHead, tableHeader, tableWrapper, textLink } from '../styles'
 
@@ -9,7 +11,32 @@ import { table, tableCell, tableHead, tableHeader, tableWrapper, textLink } from
 // kind of block in the format, and calls itself for blocks inside blocks (list items, quotes
 // and table cells). Headings in the content come below the page's own headings (h1 and h2), so
 // a level 1 heading is shown as h3.
-defineProps<{ blocks: BlockNode[] }>()
+//
+// Protocol steps say who ticked them and when. Given `tick`, each step has a tick box, which
+// asks for the step to be ticked (or unticked) by its path in the document (see stepsOf in
+// @protoeln/content); the box changes once the tick has been saved and the content comes back.
+const props = withDefaults(
+  defineProps<{
+    blocks: BlockNode[]
+    // Where these blocks are in the document (empty for the document's own blocks)
+    path?: number[]
+    // Names of the people who ticked steps, by ORCID iD
+    people?: Record<string, string>
+    tick?: (path: number[], done: boolean) => void
+    // Whether a tick is being saved
+    ticking?: boolean
+  }>(),
+  { path: () => [], people: () => ({}), tick: undefined, ticking: false },
+)
+
+// Who ticked a step, and when
+function doneText(attrs: { doneBy?: string; doneAt?: string }) {
+  const who = attrs.doneBy ? (props.people[attrs.doneBy] ?? attrs.doneBy) : 'someone'
+  return attrs.doneAt ? `Done by ${who}, ${formatDateTime(attrs.doneAt)}` : `Done by ${who}`
+}
+
+// Passed on to the blocks inside blocks
+const passOn = computed(() => ({ people: props.people, tick: props.tick, ticking: props.ticking }))
 
 const MATERIAL_COLUMNS = [
   { key: 'name', label: 'Material' },
@@ -34,7 +61,7 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
     </component>
     <ul v-else-if="block.type === 'bulletList'" class="list-disc space-y-1 pl-6">
       <li v-for="(item, i) in block.content" :key="i" class="space-y-2">
-        <ContentBlocks :blocks="item.content" />
+        <ContentBlocks :blocks="item.content" :path="[...path, index, i]" v-bind="passOn" />
       </li>
     </ul>
     <ol
@@ -43,14 +70,14 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
       class="list-decimal space-y-1 pl-6"
     >
       <li v-for="(item, i) in block.content" :key="i" class="space-y-2">
-        <ContentBlocks :blocks="item.content" />
+        <ContentBlocks :blocks="item.content" :path="[...path, index, i]" v-bind="passOn" />
       </li>
     </ol>
     <blockquote
       v-else-if="block.type === 'blockquote'"
       class="space-y-2 border-l-4 border-line pl-4 text-muted"
     >
-      <ContentBlocks :blocks="block.content" />
+      <ContentBlocks :blocks="block.content" :path="[...path, index]" v-bind="passOn" />
     </blockquote>
     <pre
       v-else-if="block.type === 'codeBlock'"
@@ -66,22 +93,41 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
               :key="c"
               :class="[tableCell, cell.type === 'tableHeader' && 'bg-line/40 font-semibold']"
             >
-              <ContentBlocks :blocks="cell.content" />
+              <ContentBlocks
+                :blocks="cell.content"
+                :path="[...path, index, r, c]"
+                v-bind="passOn"
+              />
             </component>
           </tr>
         </tbody>
       </table>
     </div>
-    <div v-else-if="block.type === 'protocolStep'" class="flex items-start gap-2">
-      <StepDoneIcon
-        v-if="block.attrs.done"
-        aria-hidden="true"
-        class="mt-0.5 size-5 shrink-0 text-primary"
-      />
-      <StepIcon v-else aria-hidden="true" class="mt-0.5 size-5 shrink-0 text-muted" />
-      <p>
-        <span class="sr-only">{{ block.attrs.done ? 'Done:' : 'To do:' }}</span>
-        <InlineContent :nodes="block.content ?? []" />
+    <div v-else-if="block.type === 'protocolStep'">
+      <label v-if="tick" class="flex cursor-pointer items-start gap-2">
+        <input
+          type="checkbox"
+          class="mt-0.5 size-5 shrink-0 cursor-pointer accent-primary disabled:cursor-wait"
+          :checked="block.attrs.done"
+          :disabled="ticking"
+          @click.prevent="tick?.([...path, index], !block.attrs.done)"
+        />
+        <span><InlineContent :nodes="block.content ?? []" /></span>
+      </label>
+      <div v-else class="flex items-start gap-2">
+        <StepDoneIcon
+          v-if="block.attrs.done"
+          aria-hidden="true"
+          class="mt-0.5 size-5 shrink-0 text-primary"
+        />
+        <StepIcon v-else aria-hidden="true" class="mt-0.5 size-5 shrink-0 text-muted" />
+        <p>
+          <span class="sr-only">{{ block.attrs.done ? 'Done:' : 'To do:' }}</span>
+          <InlineContent :nodes="block.content ?? []" />
+        </p>
+      </div>
+      <p v-if="block.attrs.done && block.attrs.doneBy" class="mt-0.5 pl-7 text-sm text-muted">
+        {{ doneText(block.attrs) }}
       </p>
     </div>
     <div v-else-if="block.type === 'materials'" :class="tableWrapper">

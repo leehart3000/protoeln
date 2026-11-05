@@ -216,4 +216,22 @@ describe('editing an entry', () => {
     )
     expect(screen.getByRole('button', { name: 'Table' })).not.toHaveAttribute('aria-disabled')
   })
+
+  it('starts an empty entry with a line to type on, which can become a protocol step', async () => {
+    const empty = { ...mine, content: { type: 'doc' as const, content: [] } }
+    const fetchMock = fakeApi(
+      entryAnswers(empty, { [`PUT ${ENTRY}/draft`]: { entry: empty, changed: true } }),
+    )
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.click(await screen.findByRole('button', { name: 'Protocol step' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('Saved')
+
+    expect(sentBody(fetchMock, 'PUT', `${ENTRY}/draft`)).toMatchObject({
+      content: { type: 'doc', content: [{ type: 'protocolStep', attrs: { done: false } }] },
+    })
+  })
 })

@@ -135,13 +135,21 @@ export function entrySummary(entry: EntrySummaryRecord, people: People) {
 
 // `updatedAt` is also what a save sends back as `basedOn`
 // `canEdit` is whether the requester can change it (see canEditEntry in access.ts)
-export function entryView(entry: EntryRecord, people: People, canEdit: boolean) {
+// `named` gives the names of people the content refers to by ORCID iD (who ticked each
+// protocol step; see findPeopleNamedIn in data/queries.ts)
+export function entryView(
+  entry: EntryRecord,
+  people: People,
+  canEdit: boolean,
+  named: Map<string, string> = new Map(),
+) {
   return {
     ...entrySummary(entry, people),
     canEdit,
     coAuthors: entry.coAuthorIds.map((id) => person(people, id)),
     contentFormat: entry.contentFormat,
     content: entry.content,
+    contentPeople: Object.fromEntries(named),
     text: entry.text,
     tags: entry.tags,
     entities: entry.entities,

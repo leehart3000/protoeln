@@ -2,9 +2,12 @@ import mongoose from 'mongoose'
 import {
   CONTENT_FORMAT,
   checkDocument,
+  pathText,
+  stepsOf,
   toMarkdown,
   toPlainText,
   type DocNode,
+  type ProtocolStepNode,
 } from '@protoeln/content'
 
 import { isLocked } from '../access.ts'
@@ -16,10 +19,10 @@ import { EntryChangeModel } from './models/entry-change.ts'
 import { EntryVersionModel } from './models/entry-version.ts'
 import { EntryModel, ENTRY_KINDS } from './models/entry.ts'
 
-// What can be done to an entry: create it, save its draft, and create versions of it. Each
-// operation that writes more than one record does so in a transaction, so that either all of
-// its records are saved or none are: a save is never recorded without its change, nor a
-// version without the entry knowing about it.
+// What can be done to an entry: create it, save its draft, tick off its protocol steps, and
+// create versions of it. Each operation that writes more than one record does so in a
+// transaction, so that either all of its records are saved or none are: a save is never
+// recorded without its change, nor a version without the entry knowing about it.
 
 type Id = mongoose.Types.ObjectId | string
 
@@ -30,6 +33,42 @@ function checkContent(content: unknown): DocNode {
   }
   return content as DocNode
 }
+
+// A step's tick (whether it's done, who ticked it and when), for comparing ticks
+function tickOf(step: ProtocolStepNode) {
+  const { done, doneBy, doneAt } = step.attrs
+  return JSON.stringify([done === true, doneBy ?? null, doneAt ?? null])
+}
+const UNTICKED = tickOf({ type: 'protocolStep', attrs: { done: false } })
+
+// Steps are ticked and unticked with tickStep, which records who and when from the server, so
+// that a tick can be trusted. Content saved any other way may keep the ticks it already has
+// (moving, copying or deleting steps), but can't add or change one.
+function checkTicksKept(before: DocNode, after: DocNode) {
+  const kept = new Map<string, number>()
+  for (const { step } of stepsOf(before)) {
+    kept.set(tickOf(step), (kept.get(tickOf(step)) ?? 0) + 1)
+  }
+  const problems: { path: string; message: string }[] = []
+  for (const { path, step } of stepsOf(after)) {
+    const tick = tickOf(step)
+    if (tick === UNTICKED) continue
+    const left = kept.get(tick) ?? 0
+    if (left === 0) {
+      problems.push({
+        path: `${pathText(path)}.attrs`,
+        message: 'should be as saved: steps are ticked and unticked on the entry page',
+      })
+    } else {
+      kept.set(tick, left - 1)
+    }
+  }
+  if (problems.length > 0) {
+    throw new InvalidError('The entry content is not valid', problems)
+  }
+}
+
+const EMPTY_DOC: DocNode = { type: 'doc', content: [] }
 
 async function findEntry(entryId: Id, session?: mongoose.ClientSession) {
   const entry = await EntryModel.findById(entryId).session(session ?? null)
@@ -62,7 +101,8 @@ export async function createEntry(input: {
   title: string
   content?: unknown
 }) {
-  const content = checkContent(input.content ?? { type: 'doc', content: [] })
+  const content = checkContent(input.content ?? EMPTY_DOC)
+  checkTicksKept(EMPTY_DOC, content)
   return EntryModel.create({
     code: await nextEntryCode(),
     notebookId: input.notebookId,
@@ -74,9 +114,50 @@ export async function createEntry(input: {
   })
 }
 
-// Saves an entry's draft and records what changed. `basedOn` is when the draft being edited was
-// last saved (the entry's updatedAt as the editor loaded it); if someone else has saved since,
-// the save is refused rather than silently overwriting their work.
+type EntryDocument = Awaited<ReturnType<typeof findEntry>>
+
+// Finds an entry to change, checking that this person may change it and that the draft they
+// changed is the one saved: `basedOn` is when that draft was last saved (the entry's updatedAt
+// as they loaded it). If someone else has saved since, the change is refused rather than
+// silently overwriting their work.
+async function entryToChange(
+  input: { entryId: Id; userId: Id; basedOn: Date },
+  session: mongoose.ClientSession,
+) {
+  const entry = await findEntry(input.entryId, session)
+  checkCanEdit(entry, input.userId)
+  if (entry.updatedAt.getTime() !== input.basedOn.getTime()) {
+    throw new ConflictError('This entry has been saved by someone else since you opened it')
+  }
+  return entry
+}
+
+// Saves a new title and content as the entry's draft, recording exactly what changed (if
+// anything did)
+async function storeDraft(
+  entry: EntryDocument,
+  change: { userId: Id; title: string; content: DocNode },
+  session: mongoose.ClientSession,
+) {
+  const before = { title: entry.title, content: entry.content as unknown }
+  const after = { title: change.title, content: change.content as unknown }
+  const diff = diffJson(before, after)
+  if (diff.length === 0) {
+    return { entry, changed: false }
+  }
+
+  entry.title = change.title
+  entry.content = change.content
+  entry.markModified('content')
+  entry.text = toPlainText(change.content)
+  await entry.save({ session })
+  await EntryChangeModel.create([{ entryId: entry._id, userId: change.userId, diff }], {
+    session,
+  })
+  return { entry, changed: true }
+}
+
+// Saves an entry's draft and records what changed
 export async function saveDraft(input: {
   entryId: Id
   userId: Id
@@ -87,28 +168,40 @@ export async function saveDraft(input: {
   const content = checkContent(input.content)
 
   return mongoose.connection.transaction(async (session) => {
-    const entry = await findEntry(input.entryId, session)
-    checkCanEdit(entry, input.userId)
-    if (entry.updatedAt.getTime() !== input.basedOn.getTime()) {
-      throw new ConflictError('This entry has been saved by someone else since you opened it')
-    }
+    const entry = await entryToChange(input, session)
+    checkTicksKept(entry.content as DocNode, content)
+    return storeDraft(entry, { userId: input.userId, title: input.title, content }, session)
+  })
+}
 
-    const before = { title: entry.title, content: entry.content as unknown }
-    const after = { title: input.title, content: content as unknown }
-    const diff = diffJson(before, after)
-    if (diff.length === 0) {
+// Ticks (or unticks) the protocol step at `path` in the draft (see stepsOf), recording who
+// ticked it (by ORCID iD) and when, from the server's clock. Unticking removes both; the
+// change, like any other, is kept in the entry's history.
+export async function tickStep(input: {
+  entryId: Id
+  user: { id: Id; orcid: string }
+  basedOn: Date
+  path: number[]
+  done: boolean
+}) {
+  return mongoose.connection.transaction(async (session) => {
+    const entry = await entryToChange({ ...input, userId: input.user.id }, session)
+    const content = JSON.parse(JSON.stringify(entry.content)) as DocNode
+    const found = stepsOf(content).find(
+      ({ path }) => path.length === input.path.length && path.every((i, n) => i === input.path[n]),
+    )
+    if (found === undefined) {
+      throw new InvalidError('The request has problems', [
+        { path: 'path', message: 'should be where a protocol step is in the draft' },
+      ])
+    }
+    if (found.step.attrs.done === input.done) {
       return { entry, changed: false }
     }
-
-    entry.title = input.title
-    entry.content = content
-    entry.markModified('content')
-    entry.text = toPlainText(content)
-    await entry.save({ session })
-    await EntryChangeModel.create([{ entryId: entry._id, userId: input.userId, diff }], {
-      session,
-    })
-    return { entry, changed: true }
+    found.step.attrs = input.done
+      ? { done: true, doneBy: input.user.orcid, doneAt: new Date().toISOString() }
+      : { done: false }
+    return storeDraft(entry, { userId: input.user.id, title: entry.title, content }, session)
   })
 }
 

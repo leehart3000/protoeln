@@ -1,4 +1,4 @@
-import { mergeAttributes, Node, type Extensions } from '@tiptap/core'
+import { Extension, mergeAttributes, Node, type Extensions } from '@tiptap/core'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
@@ -36,6 +36,38 @@ const ProtocolStep = Node.create({
       mergeAttributes(HTMLAttributes, { 'data-type': 'protocol-step', class: 'protocol-step' }),
       0,
     ]
+  },
+})
+
+// Enter in a protocol step works as in a list: it starts a new step, unticked (a tick is only
+// ever made on the entry page), and Enter in an empty step ends the steps with a paragraph.
+// This is an extension of its own, with a high priority, so it comes before the editor's own
+// Enter (which would start a paragraph); the step's node keeps the usual priority, so that
+// paragraphs stay the editor's default block.
+const ProtocolStepKeys = Extension.create({
+  name: 'protocolStepKeys',
+  priority: 1000,
+  addKeyboardShortcuts() {
+    return {
+      Enter: ({ editor }) => {
+        const { $from, $to } = editor.state.selection
+        if ($from.parent.type.name !== 'protocolStep' || !$from.sameParent($to)) return false
+        if ($from.parent.content.size === 0) {
+          return editor.commands.setNode('paragraph')
+        }
+        // One change, which says it was handled, so the editor's own Enter doesn't run as well
+        return editor.commands.command(({ tr, state, dispatch }) => {
+          const type = state.schema.nodes.protocolStep
+          if (type === undefined) return false
+          if (dispatch) {
+            tr.deleteSelection()
+            tr.split(tr.selection.from, 1, [{ type, attrs: { done: false } }])
+            tr.scrollIntoView()
+          }
+          return true
+        })
+      },
+    }
   },
 })
 
@@ -116,6 +148,7 @@ export function editorExtensions(): Extensions {
     TableHeader,
     TableCell,
     ProtocolStep,
+    ProtocolStepKeys,
     Materials,
     DataBlock,
     FileBlock,

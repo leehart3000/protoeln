@@ -36,8 +36,12 @@ const basedOn = ref(props.entry.updatedAt)
 const unsaved = ref(false)
 const notice = ref('')
 
+// An empty entry starts as one empty paragraph, as an editor needs somewhere for the cursor to
+// be (and fromProseMirror leaves an empty last paragraph out again when saving)
+const EMPTY = { type: 'doc', content: [{ type: 'paragraph' }] }
+
 const editor = useEditor({
-  content: props.entry.content,
+  content: props.entry.content.content.length > 0 ? props.entry.content : EMPTY,
   extensions: editorExtensions(),
   editorProps: {
     attributes: {

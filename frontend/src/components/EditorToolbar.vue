@@ -187,8 +187,6 @@ interface TableTool {
 interface TableGroup {
   name: string
   tools: TableTool[]
-  // Whether it's shown (always, if not given)
-  shown?: () => boolean
 }
 
 const TABLE_GROUPS: TableGroup[] = [
@@ -236,14 +234,21 @@ const TABLE_GROUPS: TableGroup[] = [
     ],
   },
   {
-    // Merged cells aren't in the content format; one pasted in can be split here
     name: 'Cell',
-    tools: [{ label: 'Split cell', icon: SplitCellIcon, run: () => chain().splitCell().run() }],
-    shown: () => props.editor.can().splitCell(),
+    tools: [
+      {
+        // Merged cells aren't in the content format; one pasted in can be split here
+        label: 'Split cell',
+        icon: SplitCellIcon,
+        run: () => chain().splitCell().run(),
+        unavailable: () =>
+          props.editor.can().splitCell() ? undefined : 'Only a merged cell can be split.',
+      },
+    ],
   },
 ]
 
-const tableGroups = computed(() => TABLE_GROUPS.filter((group) => group.shown?.() ?? true))
+const NOT_IN_LINK = 'Put the cursor in a link to remove it.'
 
 // Adding a link asks for its address in a small form under the toolbar
 const linking = ref(false)
@@ -299,12 +304,12 @@ const toolButton =
             <LinkIcon aria-hidden="true" class="size-4" />
           </button>
           <button
-            v-if="editor.isActive('link')"
             type="button"
             :class="toolButton"
             aria-label="Remove link"
-            title="Remove link"
-            @click="chain().extendMarkRange('link').unsetLink().run()"
+            :title="editor.isActive('link') ? 'Remove link' : NOT_IN_LINK"
+            :aria-disabled="editor.isActive('link') ? undefined : 'true'"
+            @click="editor.isActive('link') && chain().extendMarkRange('link').unsetLink().run()"
           >
             <UnlinkIcon aria-hidden="true" class="size-4" />
           </button>
@@ -317,9 +322,9 @@ const toolButton =
       aria-label="Table"
       class="flex flex-wrap items-center gap-0.5 border-t border-line p-1.5"
     >
-      <template v-for="(group, index) in tableGroups" :key="group.name">
+      <template v-for="(group, index) in TABLE_GROUPS" :key="group.name">
         <span v-if="index > 0" aria-hidden="true" class="mx-0.5 h-6 w-px bg-line"></span>
-        <span aria-hidden="true" class="ml-1 text-xs font-semibold text-muted uppercase">
+        <span aria-hidden="true" class="ml-1 text-xs font-semibold text-muted">
           {{ group.name }}:
         </span>
         <button

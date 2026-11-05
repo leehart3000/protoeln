@@ -82,6 +82,30 @@ export class BodyReader {
     return value
   }
 
+  // A required true-or-false field
+  boolean(field: string): boolean {
+    const value = this.body[field]
+    if (typeof value !== 'boolean') {
+      this.problems.push({ path: field, message: 'should be true or false' })
+      return false
+    }
+    return value
+  }
+
+  // A required list of positions, such as [2, 0, 1] (see stepsOf in @protoeln/content)
+  indexPath(field: string): number[] {
+    const value = this.body[field]
+    if (
+      !Array.isArray(value) ||
+      value.length === 0 ||
+      !value.every((index) => Number.isInteger(index) && index >= 0)
+    ) {
+      this.problems.push({ path: field, message: 'should be a list of whole numbers, 0 or more' })
+      return []
+    }
+    return value as number[]
+  }
+
   oneOf<T extends string>(field: string, allowed: readonly T[]): T {
     const value = this.body[field]
     if (!allowed.includes(value as T)) {

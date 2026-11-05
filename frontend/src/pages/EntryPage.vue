@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useQuery } from '@tanstack/vue-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed, defineAsyncComponent, ref, toRef } from 'vue'
 
-import { fetchEntry, fetchHistoryCheck, fetchVersions } from '../api'
+import { fetchEntry, fetchHistoryCheck, fetchVersions, tickStep } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import ContentBlocks from '../components/ContentBlocks.vue'
+import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import VersionForm from '../components/VersionForm.vue'
@@ -24,8 +25,8 @@ import {
 } from '../styles'
 
 // One entry: its details, its current draft, and its versions, with a check that none of the
-// versions has been changed since it was made. Its author can edit the draft (in the editor)
-// and create versions.
+// versions has been changed since it was made. Its author can edit the draft (in the editor),
+// tick off protocol steps (each tick is saved straight away), and create versions.
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
@@ -42,6 +43,27 @@ const historyCheck = useQuery({
   queryKey: ['entry', code, 'history-check'],
   queryFn: () => fetchHistoryCheck(code.value),
 })
+
+// Ticking a step saves it at once. If the draft has changed since this page loaded, the tick is
+// refused and the page fetches the draft again, so the next tick is of the steps as they are.
+const queryClient = useQueryClient()
+const ticking = useMutation({
+  mutationFn: (step: { path: number[]; done: boolean }) =>
+    tickStep(code.value, { basedOn: data.value?.entry.updatedAt ?? '', ...step }),
+  onSuccess: async (result) => {
+    queryClient.setQueryData(['entry', code.value], (old: unknown) =>
+      old && typeof old === 'object' ? { ...old, entry: result.entry } : old,
+    )
+    await queryClient.invalidateQueries({
+      predicate: (query) => ['entries', 'notebook'].includes(String(query.queryKey[0])),
+    })
+  },
+  onError: () => queryClient.invalidateQueries({ queryKey: ['entry', code.value], exact: true }),
+})
+
+function tick(path: number[], done: boolean) {
+  ticking.mutate({ path, done })
+}
 
 // The editor is loaded only when someone opens it, as it's most of the website's code and most
 // visitors only read
@@ -117,9 +139,13 @@ const crumbs = computed(() =>
           v-else
           class="mt-3 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 sm:p-6"
         >
+          <FormProblem :error="ticking.error.value" />
           <ContentBlocks
             v-if="data.entry.content.content.length > 0"
             :blocks="data.entry.content.content"
+            :people="data.entry.contentPeople"
+            :tick="data.entry.canEdit ? tick : undefined"
+            :ticking="ticking.isPending.value"
           />
           <p v-else class="text-muted">This entry is empty.</p>
         </div>
