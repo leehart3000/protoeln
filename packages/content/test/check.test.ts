@@ -111,6 +111,26 @@ describe('checkDocument', () => {
       'content[0].content[0].content',
     ],
     [
+      'a merged cell',
+      {
+        type: 'doc',
+        content: [
+          {
+            type: 'table',
+            content: [
+              {
+                type: 'tableRow',
+                content: [
+                  { type: 'tableCell', attrs: { colspan: 2 }, content: [{ type: 'paragraph' }] },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      'content[0].content[0].content[0].attrs',
+    ],
+    [
       'formatting inside a code block',
       {
         type: 'doc',

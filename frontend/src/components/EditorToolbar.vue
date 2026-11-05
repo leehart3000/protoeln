@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import type { Editor } from '@tiptap/core'
-import { ref, type Component } from 'vue'
+import { findParentNode, type Editor } from '@tiptap/core'
+import { isInTable, selectedRect } from '@tiptap/pm/tables'
+import { computed, ref, type Component } from 'vue'
 
 import {
   BoldIcon,
   BulletListIcon,
   CodeBlockIcon,
   CodeIcon,
+  ColumnLeftIcon,
+  ColumnRightIcon,
+  DeleteIcon,
+  HeaderRowIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
@@ -17,15 +22,20 @@ import {
   ProtocolStepIcon,
   QuoteIcon,
   RedoIcon,
+  RowAboveIcon,
+  RowBelowIcon,
+  SplitCellIcon,
   SubscriptIcon,
   SuperscriptIcon,
+  TableIcon,
   UndoIcon,
   UnlinkIcon,
 } from '../icons'
 import { inputClass, primaryButton, secondaryButton } from '../styles'
 
 // The editor's buttons: one for each block and mark of the content format. Each button says what
-// it does (its label is also its tooltip), and shows whether it's on where the cursor is.
+// it does (its label is also its tooltip), and shows whether it's on where the cursor is. In a
+// table, a second row of buttons adds and deletes rows and columns.
 
 const props = defineProps<{ editor: Editor }>()
 
@@ -34,6 +44,8 @@ interface Tool {
   icon: Component
   run: () => void
   active?: () => boolean
+  // Why it can't be used where the cursor is, if it can't
+  unavailable?: () => string | undefined
 }
 
 const chain = () => props.editor.chain().focus()
@@ -120,6 +132,14 @@ const GROUPS: Tool[][] = [
       active: () => props.editor.isActive('protocolStep'),
     },
     {
+      label: 'Table',
+      icon: TableIcon,
+      run: () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+      active: () => props.editor.isActive('table'),
+      unavailable: () =>
+        props.editor.isActive('table') ? "A table can't go inside a table." : undefined,
+    },
+    {
       label: 'Quote',
       icon: QuoteIcon,
       run: () => chain().toggleBlockquote().run(),
@@ -137,6 +157,93 @@ const GROUPS: Tool[][] = [
     { label: 'Redo', icon: RedoIcon, run: () => chain().redo().run() },
   ],
 ]
+
+// The table the cursor is in, if any, and whether its first row is a header row
+const table = computed(
+  () => findParentNode((node) => node.type.name === 'table')(props.editor.state.selection)?.node,
+)
+const hasHeaderRow = computed(
+  () => table.value?.firstChild?.firstChild?.type.name === 'tableHeader',
+)
+
+// Whether deleting would remove every row (or column) of the table. The editor won't do that
+// (it does nothing instead), so deleting the last row or column deletes the whole table.
+function wouldEmpty(axis: 'rows' | 'columns') {
+  const state = props.editor.state
+  if (!isInTable(state)) return true
+  const { top, bottom, left, right, map } = selectedRect(state)
+  return axis === 'rows' ? top === 0 && bottom === map.height : left === 0 && right === map.width
+}
+
+interface TableTool {
+  label: string
+  icon: Component
+  run: () => boolean
+  // Why it can't be used where the cursor is, if it can't
+  unavailable?: () => string | undefined
+  pressed?: () => boolean
+}
+
+interface TableGroup {
+  name: string
+  tools: TableTool[]
+  // Whether it's shown (always, if not given)
+  shown?: () => boolean
+}
+
+const TABLE_GROUPS: TableGroup[] = [
+  {
+    name: 'Table',
+    tools: [{ label: 'Delete table', icon: DeleteIcon, run: () => chain().deleteTable().run() }],
+  },
+  {
+    name: 'Row',
+    tools: [
+      {
+        label: 'Header row',
+        icon: HeaderRowIcon,
+        run: () => chain().toggleHeaderRow().run(),
+        pressed: () => hasHeaderRow.value,
+      },
+      { label: 'Add row above', icon: RowAboveIcon, run: () => chain().addRowBefore().run() },
+      { label: 'Add row below', icon: RowBelowIcon, run: () => chain().addRowAfter().run() },
+      {
+        label: 'Delete row',
+        icon: DeleteIcon,
+        run: () => (wouldEmpty('rows') ? chain().deleteTable().run() : chain().deleteRow().run()),
+      },
+    ],
+  },
+  {
+    name: 'Column',
+    tools: [
+      {
+        label: 'Add column left',
+        icon: ColumnLeftIcon,
+        run: () => chain().addColumnBefore().run(),
+      },
+      {
+        label: 'Add column right',
+        icon: ColumnRightIcon,
+        run: () => chain().addColumnAfter().run(),
+      },
+      {
+        label: 'Delete column',
+        icon: DeleteIcon,
+        run: () =>
+          wouldEmpty('columns') ? chain().deleteTable().run() : chain().deleteColumn().run(),
+      },
+    ],
+  },
+  {
+    // Merged cells aren't in the content format; one pasted in can be split here
+    name: 'Cell',
+    tools: [{ label: 'Split cell', icon: SplitCellIcon, run: () => chain().splitCell().run() }],
+    shown: () => props.editor.can().splitCell(),
+  },
+]
+
+const tableGroups = computed(() => TABLE_GROUPS.filter((group) => group.shown?.() ?? true))
 
 // Adding a link asks for its address in a small form under the toolbar
 const linking = ref(false)
@@ -158,23 +265,24 @@ function applyLink() {
 }
 
 const toolButton =
-  'inline-flex size-9 items-center justify-center rounded-md text-muted hover:bg-line/50 hover:text-fg aria-pressed:bg-primary/15 aria-pressed:text-primary'
+  'inline-flex size-9 items-center justify-center rounded-md text-muted hover:bg-line/50 hover:text-fg aria-pressed:bg-primary/15 aria-pressed:text-primary aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent'
 </script>
 
 <template>
   <div class="border-b border-line">
-    <div role="toolbar" aria-label="Formatting" class="flex flex-wrap items-center gap-1 p-1.5">
+    <div role="toolbar" aria-label="Formatting" class="flex flex-wrap items-center gap-0.5 p-1.5">
       <template v-for="(group, index) in GROUPS" :key="index">
-        <span v-if="index > 0" aria-hidden="true" class="mx-1 h-6 w-px bg-line"></span>
+        <span v-if="index > 0" aria-hidden="true" class="mx-0.5 h-6 w-px bg-line"></span>
         <button
           v-for="tool in group"
           :key="tool.label"
           type="button"
           :class="toolButton"
           :aria-label="tool.label"
-          :title="tool.label"
+          :title="tool.unavailable?.() ?? tool.label"
           :aria-pressed="tool.active ? tool.active() : undefined"
-          @click="tool.run"
+          :aria-disabled="tool.unavailable?.() ? 'true' : undefined"
+          @click="tool.unavailable?.() || tool.run()"
         >
           <component :is="tool.icon" aria-hidden="true" class="size-4" />
         </button>
@@ -201,6 +309,32 @@ const toolButton =
             <UnlinkIcon aria-hidden="true" class="size-4" />
           </button>
         </template>
+      </template>
+    </div>
+    <div
+      v-if="table"
+      role="toolbar"
+      aria-label="Table"
+      class="flex flex-wrap items-center gap-0.5 border-t border-line p-1.5"
+    >
+      <template v-for="(group, index) in tableGroups" :key="group.name">
+        <span v-if="index > 0" aria-hidden="true" class="mx-0.5 h-6 w-px bg-line"></span>
+        <span aria-hidden="true" class="ml-1 text-xs font-semibold text-muted uppercase">
+          {{ group.name }}:
+        </span>
+        <button
+          v-for="tool in group.tools"
+          :key="tool.label"
+          type="button"
+          :class="toolButton"
+          :aria-label="tool.label"
+          :title="tool.unavailable?.() ?? tool.label"
+          :aria-pressed="tool.pressed?.()"
+          :aria-disabled="tool.unavailable?.() ? 'true' : undefined"
+          @click="tool.unavailable?.() || tool.run()"
+        >
+          <component :is="tool.icon" aria-hidden="true" class="size-4" />
+        </button>
       </template>
     </div>
     <form

@@ -136,8 +136,20 @@ function listContent(value: unknown, path: string, problems: Problem[]) {
   checkList(node.content, at(path, 'content'), problems, checkListItem, { nonEmpty: true })
 }
 
+// A cell holds blocks, and has no attributes: the format has no merged cells
+function cellContent(value: unknown, path: string, problems: Problem[]) {
+  const node = value as Record<string, unknown>
+  if (node.attrs !== undefined) {
+    problems.push({
+      path: at(path, 'attrs'),
+      message: "should not be there: a cell can't span several columns or rows (split it first)",
+    })
+  }
+  blockContent(value, path, problems)
+}
+
 const checkTableCell: Check = (value, path, problems) =>
-  checkNode(value, path, problems, { tableCell: blockContent, tableHeader: blockContent }, 'a cell')
+  checkNode(value, path, problems, { tableCell: cellContent, tableHeader: cellContent }, 'a cell')
 
 function rowContent(value: unknown, path: string, problems: Problem[]) {
   const node = value as Record<string, unknown>

@@ -37,6 +37,18 @@ function optionalText<K extends string>(attrs: Json, keys: readonly K[]) {
   return kept
 }
 
+// A table cell's colspan and rowspan, when either isn't 1. (Column widths aren't content, so
+// they're left out, as are spans of 1.)
+function spanOf(attrs: Json) {
+  const span: Json = {}
+  for (const key of ['colspan', 'rowspan']) {
+    if (attrs[key] !== undefined && attrs[key] !== 1) {
+      span[key] = attrs[key]
+    }
+  }
+  return Object.keys(span).length > 0 ? span : undefined
+}
+
 function mark(value: unknown): Mark {
   if (!isObject(value)) return value as Mark
   switch (value.type) {
@@ -128,10 +140,14 @@ function block(value: unknown): BlockNode {
           type: 'tableRow' as const,
           content: list(isObject(row) ? row.content : []).map((cell) => {
             const node = isObject(cell) ? cell : {}
-            return {
+            const kept = {
               type: node.type === 'tableHeader' ? ('tableHeader' as const) : ('tableCell' as const),
               content: blocks(node.content),
             }
+            // The format has no merged cells, so a cell spanning several columns or rows keeps
+            // its span, for checking to report, rather than quietly losing it
+            const span = spanOf(attrsOf(node))
+            return span ? ({ ...kept, attrs: span } as typeof kept) : kept
           }),
         })),
       }

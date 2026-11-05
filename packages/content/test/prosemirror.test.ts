@@ -110,6 +110,42 @@ describe('fromProseMirror', () => {
     })
   })
 
+  it('keeps the span of a merged table cell, so checking reports it', () => {
+    const doc = fromProseMirror({
+      type: 'doc',
+      content: [
+        {
+          type: 'table',
+          content: [
+            {
+              type: 'tableRow',
+              content: [
+                {
+                  type: 'tableCell',
+                  attrs: { colspan: 2, rowspan: 1, colwidth: [120, 80] },
+                  content: [{ type: 'paragraph' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(doc.content[0]).toEqual({
+      type: 'table',
+      content: [
+        {
+          type: 'tableRow',
+          content: [{ type: 'tableCell', attrs: { colspan: 2 }, content: [{ type: 'paragraph' }] }],
+        },
+      ],
+    })
+    expect(checkDocument(doc).map((problem) => problem.path)).toEqual([
+      'content[0].content[0].content[0].attrs',
+    ])
+  })
+
   it('passes on anything the format does not know, so checking reports it', () => {
     const doc = fromProseMirror({
       type: 'doc',

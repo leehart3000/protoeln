@@ -140,6 +140,11 @@
     font-weight: 600;
   }
 
+  /* Cells chosen together, by dragging across them */
+  .editor-content :where(.selectedCell) {
+    background-color: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  }
+
   /* A protocol step, with its tick box */
   .editor-content .protocol-step {
     position: relative;

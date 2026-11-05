@@ -21,7 +21,7 @@ can be introduced alongside this one.
 | `bulletList`, `orderedList` | List items (`listItem`), each holding blocks; an ordered list may set `attrs.start` |
 | `blockquote` | Blocks |
 | `codeBlock` | Plain text, without formatting |
-| `table` | Rows (`tableRow`) of cells (`tableCell` or `tableHeader`), each holding blocks |
+| `table` | Rows (`tableRow`) of cells (`tableCell` or `tableHeader`), each holding blocks; cells have no attributes, so there are no merged cells |
 | `dataBlock` | Shows a data item: `attrs.dataItemId` |
 | `fileBlock` | Shows an image or links to a file: `attrs.fileId`, optional `attrs.caption` |
 | `protocolStep` | A step that can be ticked off: `attrs.done`, optional `attrs.doneBy` and `attrs.doneAt`; inline content |
@@ -42,7 +42,9 @@ Text can carry these marks: `bold`, `italic`, `code`, `subscript`, `superscript`
 at their defaults (a code block's language, a link's target, a table cell's colspan), nulls for
 optional attributes, and empty content lists are left out, as are empty paragraphs at the very
 end of the document (editors keep one there to type into). Anything the format doesn't list is
-passed on unchanged, so checking reports it rather than losing it.
+passed on unchanged, so checking reports it rather than losing it. So is a table cell's span when
+it isn't 1 (a merged cell, perhaps pasted in): it's kept for checking to report, and the cell can
+be split in the editor. Column widths are left out, as how wide a column is drawn isn't content.
 
 ## Checking
 

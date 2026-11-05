@@ -7,7 +7,7 @@ import { onBeforeRouteLeave } from 'vue-router'
 
 import { saveDraft, type Entry } from '../api'
 import { editorExtensions } from '../editor/extensions'
-import { SaveIcon, VersionIcon } from '../icons'
+import { SavedIcon, SaveIcon, UnsavedIcon, VersionIcon } from '../icons'
 import {
   dangerButton,
   fieldLabel,
@@ -68,7 +68,7 @@ const saving = useMutation({
   onSuccess: async (result) => {
     basedOn.value = result.entry.updatedAt
     unsaved.value = false
-    notice.value = result.changed ? 'Saved.' : 'Saved: nothing had changed.'
+    notice.value = result.changed ? 'Saved' : 'Saved (nothing had changed)'
     queryClient.setQueryData(['entry', props.entry.code], (old: unknown) =>
       old && typeof old === 'object' ? { ...old, entry: result.entry } : old,
     )
@@ -151,7 +151,12 @@ onBeforeUnmount(() => {
       <button type="button" :class="secondaryButton" @click="close">Close editor</button>
       <!-- Always present, so screen readers announce each new notice -->
       <p role="status" class="text-sm font-medium empty:hidden">
-        {{ unsaved ? 'Unsaved changes' : notice }}
+        <span v-if="unsaved" class="inline-flex items-center gap-1.5 text-danger">
+          <UnsavedIcon aria-hidden="true" class="size-4 shrink-0" />Unsaved changes
+        </span>
+        <span v-else-if="notice" class="inline-flex items-center gap-1.5 text-primary">
+          <SavedIcon aria-hidden="true" class="size-4 shrink-0" />{{ notice }}
+        </span>
       </p>
     </div>
     <VersionForm v-if="versioning && !unsaved" :code="entry.code" @close="versioning = false" />
