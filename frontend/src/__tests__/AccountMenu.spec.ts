@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { screen } from '@testing-library/vue'
+import { screen, within } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 
 import { fakeApi, renderAt } from './helpers'
@@ -52,6 +52,17 @@ describe('AccountMenu', () => {
     await renderAt('/')
 
     expect(await screen.findByRole('link', { name: 'Sign in' })).toBeInTheDocument()
+  })
+})
+
+describe('site admins', () => {
+  it('marks a site admin with a gold shield, in the header and on their profile', async () => {
+    fakeApi({ '/api/v1/me': { user: { ...carberry, siteAdmin: true } } })
+    await renderAt('/profile')
+
+    const link = await screen.findByRole('link', { name: 'Josiah Carberry Site admin' })
+    expect(within(link).getByTitle('Site admin')).toBeInTheDocument()
+    expect(screen.getByText('You can read every project, and add to any of them.')).toBeVisible()
   })
 })
 

@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router'
 
 import AccountMenu from './components/AccountMenu.vue'
+import EnvironmentBadge from './components/EnvironmentBadge.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { EntryIcon, NotebookIcon, ProjectIcon } from './icons'
 
@@ -42,6 +43,7 @@ function navLinkClass(current: boolean) {
             Proto<span class="font-bold text-primary">ELN</span>
           </span>
         </RouterLink>
+        <EnvironmentBadge />
         <div class="ml-auto flex items-center gap-1">
           <AccountMenu />
           <ThemeToggle />

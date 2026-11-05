@@ -42,6 +42,7 @@ export {
   NotebookPen as EntryIcon,
   ShieldAlert as HistoryProblemIcon,
   ShieldCheck as HistoryIntactIcon,
+  ShieldCheck as SiteAdminIcon,
   Square as StepIcon,
   SquareCheck as StepDoneIcon,
   Save as SaveIcon,

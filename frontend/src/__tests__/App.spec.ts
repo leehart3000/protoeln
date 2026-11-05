@@ -5,6 +5,7 @@ import { fakeApi, renderAt } from './helpers'
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.unstubAllEnvs()
 })
 
 describe('App', () => {
@@ -34,5 +35,17 @@ describe('App', () => {
       'page',
     )
     expect(within(nav).getByRole('link', { name: 'Projects' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('marks the staging site, but not the real one', async () => {
+    vi.stubEnv('VITE_APP_ENVIRONMENT', 'Staging')
+    fakeApi({})
+    const { unmount } = await renderAt('/')
+    expect(screen.getByText('Staging')).toBeInTheDocument()
+    unmount()
+
+    vi.stubEnv('VITE_APP_ENVIRONMENT', '')
+    await renderAt('/')
+    expect(screen.queryByText('Staging')).not.toBeInTheDocument()
   })
 })

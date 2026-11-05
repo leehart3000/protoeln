@@ -139,5 +139,5 @@ worker-dev:
 # Check everything, build the website, and deploy it with the API to staging.protoeln.org
 deploy:
     just check
-    {{web}} build
+    VITE_APP_ENVIRONMENT=Staging {{web}} build
     {{api}} deploy

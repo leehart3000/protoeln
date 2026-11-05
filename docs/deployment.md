@@ -69,4 +69,11 @@ just deploy
 ```
 
 runs every check, builds the website, and deploys the Worker to `staging.protoeln.org`.
-Cloudflare sets up the address and its certificate the first time.
+Cloudflare sets up the address and its certificate the first time. The website is built with
+`VITE_APP_ENVIRONMENT=Staging`, so a gold "Staging" badge beside the logo shows it isn't the real
+site ("Local" on your own computer; production will have none).
+
+The new website is served straight away, but the API has been seen to take a few minutes to
+move to the new code (it runs in a Durable Object, which Cloudflare restarts on its own
+schedule). Until it has, requests the new website makes of the new API may be answered "Not
+found"; wait a few minutes and try again.

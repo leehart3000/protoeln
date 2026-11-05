@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { signInHref, type ProjectRole } from '../api'
 import PageTitle from '../components/PageTitle.vue'
 import SignOutButton from '../components/SignOutButton.vue'
+import SiteAdminBadge from '../components/SiteAdminBadge.vue'
 import { formatDate, ROLE_LABELS } from '../format'
 import { ExternalIcon, ProfileIcon, SignInIcon } from '../icons'
 import {
@@ -74,7 +75,10 @@ const ALLOWS: Record<ProjectRole, string> = {
       </template>
       <template v-if="user.siteAdmin">
         <dt class="text-muted">Site admin</dt>
-        <dd>Yes: you can read every project, and add to any of them.</dd>
+        <dd>
+          <SiteAdminBadge label />
+          <p class="mt-1 text-muted">You can read every project, and add to any of them.</p>
+        </dd>
       </template>
     </dl>
 

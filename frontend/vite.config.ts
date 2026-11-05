@@ -4,6 +4,12 @@ import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
+// Which site a build is for, shown as a badge in the header so it's never mistaken for the real
+// one (as in ProtoLIMS): "Staging" (set by `just deploy`), "Local" on your own computer, and
+// nothing for production (or in CI checks and tests, unless a test sets it). Vite gives VITE_*
+// variables to the app as import.meta.env.VITE_*.
+process.env.VITE_APP_ENVIRONMENT ??= process.env.CI || process.env.VITEST ? '' : 'Local'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), tailwindcss()],

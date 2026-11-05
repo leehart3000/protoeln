@@ -6,6 +6,7 @@ import { signInHref } from '../api'
 import { ProfileIcon, SignInIcon } from '../icons'
 import { useMe } from '../useMe'
 import SignOutButton from './SignOutButton.vue'
+import SiteAdminBadge from './SiteAdminBadge.vue'
 
 // Signing in and out, in the header, as in ProtoLIMS. Signing in leaves the site for ORCID,
 // which sends the browser back to the same page afterwards. Once signed in, the name links to
@@ -30,6 +31,9 @@ const headerButton =
       <RouterLink to="/profile" title="Your profile" :class="headerButton">
         <ProfileIcon aria-hidden="true" class="size-5 shrink-0" />
         <span class="max-w-40 truncate max-sm:sr-only">{{ user.name }}</span>
+        <!-- A space between the name and "Site admin", so screen readers don't run them together
+          (Vue leaves out the spaces between tags; this one doesn't show, as the link is flex) -->
+        <template v-if="user.siteAdmin">{{ ' ' }}<SiteAdminBadge /></template>
       </RouterLink>
       <SignOutButton
         :button-class="[headerButton, 'max-sm:hidden']"
