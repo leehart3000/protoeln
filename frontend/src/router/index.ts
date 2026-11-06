@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
+import AboutPage from '../pages/AboutPage.vue'
 import EntriesPage from '../pages/EntriesPage.vue'
 import EntryPage from '../pages/EntryPage.vue'
 import HomePage from '../pages/HomePage.vue'
@@ -9,6 +10,7 @@ import NewProjectPage from '../pages/NewProjectPage.vue'
 import NotebookPage from '../pages/NotebookPage.vue'
 import NotebooksPage from '../pages/NotebooksPage.vue'
 import NotFoundPage from '../pages/NotFoundPage.vue'
+import PrivacyPage from '../pages/PrivacyPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import ProjectPage from '../pages/ProjectPage.vue'
 import ProjectsPage from '../pages/ProjectsPage.vue'
@@ -29,6 +31,8 @@ export const routes: RouteRecordRaw[] = [
   { path: '/entries/:code', component: EntryPage, props: true },
   { path: '/entries/:code/versions/:number', component: VersionPage, props: true },
   { path: '/profile', component: ProfilePage },
+  { path: '/about', component: AboutPage },
+  { path: '/privacy', component: PrivacyPage },
   { path: '/:pathMatch(.*)*', component: NotFoundPage },
 ]
 

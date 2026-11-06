@@ -64,6 +64,15 @@ describe('App', () => {
     expect(within(footer).getByText(/^Version /)).toHaveTextContent(VERSION)
   })
 
+  it('links to the About and Privacy pages from the footer', async () => {
+    fakeApi({})
+    await renderAt('/')
+
+    const nav = screen.getByRole('navigation', { name: 'About this site' })
+    expect(within(nav).getByRole('link', { name: 'About' })).toHaveAttribute('href', '/about')
+    expect(within(nav).getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy')
+  })
+
   it('shows a lock in the header while the site is read-only', async () => {
     fakeApi({ '/api/v1/me': { user: null, readOnly: true } })
     await renderAt('/')

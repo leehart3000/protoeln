@@ -7,6 +7,8 @@ import ExternalLink from './components/ExternalLink.vue'
 import ReadOnlyBadge from './components/ReadOnlyBadge.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { EntryIcon, NotebookIcon, ProjectIcon } from './icons'
+import { SITE } from './site'
+import { textLink } from './styles'
 
 // The main navigation, as in ProtoLIMS: a link to the list of each kind of record. A link is
 // marked as the current one on its list and on the pages of its records (so "Notebooks" is
@@ -20,8 +22,8 @@ const NAV_LINKS = [
 const route = useRoute()
 
 // The footer, as in ProtoLIMS's: where the source code is (the AGPL asks for it to be offered),
-// and which version and commit this is (see buildInfo in vite.config.ts)
-const SOURCE_URL = 'https://gitlab.com/leehart3000/protoeln'
+// links to the About and Privacy pages, and which version and commit this is (see buildInfo in
+// vite.config.ts)
 const LICENCE_URL = 'https://www.gnu.org/licenses/agpl-3.0.html'
 const VERSION = `${import.meta.env.VITE_APP_VERSION}/${import.meta.env.VITE_APP_COMMIT}`
 
@@ -83,9 +85,13 @@ function navLinkClass(current: boolean) {
         class="mx-auto flex max-w-6xl flex-wrap justify-between gap-x-6 gap-y-2 px-4 py-6 text-sm text-muted"
       >
         <p>
-          ProtoELN is <ExternalLink :href="SOURCE_URL" text="free software" /> under the
+          ProtoELN is <ExternalLink :href="SITE.sourceUrl" text="free software" /> under the
           <ExternalLink :href="LICENCE_URL" text="GNU AGPL v3" after="." />
         </p>
+        <nav aria-label="About this site" class="flex gap-4">
+          <RouterLink to="/about" :class="textLink">About</RouterLink>
+          <RouterLink to="/privacy" :class="textLink">Privacy</RouterLink>
+        </nav>
         <p>Version {{ VERSION }}</p>
       </div>
     </footer>
