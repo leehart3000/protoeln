@@ -2,14 +2,14 @@
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 
-import { fetchProjects, type Project } from '../api'
+import { fetchProjects } from '../api'
 import NewButton from '../components/NewButton.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import RowDetails from '../components/RowDetails.vue'
 import { ROLE_LABELS } from '../format'
 import { ProjectIcon } from '../icons'
-import { refusal } from '../permissions'
+import { readableByAnyone, refusal } from '../permissions'
 import { useMe } from '../useMe'
 import {
   badge,
@@ -28,12 +28,6 @@ const { data, isPending, isError } = useQuery({ queryKey: ['projects'], queryFn:
 const cannotCreate = computed(() =>
   refusal(me.data.value, me.data.value?.user?.siteAdmin === true, 'site admins'),
 )
-
-function access(project: Project) {
-  if (project.yourRole) return ROLE_LABELS[project.yourRole]
-  // (A project marked public is only public if the site lets anyone read public projects)
-  return project.publicRead && me.data.value?.publicRead ? 'Public' : ''
-}
 </script>
 
 <template>
@@ -69,8 +63,16 @@ function access(project: Project) {
                 <td :class="tableCell" class="text-muted max-md:hidden">
                   {{ project.description }}
                 </td>
+                <!-- The visitor's role in it, if any, and whether anyone can read it -->
                 <td :class="tableCell" class="max-sm:hidden">
-                  <span v-if="access(project)" :class="badge">{{ access(project) }}</span>
+                  <span class="flex flex-wrap gap-1.5">
+                    <span v-if="project.yourRole" :class="badge">
+                      {{ ROLE_LABELS[project.yourRole] }}
+                    </span>
+                    <span v-if="readableByAnyone(project, me.data.value)" :class="badge">
+                      Public
+                    </span>
+                  </span>
                 </td>
                 <RowDetails />
               </tr>

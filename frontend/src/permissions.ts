@@ -15,3 +15,9 @@ export function refusal(me: Me | undefined, allowed: boolean, who: string): stri
   }
   return me.user === null ? 'Sign in to do this.' : `Only ${who} can do this.`
 }
+
+// Whether anyone can read a project without signing in: it's marked public, and the site shows
+// public projects to everyone (PROTOELN_PUBLIC_READ)
+export function readableByAnyone(project: { publicRead: boolean }, me: Me | undefined): boolean {
+  return project.publicRead && me?.publicRead === true
+}

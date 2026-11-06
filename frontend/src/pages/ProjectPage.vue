@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, toRef } from 'vue'
 
 import { fetchProject } from '../api'
+import { ROLE_LABELS } from '../format'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import MembersSection from '../components/MembersSection.vue'
 import NewButton from '../components/NewButton.vue'
@@ -10,8 +11,8 @@ import NotebookTable from '../components/NotebookTable.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { ProjectIcon } from '../icons'
-import { refusal } from '../permissions'
-import { sectionHeading } from '../styles'
+import { readableByAnyone, refusal } from '../permissions'
+import { badge, sectionHeading } from '../styles'
 import { useMe } from '../useMe'
 
 const props = defineProps<{ code: string }>()
@@ -30,6 +31,22 @@ const cannotAdd = computed(() =>
     "the project's contributors and admins",
   ),
 )
+
+// Who can see the project, and why (a project marked public is only public if the site shows
+// public projects to everyone)
+const visibility = computed(() => {
+  const project = data.value?.project
+  if (!project) return null
+  if (readableByAnyone(project, me.data.value)) {
+    return { label: 'Public', text: 'Anyone can read it, without signing in.' }
+  }
+  return {
+    label: 'Private',
+    text: project.publicRead
+      ? "Only its members can see it. It's marked public, but this site doesn't show public projects to everyone at the moment."
+      : 'Only its members can see it.',
+  }
+})
 </script>
 
 <template>
@@ -44,6 +61,13 @@ const cannotAdd = computed(() =>
       <PageTitle :icon="ProjectIcon">{{ data.project.title }}</PageTitle>
       <p v-if="data.project.description" class="mt-2 max-w-2xl text-muted">
         {{ data.project.description }}
+      </p>
+      <p v-if="visibility" class="mt-3 max-w-2xl text-sm text-muted">
+        <span :class="badge" class="mr-1.5 text-fg">{{ visibility.label }}</span>
+        {{ visibility.text }}
+        <template v-if="data.project.yourRole">
+          Your role: {{ ROLE_LABELS[data.project.yourRole] }}.
+        </template>
       </p>
 
       <div class="mt-8 mb-3 flex items-center gap-3">

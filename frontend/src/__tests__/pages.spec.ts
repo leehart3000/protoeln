@@ -50,6 +50,14 @@ describe('projects page', () => {
     expect(await screen.findByText('Public')).toBeInTheDocument()
   })
 
+  it('shows the visitor’s role in a project as well as whether it is public', async () => {
+    fakeApi({ '/api/v1/projects': [{ ...project, yourRole: 'admin' }] })
+    await renderAt('/projects')
+
+    expect(await screen.findByText('Admin')).toBeInTheDocument()
+    expect(await screen.findByText('Public')).toBeInTheDocument()
+  })
+
   it("doesn't call a project public if the site doesn't show public projects to everyone", async () => {
     fakeApi({
       '/api/v1/me': { user: null, readOnly: false, publicRead: false },
@@ -89,6 +97,30 @@ describe('project page', () => {
       `/notebooks/${notebook.id}`,
     )
     expect(screen.getByText('Josiah Carberry')).toBeInTheDocument()
+    expect(screen.getByText('Invented example data, for trying out ProtoELN.')).toBeInTheDocument()
+  })
+
+  it('says who can see the project, and the visitor’s role in it', async () => {
+    fakeApi({
+      '/api/v1/projects/DEMO': { project: { ...project, yourRole: 'admin' }, notebooks: [] },
+    })
+    await renderAt('/projects/DEMO')
+
+    expect(await screen.findByText('Public')).toBeInTheDocument()
+    expect(screen.getByText(/Anyone can read it, without signing in/)).toHaveTextContent(
+      'Your role: Admin.',
+    )
+  })
+
+  it('calls a project private if the site doesn’t show public projects to everyone', async () => {
+    fakeApi({
+      '/api/v1/me': { user: null, readOnly: false, publicRead: false },
+      '/api/v1/projects/DEMO': { project, notebooks: [] },
+    })
+    await renderAt('/projects/DEMO')
+
+    expect(await screen.findByText('Private')).toBeInTheDocument()
+    expect(screen.getByText(/It's marked public, but this site/)).toBeInTheDocument()
   })
 
   it('says a project is not found, which is also what private projects show', async () => {
