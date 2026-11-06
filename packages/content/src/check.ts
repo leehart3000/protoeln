@@ -207,6 +207,7 @@ const BLOCKS: Record<string, Check> = {
     checkAttrs(value as Record<string, unknown>, path, problems, (attrs, attrsPath) => {
       checkString(attrs.fileId, at(attrsPath, 'fileId'), problems)
       checkString(attrs.caption, at(attrsPath, 'caption'), problems, true)
+      checkString(attrs.alt, at(attrsPath, 'alt'), problems, true)
     }),
   protocolStep: (value, path, problems) => {
     checkAttrs(value as Record<string, unknown>, path, problems, (attrs, attrsPath) => {

@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import {
   CONTENT_FORMAT,
   checkDocument,
+  fileIdsOf,
   linkedEntryCodes,
   pathText,
   stepsOf,
@@ -116,6 +117,7 @@ export async function createEntry(input: {
     content,
     text: toPlainText(content),
     linkedEntries: linkedEntryCodes(content),
+    files: fileIdsOf(content),
     tags: input.tags ?? [],
     source: input.source ?? null,
   })
@@ -168,6 +170,7 @@ async function storeDraft(
   entry.markModified('content')
   entry.text = toPlainText(change.content)
   entry.linkedEntries = linkedEntryCodes(change.content)
+  entry.files = fileIdsOf(change.content)
   await entry.save({ session })
   await EntryChangeModel.create([{ entryId: entry._id, userId: change.userId, diff }], {
     session,
@@ -263,6 +266,7 @@ export async function createVersion(input: { entryId: Id; userId: Id; note?: str
           text: toPlainText(content),
           markdown: toMarkdown(content),
           linkedEntries: linkedEntryCodes(content),
+          files: fileIdsOf(content),
           note,
           createdBy: input.userId,
           createdAt,

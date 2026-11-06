@@ -23,6 +23,7 @@ const config: Config = {
   siteAdmins: [],
   readOnly: false,
   publicRead: false,
+  files: null,
 }
 
 // A fake ORCID: its signing keys, and the ID token it hands out for a code

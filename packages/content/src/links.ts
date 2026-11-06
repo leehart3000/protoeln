@@ -20,6 +20,30 @@ export function recordLinksOf(doc: DocNode): RecordLinkNode[] {
   return found
 }
 
+// The files a document shows (fileBlock), by their ids (SHA-256s), each once, in reading order
+export function fileIdsOf(doc: DocNode): string[] {
+  const found: string[] = []
+  const walk = (nodes: unknown) => {
+    if (!Array.isArray(nodes)) return
+    for (const node of nodes as unknown[]) {
+      if (typeof node !== 'object' || node === null) continue
+      const { type, attrs, content } = node as {
+        type?: unknown
+        attrs?: unknown
+        content?: unknown
+      }
+      if (type === 'fileBlock') {
+        const fileId = (attrs as { fileId?: unknown } | undefined)?.fileId
+        if (typeof fileId === 'string') found.push(fileId)
+      } else {
+        walk(content)
+      }
+    }
+  }
+  walk(doc.content)
+  return [...new Set(found)]
+}
+
 // The codes of the ProtoELN entries a document links to, each once, in reading order
 export function linkedEntryCodes(doc: DocNode): string[] {
   const codes = recordLinksOf(doc)

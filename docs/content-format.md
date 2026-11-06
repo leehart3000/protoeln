@@ -23,7 +23,7 @@ can be introduced alongside this one.
 | `codeBlock` | Plain text, without formatting |
 | `table` | Rows (`tableRow`) of cells (`tableCell` or `tableHeader`), each holding blocks; cells have no attributes, so there are no merged cells |
 | `dataBlock` | Shows a data item: `attrs.dataItemId` |
-| `fileBlock` | Shows an image or links to a file: `attrs.fileId`, optional `attrs.caption` |
+| `fileBlock` | Shows an image or links to a file: `attrs.fileId`, the file's SHA-256 in hex (so a version's hash covers the file too), optional `attrs.caption` (shown with it) and `attrs.alt` (describing an image for people who can't see it) |
 | `protocolStep` | A step that can be ticked off: `attrs.done`; once ticked, `attrs.doneBy` (the ORCID iD of who ticked it) and `attrs.doneAt` (when, in UTC, ISO 8601), both set by the server; inline content |
 | `materials` | Reagents and consumables: `attrs.items`, each with a `name` and optional `supplier`, `catalogueNumber`, `lotNumber` and `amount` |
 | `recordLink` | A link to a record: `attrs.system`, `kind`, `url`, `label`, optional `externalId`. A link to another entry has system `protoeln`, kind `entry`, a `url` such as `/entries/ELN-2026-0003`, and the entry's code as `externalId`; a link elsewhere (e.g. a ProtoLIMS sample) has the site's host name as `system`, such as `protolims.org`. The `url` must start `https://`, `http://` or `/` |

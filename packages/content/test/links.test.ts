@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { linkedEntryCodes, recordLinksOf } from '../src/links.ts'
+import { fileIdsOf, linkedEntryCodes, recordLinksOf } from '../src/links.ts'
 import type { DocNode } from '../src/types.ts'
 
 function entryLink(code: string) {
@@ -52,5 +52,29 @@ describe('links to records', () => {
   it('lists the entries a document links to, each once', () => {
     expect(linkedEntryCodes(doc)).toEqual(['ELN-2026-0002', 'ELN-2026-0003'])
     expect(linkedEntryCodes({ type: 'doc', content: [sample] })).toEqual([])
+  })
+})
+
+describe('fileIdsOf', () => {
+  it('lists the files a document shows, each once, wherever they are', () => {
+    const file = (fileId: string) => ({ type: 'fileBlock' as const, attrs: { fileId } })
+    const doc: DocNode = {
+      type: 'doc',
+      content: [
+        file('a1'),
+        { type: 'blockquote', content: [file('b2')] },
+        {
+          type: 'table',
+          content: [
+            {
+              type: 'tableRow',
+              content: [{ type: 'tableCell', content: [file('a1'), file('c3')] }],
+            },
+          ],
+        },
+      ],
+    }
+
+    expect(fileIdsOf(doc)).toEqual(['a1', 'b2', 'c3'])
   })
 })

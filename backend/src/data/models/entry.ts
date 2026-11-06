@@ -62,6 +62,9 @@ const entrySchema = new mongoose.Schema(
     text: { type: String, default: '' },
     // The codes of the entries the content links to, so an entry can list what links to it
     linkedEntries: { type: [String], default: [] },
+    // The ids (SHA-256s) of the files the content shows, so a file can be shown to whoever can
+    // read an entry that shows it (see data/files.ts)
+    files: { type: [String], default: [] },
     tags: { type: [String], default: [] },
     entities: { type: [entitySchema], default: [] },
     // The number of the latest version (0 until the first version is created)
@@ -76,6 +79,7 @@ const entrySchema = new mongoose.Schema(
 
 entrySchema.index({ notebookId: 1, updatedAt: -1 })
 entrySchema.index({ linkedEntries: 1 })
+entrySchema.index({ files: 1 })
 // So an import can tell which records it has imported already
 entrySchema.index({ 'source.url': 1 }, { sparse: true })
 

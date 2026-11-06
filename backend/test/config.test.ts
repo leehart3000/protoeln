@@ -14,6 +14,7 @@ describe('readConfig', () => {
       siteAdmins: [],
       readOnly: false,
       publicRead: false,
+      files: null,
     })
   })
 
@@ -50,5 +51,26 @@ describe('readConfig', () => {
     expect(() => readConfig({ PROTOELN_SESSION_DAYS: '0' })).toThrow(/SESSION_DAYS/)
     expect(() => readConfig({ PROTOELN_READ_ONLY: 'yes' })).toThrow(/READ_ONLY/)
     expect(() => readConfig({ PROTOELN_PUBLIC_READ: 'yes' })).toThrow(/PUBLIC_READ/)
+  })
+
+  it('reads the file store settings, all or none', () => {
+    const settings = {
+      PROTOELN_FILES_ENDPOINT: 'https://example.r2.cloudflarestorage.com/',
+      PROTOELN_FILES_BUCKET: 'protoeln-files',
+      PROTOELN_FILES_ACCESS_KEY_ID: 'key',
+      PROTOELN_FILES_SECRET_ACCESS_KEY: 'secret',
+    }
+
+    expect(readConfig(settings).files).toEqual({
+      endpoint: 'https://example.r2.cloudflarestorage.com/',
+      bucket: 'protoeln-files',
+      region: 'auto',
+      accessKeyId: 'key',
+      secretAccessKey: 'secret',
+    })
+    expect(() => readConfig({ ...settings, PROTOELN_FILES_BUCKET: '' })).toThrow(/or none/)
+    expect(() =>
+      readConfig({ ...settings, PROTOELN_FILES_ENDPOINT: 'http://example.org' }),
+    ).toThrow(/https/)
   })
 })

@@ -156,7 +156,10 @@ function block(value: unknown): BlockNode {
     case 'fileBlock':
       return {
         type: 'fileBlock',
-        attrs: { fileId: String(attrs.fileId ?? ''), ...optionalText(attrs, ['caption'] as const) },
+        attrs: {
+          fileId: String(attrs.fileId ?? ''),
+          ...optionalText(attrs, ['caption', 'alt'] as const),
+        },
       }
     case 'protocolStep':
       return withInline(

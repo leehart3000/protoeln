@@ -1,4 +1,5 @@
 import { isValidOrcid } from './data/orcid.ts'
+import type { S3Settings } from './files/s3.ts'
 
 // Settings, from environment variables. Locally they can also come from backend/.env, which git
 // ignores, so secrets (the ORCID client secret, the database password) are never committed.
@@ -30,6 +31,34 @@ export interface Config {
   // When on, anyone can read the projects marked public, without signing in. When off, every
   // project can be seen only by its members and site admins, whatever it's marked.
   publicRead: boolean
+  // Where files (such as images in entries) are kept: an S3-compatible object store, such as
+  // Cloudflare R2. Without one, files can't be shown (see files/store.ts).
+  files: S3Settings | null
+}
+
+// The object store's settings: all of them, or none
+function fileSettings(env: Record<string, string | undefined>): S3Settings | null {
+  const endpoint = env.PROTOELN_FILES_ENDPOINT
+  const bucket = env.PROTOELN_FILES_BUCKET
+  const accessKeyId = env.PROTOELN_FILES_ACCESS_KEY_ID
+  const secretAccessKey = env.PROTOELN_FILES_SECRET_ACCESS_KEY
+  const given = [endpoint, bucket, accessKeyId, secretAccessKey].filter((value) => value)
+  if (given.length === 0) return null
+  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) {
+    throw new Error(
+      'Set all of PROTOELN_FILES_ENDPOINT, _BUCKET, _ACCESS_KEY_ID and _SECRET_ACCESS_KEY, or none',
+    )
+  }
+  if (!endpoint.startsWith('https://') && !endpoint.startsWith('http://127.0.0.1')) {
+    throw new Error('PROTOELN_FILES_ENDPOINT must start with https://')
+  }
+  return {
+    endpoint,
+    bucket,
+    region: env.PROTOELN_FILES_REGION ?? 'auto',
+    accessKeyId,
+    secretAccessKey,
+  }
 }
 
 export function readConfig(env: Record<string, string | undefined> = process.env): Config {
@@ -77,5 +106,6 @@ export function readConfig(env: Record<string, string | undefined> = process.env
     siteAdmins,
     readOnly: readOnly === 'true',
     publicRead: publicRead === 'true',
+    files: fileSettings(env),
   }
 }

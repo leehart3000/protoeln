@@ -3,8 +3,11 @@ import express, { type Request } from 'express'
 import type { CurrentUser } from './access.ts'
 import type { Config } from './config.ts'
 import { authRoutes } from './http/auth-routes.ts'
+import { s3Store } from './files/s3.ts'
+import type { FileStore } from './files/store.ts'
 import { detailRoutes } from './http/detail-routes.ts'
 import { handleErrors, notFound } from './http/errors.ts'
+import { fileRoutes } from './http/file-routes.ts'
 import { memberRoutes } from './http/member-routes.ts'
 import { refuseChanges } from './http/read-only.ts'
 import { readRoutes } from './http/routes.ts'
@@ -23,6 +26,8 @@ export interface AppOptions {
   // Whether anyone can read the site's public projects (see canRead in access.ts); from the
   // settings, unless given here (in tests). Off if neither says.
   publicRead?: boolean
+  // Where files are kept (see files/store.ts); from the settings, unless given here (in tests)
+  files?: FileStore | null
 }
 
 // Every route is under a versioned prefix, as in ProtoLIMS, so a later, incompatible version of
@@ -63,6 +68,9 @@ export function createApp(options: AppOptions = {}) {
   app.use(API, writeRoutes())
   app.use(API, detailRoutes())
   app.use(API, memberRoutes({ orcidBaseUrl }))
+  const fileSettings = options.config?.files
+  const files = options.files ?? (fileSettings ? s3Store(fileSettings) : null)
+  app.use(API, fileRoutes(files))
 
   app.use(notFound)
   app.use(handleErrors)

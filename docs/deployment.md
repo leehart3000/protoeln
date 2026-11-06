@@ -53,6 +53,22 @@ pnpm exec wrangler secret put PROTOELN_SITE_ADMINS
   own private site), every project can be seen only by its members and site admins, however
   it's marked.
 
+## Files (Cloudflare R2)
+
+Files shown in entries, such as images, are kept in an S3-compatible object store: Cloudflare
+R2 on staging and production. Locally, without one, entries show no images. Each site has its
+own bucket, reached with an access key that can only read and write that bucket:
+
+- Buckets: `protoeln-files-staging` (staging) and `protoeln-files` (production), both in
+  western Europe, neither public (files are served by the API, which checks who may see them).
+- Settings: `PROTOELN_FILES_ENDPOINT` (`https://ACCOUNT_ID.r2.cloudflarestorage.com`) and
+  `PROTOELN_FILES_BUCKET` in `vars`; `PROTOELN_FILES_ACCESS_KEY_ID` and
+  `PROTOELN_FILES_SECRET_ACCESS_KEY` as secrets. Set all four, or none: the API won't start
+  with only some of them.
+
+Other S3-compatible stores (Amazon S3, MinIO) work with the same settings, plus
+`PROTOELN_FILES_REGION` for Amazon S3.
+
 ## Who can reach staging
 
 Staging can be written to, so it's behind [Cloudflare Access](https://developers.cloudflare.com/cloudflare-one/policies/access/):

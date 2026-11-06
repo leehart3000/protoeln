@@ -86,10 +86,12 @@ export interface DataBlockNode {
   attrs: { dataItemId: string }
 }
 
-// Shows an image, or links to another kind of file
+// Shows an image, or links to another kind of file. `fileId` is the file's SHA-256 (in hex),
+// so a version's hash also covers the files it shows. `alt` describes an image for people who
+// can't see it; `caption` is shown with it.
 export interface FileBlockNode {
   type: 'fileBlock'
-  attrs: { fileId: string; caption?: string }
+  attrs: { fileId: string; caption?: string; alt?: string }
 }
 
 // A protocol step that can be ticked off, recording who ticked it and when
