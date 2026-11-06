@@ -90,7 +90,20 @@ export interface Entry extends EntrySummary {
   contentPeople: Record<string, string>
   text: string
   tags: string[]
+  // Where an imported entry came from, crediting its original authors (null if written here)
+  source: EntrySource | null
   createdAt: string
+}
+
+export interface EntrySource {
+  // The record it was imported from, such as a Zenodo record
+  url: string
+  doi: string
+  authors: string[]
+  // As YYYY-MM-DD
+  publishedOn: string
+  licence: string
+  citation: string
 }
 
 export interface VersionSummary {

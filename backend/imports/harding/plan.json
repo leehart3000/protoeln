@@ -1,0 +1,36 @@
+{
+  "project": {
+    "code": "HTT",
+    "title": "Huntingtin structure-function open lab notebook",
+    "description": "Rachel Harding's open lab notebook at the Structural Genomics Consortium, University of Toronto, on the structure and function of huntingtin, the protein behind Huntington's disease. Imported from the write-ups she and her colleagues published on Zenodo; each entry credits its own authors and record.",
+    "sourceRepository": "Zenodo (each entry links to its record). Her open notebook: https://openlabnotebooks.org/category/scientist/rachel-harding/",
+    "licence": "CC BY 4.0, as each record states: https://creativecommons.org/licenses/by/4.0/",
+    "citation": "Cite each entry's own Zenodo record, given in its details."
+  },
+  "notebook": {
+    "title": "Huntingtin structure-function",
+    "description": "Write-ups of experiments, as published on Zenodo."
+  },
+  "records": [
+    {
+      "id": "841818",
+      "title": "Preliminary p53-HTT interaction study 20170719",
+      "kind": "experiment",
+      "tags": [
+        "huntingtin",
+        "HTT",
+        "Huntington's disease",
+        "HD",
+        "p53",
+        "Protein interaction",
+        "PPI"
+      ],
+      "url": "https://zenodo.org/records/841818",
+      "doi": "10.5281/zenodo.841818",
+      "authors": ["Harding, Rachel", "Duan, Shili", "Arrowsmith, Cheryl", "Edwards, Aled"],
+      "publishedOn": "2017-07-19",
+      "licence": "CC BY 4.0 https://creativecommons.org/licenses/by/4.0/",
+      "citation": "Harding, R., Duan, S., Arrowsmith, C., & Edwards, A. (2017). Preliminary p53-HTT interaction study 20170719. Zenodo. https://doi.org/10.5281/zenodo.841818"
+    }
+  ]
+}

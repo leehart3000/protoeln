@@ -11,9 +11,11 @@ import {
   type LinkingEntry,
 } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import DetailsCard from '../components/DetailsCard.vue'
 import DisabledButton from '../components/DisabledButton.vue'
 import ContentBlocks from '../components/ContentBlocks.vue'
 import FormProblem from '../components/FormProblem.vue'
+import EntrySourceDetails from '../components/EntrySourceDetails.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import RowDetails from '../components/RowDetails.vue'
@@ -24,6 +26,9 @@ import { KIND_ICONS } from '../kinds'
 import { READ_ONLY_REASON } from '../permissions'
 import {
   badge,
+  detailList,
+  detailTerm,
+  detailValue,
   errorBox,
   rowLink,
   secondaryButton,
@@ -49,6 +54,8 @@ const { data, isPending, isError } = useQuery({
   queryKey: ['entry', code],
   queryFn: () => fetchEntry(code.value),
 })
+// Where an imported entry came from (null for an entry written here)
+const source = computed(() => data.value?.entry.source ?? null)
 const versions = useQuery({
   queryKey: ['entry', code, 'versions'],
   queryFn: () => fetchVersions(code.value),
@@ -143,24 +150,37 @@ const crumbs = computed(() =>
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="entry">
     <template v-if="data">
       <PageTitle :icon="KIND_ICONS[data.entry.kind]">{{ data.entry.title }}</PageTitle>
-      <dl class="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-        <dt class="text-muted">Code</dt>
-        <dd class="font-mono">{{ data.entry.code }}</dd>
-        <dt class="text-muted">Kind</dt>
-        <dd>{{ KIND_LABELS[data.entry.kind] }}</dd>
-        <dt class="text-muted">Status</dt>
-        <dd>
-          <span :class="badge">{{ STATUS_LABELS[data.entry.status] }}</span>
-        </dd>
-        <dt class="text-muted">Author</dt>
-        <dd>{{ data.entry.author.name }}</dd>
-        <template v-if="data.entry.coAuthors.length > 0">
-          <dt class="text-muted">Co-authors</dt>
-          <dd>{{ data.entry.coAuthors.map((person) => person.name).join(', ') }}</dd>
-        </template>
-        <dt class="text-muted">Last saved</dt>
-        <dd>{{ formatDateTime(data.entry.updatedAt) }}</dd>
-      </dl>
+      <DetailsCard>
+        <dl :class="detailList">
+          <dt :class="detailTerm">Code:</dt>
+          <dd :class="detailValue" class="font-mono">{{ data.entry.code }}</dd>
+          <dt :class="detailTerm">Kind:</dt>
+          <dd :class="detailValue">{{ KIND_LABELS[data.entry.kind] }}</dd>
+          <dt :class="detailTerm">Status:</dt>
+          <dd :class="detailValue">
+            <span :class="badge">{{ STATUS_LABELS[data.entry.status] }}</span>
+          </dd>
+          <!-- An imported entry's author is whoever imported it; its original authors are below -->
+          <dt :class="detailTerm">{{ source ? 'Imported by:' : 'Author:' }}</dt>
+          <dd :class="detailValue">{{ data.entry.author.name }}</dd>
+          <template v-if="data.entry.coAuthors.length > 0">
+            <dt :class="detailTerm">Co-authors:</dt>
+            <dd :class="detailValue">
+              {{ data.entry.coAuthors.map((person) => person.name).join(', ') }}
+            </dd>
+          </template>
+          <dt :class="detailTerm">Last saved:</dt>
+          <dd :class="detailValue">{{ formatDateTime(data.entry.updatedAt) }}</dd>
+          <template v-if="data.entry.tags.length > 0">
+            <dt :class="detailTerm">Tags:</dt>
+            <dd :class="detailValue" class="flex flex-wrap gap-1.5">
+              <span v-for="tag in data.entry.tags" :key="tag" :class="badge">{{ tag }}</span>
+            </dd>
+          </template>
+        </dl>
+        <!-- Credit for an imported entry: where it came from, and its original authors -->
+        <EntrySourceDetails v-if="source" :source="source" />
+      </DetailsCard>
 
       <section aria-labelledby="draft-heading" class="mt-8">
         <div class="flex flex-wrap items-center gap-3">

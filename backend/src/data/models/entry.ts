@@ -27,6 +27,22 @@ const entitySchema = new mongoose.Schema(
   { _id: false },
 )
 
+// Where an imported entry came from (see data/imports.ts), crediting its original authors by
+// name: the record it was imported from, its DOI, who wrote it, when it was published, its
+// licence, and how to cite it. Entries written in ProtoELN have none.
+const sourceSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    doi: { type: String, default: '' },
+    authors: { type: [String], default: [] },
+    // As YYYY-MM-DD
+    publishedOn: { type: String, default: '' },
+    licence: { type: String, default: '' },
+    citation: { type: String, default: '' },
+  },
+  { _id: false },
+)
+
 const entrySchema = new mongoose.Schema(
   {
     code: { type: String, required: true, unique: true, match: /^ELN-\d{4}-\d{4,}$/ },
@@ -52,12 +68,16 @@ const entrySchema = new mongoose.Schema(
     latestVersion: { type: Number, default: 0, min: 0 },
     // Set when this entry is an addendum correcting a signed entry
     addendumTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Entry' },
+    // Set when this entry was imported from elsewhere
+    source: { type: sourceSchema, default: null },
   },
   { collection: 'entries', timestamps: true, minimize: false },
 )
 
 entrySchema.index({ notebookId: 1, updatedAt: -1 })
 entrySchema.index({ linkedEntries: 1 })
+// So an import can tell which records it has imported already
+entrySchema.index({ 'source.url': 1 }, { sparse: true })
 
 export type Entry = InferSchemaType<typeof entrySchema>
 export const EntryModel = mongoose.model('Entry', entrySchema)

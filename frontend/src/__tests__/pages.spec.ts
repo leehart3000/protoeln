@@ -224,6 +224,56 @@ describe('entry page', () => {
     }
   }
 
+  it('credits an imported entry’s source and original authors', async () => {
+    const imported = {
+      ...protocol,
+      tags: ['huntingtin'],
+      source: {
+        url: 'https://zenodo.org/records/841818',
+        doi: '10.5281/zenodo.841818',
+        authors: ['Harding, Rachel', 'Duan, Shili'],
+        publishedOn: '2017-07-19',
+        licence: 'CC BY 4.0',
+        citation: 'Harding, R. & Duan, S. (2017). https://doi.org/10.5281/zenodo.841818',
+      },
+    }
+    fakeApi({
+      ...answers({ intact: true, problems: [] }),
+      '/api/v1/entries/ELN-2026-0001': {
+        ...answers(null)['/api/v1/entries/ELN-2026-0001'],
+        entry: imported,
+      },
+    })
+    await renderAt('/entries/ELN-2026-0001')
+
+    const details = await screen.findByRole('region', { name: 'Details' })
+    expect(within(details).getByText('Imported by:').nextElementSibling).toHaveTextContent(
+      'Josiah Carberry',
+    )
+    expect(within(details).getByText('Original authors:').nextElementSibling).toHaveTextContent(
+      'Harding, Rachel; Duan, Shili',
+    )
+    expect(within(details).getByText('Published:').nextElementSibling).toHaveTextContent(
+      '19 July 2017',
+    )
+    expect(
+      within(details).getByRole('link', {
+        name: 'https://zenodo.org/records/841818 (opens in a new tab)',
+      }),
+    ).toHaveAttribute('href', 'https://zenodo.org/records/841818')
+    expect(within(details).getAllByRole('link', { name: /doi\.org/ })).toHaveLength(2)
+    expect(within(details).getByText('huntingtin')).toBeInTheDocument()
+  })
+
+  it('names the author of an entry written here, with no source', async () => {
+    fakeApi(answers({ intact: true, problems: [] }))
+    await renderAt('/entries/ELN-2026-0001')
+
+    const details = await screen.findByRole('region', { name: 'Details' })
+    expect(within(details).getByText('Author:')).toBeInTheDocument()
+    expect(within(details).queryByText('Source')).not.toBeInTheDocument()
+  })
+
   it('lists the entries that link to it, and links to entries in its content', async () => {
     const linking = {
       ...protocolSummary,

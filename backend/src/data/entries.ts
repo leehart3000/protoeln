@@ -101,6 +101,9 @@ export async function createEntry(input: {
   kind: (typeof ENTRY_KINDS)[number]
   title: string
   content?: unknown
+  tags?: string[]
+  // For an imported entry (see models/entry.ts)
+  source?: EntrySource
 }) {
   const content = checkContent(input.content ?? EMPTY_DOC)
   checkTicksKept(EMPTY_DOC, content)
@@ -113,7 +116,19 @@ export async function createEntry(input: {
     content,
     text: toPlainText(content),
     linkedEntries: linkedEntryCodes(content),
+    tags: input.tags ?? [],
+    source: input.source ?? null,
   })
+}
+
+// Where an imported entry came from, crediting its original authors
+export interface EntrySource {
+  url: string
+  doi: string
+  authors: string[]
+  publishedOn: string
+  licence: string
+  citation: string
 }
 
 type EntryDocument = Awaited<ReturnType<typeof findEntry>>

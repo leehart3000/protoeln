@@ -8,6 +8,7 @@
     "dev": "node --env-file-if-exists=.env --watch src/server.ts",
     "start": "node src/server.ts",
     "demo-data": "node --env-file-if-exists=.env src/demo-data.ts",
+    "import-records": "node --env-file-if-exists=.env src/import-records.ts",
     "worker:dev": "wrangler dev --ip 127.0.0.1 --port 8787",
     "deploy": "wrangler deploy",
     "typecheck": "tsc",

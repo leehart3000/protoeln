@@ -9,6 +9,16 @@ export function formatDate(value: string) {
   })
 }
 
+// A calendar date given as YYYY-MM-DD, as in "19 July 2017", the same wherever the reader is
+export function formatDay(value: string) {
+  return new Date(`${value}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
 // A date and time, as in "3 Nov 2026, 18:22" (as in ProtoLIMS)
 export function formatDateTime(value: string) {
   return new Date(value).toLocaleString('en-GB', {

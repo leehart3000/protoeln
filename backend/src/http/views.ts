@@ -119,6 +119,14 @@ interface EntrySummaryRecord {
 }
 
 interface EntryRecord extends EntrySummaryRecord {
+  source?: {
+    url: string
+    doi?: string | null
+    authors?: string[] | null
+    publishedOn?: string | null
+    licence?: string | null
+    citation?: string | null
+  } | null
   coAuthorIds: Id[]
   contentFormat: string
   content: unknown
@@ -157,6 +165,17 @@ export function entryView(
     contentFormat: entry.contentFormat,
     content: entry.content,
     contentPeople: Object.fromEntries(named),
+    // Where an imported entry came from (null for entries written here)
+    source: entry.source
+      ? {
+          url: entry.source.url,
+          doi: entry.source.doi ?? '',
+          authors: entry.source.authors ?? [],
+          publishedOn: entry.source.publishedOn ?? '',
+          licence: entry.source.licence ?? '',
+          citation: entry.source.citation ?? '',
+        }
+      : null,
     text: entry.text,
     tags: entry.tags,
     entities: entry.entities,

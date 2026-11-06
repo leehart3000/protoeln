@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { ExternalIcon } from '../icons'
 import { textLink } from '../styles'
 
 // Free text (such as a licence or citation) with its line breaks kept, and its web addresses
-// as links, opening in a new tab (as ProtoLIMS's LinkedText). Only https addresses become
-// links, without any punctuation that ends a sentence or closes a bracket after them.
+// as links, opening in a new tab (as ProtoLIMS's LinkedText), with the icon ExternalLink uses
+// to show that. Only https addresses become links, without any punctuation that ends a sentence or closes a bracket after them.
 const props = defineProps<{ text: string }>()
 
 const ADDRESS = /https:\/\/[^\s<>"]+/g
@@ -35,7 +36,8 @@ const parts = computed(() => {
         :aria-label="`${part.text} (opens in a new tab)`"
         target="_blank"
         rel="noopener noreferrer"
-        >{{ part.text }}</a
+        >{{ part.text
+        }}<ExternalIcon aria-hidden="true" class="ml-0.5 inline size-3.5 align-baseline" /></a
       ><template v-else>{{ part.text }}</template></template
     ></span
   >
