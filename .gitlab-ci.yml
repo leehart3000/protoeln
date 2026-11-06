@@ -98,6 +98,8 @@ deploy-staging:
   variables:
     # Shown as a badge in the header, so staging is never mistaken for the real site
     VITE_APP_ENVIRONMENT: Staging
+    # The whole history, so the footer can say how many commits this is after the last release
+    GIT_DEPTH: '0'
   script:
     - pnpm --dir frontend build
     - pnpm --dir backend run deploy

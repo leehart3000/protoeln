@@ -3,6 +3,8 @@ import { screen, within } from '@testing-library/vue'
 
 import { fakeApi, renderAt } from './helpers'
 
+const VERSION = /^Version (unreleased|\d+\.\d+\.\d+(\+\d+)?)\/([0-9a-f]{7}|unknown)$/
+
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
@@ -47,5 +49,18 @@ describe('App', () => {
     vi.stubEnv('VITE_APP_ENVIRONMENT', '')
     await renderAt('/')
     expect(screen.queryByText('Staging')).not.toBeInTheDocument()
+  })
+
+  it('has a footer saying where the source is, its licence, and which version this is', async () => {
+    fakeApi({})
+    await renderAt('/')
+
+    const footer = screen.getByRole('contentinfo')
+    const source = within(footer).getByRole('link', { name: 'free software (opens in a new tab)' })
+    expect(source).toHaveAttribute('href', 'https://gitlab.com/leehart3000/protoeln')
+    const licence = within(footer).getByRole('link', { name: 'GNU AGPL v3 (opens in a new tab)' })
+    expect(licence).toHaveAttribute('href', 'https://www.gnu.org/licenses/agpl-3.0.html')
+    // Such as "Version 0.3.0+2/1a2b3c4", or "Version unreleased/1a2b3c4" before the first release
+    expect(within(footer).getByText(/^Version /)).toHaveTextContent(VERSION)
   })
 })

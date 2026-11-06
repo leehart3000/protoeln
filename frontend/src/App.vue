@@ -4,7 +4,8 @@ import { useRoute } from 'vue-router'
 import AccountMenu from './components/AccountMenu.vue'
 import EnvironmentBadge from './components/EnvironmentBadge.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
-import { EntryIcon, NotebookIcon, ProjectIcon } from './icons'
+import { EntryIcon, ExternalIcon, NotebookIcon, ProjectIcon } from './icons'
+import { textLink } from './styles'
 
 // The main navigation, as in ProtoLIMS: a link to the list of each kind of record. A link is
 // marked as the current one on its list and on the pages of its records (so "Notebooks" is
@@ -16,6 +17,12 @@ const NAV_LINKS = [
 ]
 
 const route = useRoute()
+
+// The footer, as in ProtoLIMS's: where the source code is (the AGPL asks for it to be offered),
+// and which version and commit this is (see buildInfo in vite.config.ts)
+const SOURCE_URL = 'https://gitlab.com/leehart3000/protoeln'
+const LICENCE_URL = 'https://www.gnu.org/licenses/agpl-3.0.html'
+const VERSION = `${import.meta.env.VITE_APP_VERSION}/${import.meta.env.VITE_APP_COMMIT}`
 
 function isCurrent(to: string) {
   return route.path === to || route.path.startsWith(`${to}/`)
@@ -68,5 +75,33 @@ function navLinkClass(current: boolean) {
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 pt-6 pb-10">
       <RouterView />
     </main>
+
+    <footer class="border-t border-line">
+      <div
+        class="mx-auto flex max-w-6xl flex-wrap justify-between gap-x-6 gap-y-2 px-4 py-6 text-sm text-muted"
+      >
+        <p>
+          ProtoELN is
+          <a
+            :href="SOURCE_URL"
+            :class="textLink"
+            aria-label="free software (opens in a new tab)"
+            target="_blank"
+            rel="noopener noreferrer"
+            >free software<ExternalIcon aria-hidden="true" class="ml-0.5 inline size-3.5"
+          /></a>
+          under the
+          <a
+            :href="LICENCE_URL"
+            :class="textLink"
+            aria-label="GNU AGPL v3 (opens in a new tab)"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GNU AGPL v3<ExternalIcon aria-hidden="true" class="ml-0.5 inline size-3.5" /></a
+          >.
+        </p>
+        <p>Version {{ VERSION }}</p>
+      </div>
+    </footer>
   </div>
 </template>
