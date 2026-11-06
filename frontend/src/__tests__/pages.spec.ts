@@ -201,6 +201,34 @@ describe('entry page', () => {
     )
   })
 
+  it('shows a version, exactly as it was made', async () => {
+    fakeApi({
+      ...answers({ intact: true, problems: [] }),
+      '/api/v1/entries/ELN-2026-0001/versions/1': {
+        ...versions[0],
+        contentFormat: 'protoeln-doc/1',
+        content: protocol.content,
+        contentPeople: {},
+        text: '',
+        markdown: '',
+      },
+    })
+    await renderAt('/entries/ELN-2026-0001/versions/1')
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Bradford assay for total protein' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(versions[0]!.hash)).toBeInTheDocument()
+    expect(screen.getByText('None: this is the first version')).toBeInTheDocument()
+    expect(screen.getByText('Read absorbance at 595 nm.')).toBeInTheDocument()
+    // Back to the entry, in the breadcrumbs and in the sentence under the title
+    const back = await screen.findAllByRole('link', { name: 'ELN-2026-0001' })
+    expect(back.map((link) => link.getAttribute('href'))).toEqual([
+      '/entries/ELN-2026-0001',
+      '/entries/ELN-2026-0001',
+    ])
+  })
+
   it('shows the entry’s content and versions, and that the history checks out', async () => {
     fakeApi(answers({ intact: true, problems: [] }))
     await renderAt('/entries/ELN-2026-0001')
@@ -214,6 +242,10 @@ describe('entry page', () => {
     expect(screen.getByText('Read absorbance at 595 nm.')).toBeInTheDocument()
     expect(await screen.findByText('First version')).toBeInTheDocument()
     expect(screen.getByTitle(versions[0]!.hash)).toHaveTextContent(/^a1b2c3d$/)
+    expect(screen.getByRole('link', { name: 'Version 1' })).toHaveAttribute(
+      'href',
+      '/entries/ELN-2026-0001/versions/1',
+    )
     expect(
       await screen.findByText(/The history checks out: every version still matches/),
     ).toBeInTheDocument()

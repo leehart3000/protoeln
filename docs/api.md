@@ -55,7 +55,7 @@ projects don't reveal that they exist.
 | `GET /api/v1/entries/:code` | `{ entry, notebook, project }`; `entry.canEdit` says whether the requester can change it (its author or a co-author, who can contribute to the project, while it isn't signed) |
 | `GET /api/v1/entries/:code/linked-from` | Summaries of the entries the requester can read that link to this one, in their current draft or in any of their versions, as for `GET /api/v1/entries`, each saying where the link is: `linkedIn: { draft, versions }` (whether the current draft links here, and the numbers of the versions that do) |
 | `GET /api/v1/entries/:code/versions` | Summaries of the entry's versions (no content), newest first |
-| `GET /api/v1/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies |
+| `GET /api/v1/entries/:code/versions/:number` | One version in full, with its plain-text and Markdown copies, and `contentPeople` (as for an entry) |
 | `GET /api/v1/entries/:code/history-check` | `{ intact, problems }`: recalculates every version's hash to check none has been changed |
 
 ### What responses show

@@ -12,6 +12,7 @@ import NotFoundPage from '../pages/NotFoundPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import ProjectPage from '../pages/ProjectPage.vue'
 import ProjectsPage from '../pages/ProjectsPage.vue'
+import VersionPage from '../pages/VersionPage.vue'
 
 // The pages, by address. Projects and entries are found by their codes, notebooks (which have
 // no code) by their id. Exported for the tests, which use the same pages with their own router.
@@ -26,6 +27,7 @@ export const routes: RouteRecordRaw[] = [
   { path: '/notebooks/:id/entries/new', component: NewEntryPage, props: true },
   { path: '/entries', component: EntriesPage },
   { path: '/entries/:code', component: EntryPage, props: true },
+  { path: '/entries/:code/versions/:number', component: VersionPage, props: true },
   { path: '/profile', component: ProfilePage },
   { path: '/:pathMatch(.*)*', component: NotFoundPage },
 ]

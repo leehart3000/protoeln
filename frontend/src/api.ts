@@ -311,6 +311,19 @@ export async function fetchLinkedFrom(code: string) {
   return (await getJson<LinkingEntry[]>(path)) ?? []
 }
 
+// One version in full, as it was made
+export interface Version extends VersionSummary {
+  contentFormat: string
+  content: DocNode
+  contentPeople: Record<string, string>
+  text: string
+  markdown: string
+}
+
+export function fetchVersion(code: string, number: number) {
+  return getJson<Version>(`/api/v1/entries/${encodeURIComponent(code)}/versions/${number}`)
+}
+
 export function fetchVersions(code: string) {
   return getJson<VersionSummary[]>(`/api/v1/entries/${encodeURIComponent(code)}/versions`)
 }

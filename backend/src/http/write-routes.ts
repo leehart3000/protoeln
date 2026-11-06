@@ -168,7 +168,9 @@ export function writeRoutes() {
     const { entry, project } = await projectOfEntry(req.params.code)
     checkCanRead(project, userOf(res))
     const version = await findVersion(entry._id, Number(req.params.number))
-    res.json(versionView(version, await findPeople([version.createdBy])))
+    const people = await findPeople([version.createdBy])
+    const named = await findPeopleNamedIn(version.content as DocNode)
+    res.json(versionView(version, people, named))
   })
 
   // Recalculates the hashes of every version, reporting any that have been tampered with

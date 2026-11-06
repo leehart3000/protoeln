@@ -16,6 +16,7 @@ import ContentBlocks from '../components/ContentBlocks.vue'
 import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
+import RowDetails from '../components/RowDetails.vue'
 import VersionForm from '../components/VersionForm.vue'
 import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
 import { EditIcon, HistoryIntactIcon, HistoryProblemIcon, LoadingIcon, VersionIcon } from '../icons'
@@ -24,12 +25,14 @@ import { READ_ONLY_REASON } from '../permissions'
 import {
   badge,
   errorBox,
+  rowLink,
   secondaryButton,
   sectionHeading,
   table,
   tableCell,
   tableHead,
   tableHeader,
+  tableRow,
   tableWrapper,
   textLink,
 } from '../styles'
@@ -265,11 +268,25 @@ const crumbs = computed(() =>
                         <th scope="col" :class="tableHeader" class="max-md:hidden">Made by</th>
                         <th scope="col" :class="tableHeader">Made</th>
                         <th scope="col" :class="tableHeader">Fingerprint</th>
+                        <th :class="tableHeader" aria-hidden="true"></th>
                       </tr>
                     </thead>
                     <tbody class="divide-y divide-line">
-                      <tr v-for="version in versions.data.value" :key="version.number">
-                        <td :class="tableCell">{{ version.number }}</td>
+                      <!-- Each row links to its version's page -->
+                      <tr
+                        v-for="version in versions.data.value"
+                        :key="version.number"
+                        :class="tableRow"
+                      >
+                        <td :class="tableCell">
+                          <RouterLink
+                            :to="`/entries/${data.entry.code}/versions/${version.number}`"
+                            :class="rowLink"
+                            :aria-label="`Version ${version.number}`"
+                          >
+                            {{ version.number }}
+                          </RouterLink>
+                        </td>
                         <td :class="tableCell">{{ version.note }}</td>
                         <td :class="tableCell" class="max-md:hidden">
                           {{ version.createdBy.name }}
@@ -282,6 +299,7 @@ const crumbs = computed(() =>
                         <td :class="tableCell" class="font-mono">
                           <span :title="version.hash">{{ version.hash.slice(0, 7) }}</span>
                         </td>
+                        <RowDetails />
                       </tr>
                     </tbody>
                   </table>

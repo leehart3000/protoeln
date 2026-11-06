@@ -267,6 +267,7 @@ describe('versions', () => {
     expect(first.body.note).toBe('First draft')
     expect(first.body.createdBy).toEqual({ name: 'Author', orcid: '0000-0002-1825-0097' })
     expect(first.body.markdown).toBe('')
+    expect(first.body.contentPeople).toEqual({})
     expect(check.body).toEqual({ intact: true, problems: [] })
   })
 

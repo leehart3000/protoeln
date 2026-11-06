@@ -188,11 +188,17 @@ export function versionSummary(version: VersionSummaryRecord, people: People) {
   }
 }
 
-export function versionView(version: VersionRecord, people: People) {
+// `named` gives the names of the people the content refers to by ORCID iD, as for an entry
+export function versionView(
+  version: VersionRecord,
+  people: People,
+  named: Map<string, string> = new Map(),
+) {
   return {
     ...versionSummary(version, people),
     contentFormat: version.contentFormat,
     content: version.content,
+    contentPeople: Object.fromEntries(named),
     text: version.text,
     markdown: version.markdown,
   }
