@@ -1,5 +1,6 @@
 # ProtoELN CI. Mirrors ProtoLIMS's checks: format, lint, type-check, test and (frontend) build,
-# for the shared content package, the backend and the frontend.
+# for the shared content package, the backend and the frontend. Then, for main only, deploys to
+# staging.protoeln.org (as ProtoLIMS's GitHub Actions do), once every check has passed.
 
 workflow:
   rules:
@@ -10,6 +11,7 @@ workflow:
 
 stages:
   - check
+  - deploy
 
 default:
   # Keep the major version in step with .node-version
@@ -75,3 +77,27 @@ frontend-checks:
     - pnpm --dir frontend typecheck
     - pnpm --dir frontend coverage
     - pnpm --dir frontend build
+
+# Deploys the website and the API, as one Cloudflare Worker, to staging.protoeln.org (see
+# docs/deployment.md). It runs only for main, and only once every job in the check stage has
+# passed. Wrangler reads two CI/CD variables, set in GitLab as protected (so only protected
+# branches such as main can use them) and masked: CLOUDFLARE_API_TOKEN, a token that can only
+# deploy Workers, and CLOUDFLARE_ACCOUNT_ID. The Worker's own secrets (MongoDB, ORCID, site
+# admins) stay in Cloudflare, so this job never sees them.
+deploy-staging:
+  extends: .pnpm
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  # A deploy is never cancelled part-way, and two never run at once
+  interruptible: false
+  resource_group: staging
+  environment:
+    name: staging
+    url: https://staging.protoeln.org
+  variables:
+    # Shown as a badge in the header, so staging is never mistaken for the real site
+    VITE_APP_ENVIRONMENT: Staging
+  script:
+    - pnpm --dir frontend build
+    - pnpm --dir backend run deploy

@@ -64,6 +64,10 @@ checks match.
 
 ## Deploying
 
+Every push to `main` deploys to `staging.protoeln.org` by itself, once all of GitLab CI's checks
+have passed (the `deploy-staging` job in `.gitlab-ci.yml`; see "Automatic deploys" below). To
+deploy by hand instead, for example from a branch,
+
 ```sh
 just deploy
 ```
@@ -77,3 +81,19 @@ The new website is served straight away, but the API has been seen to take a few
 move to the new code (it runs in a Durable Object, which Cloudflare restarts on its own
 schedule). Until it has, requests the new website makes of the new API may be answered "Not
 found"; wait a few minutes and try again.
+
+## Automatic deploys
+
+GitLab CI deploys with a Cloudflare API token that can only deploy Workers. It's set up once:
+
+1. In the Cloudflare dashboard, go to My Profile, then API Tokens, and choose Create Token. Use
+   the "Edit Cloudflare Workers" template. Under Account Resources choose your account, and
+   under Zone Resources choose `protoeln.org` only. Create it, and copy the token (it's shown
+   only once). Keep a copy in your password safe.
+2. In GitLab, go to the project's Settings, then CI/CD, then Variables, and add two:
+   - `CLOUDFLARE_API_TOKEN`: the token. Tick Protect variable, and choose "Masked and hidden".
+   - `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account ID (shown on the Workers page; it isn't
+     secret). Tick Protect variable, and choose "Masked".
+
+"Protect variable" means only protected branches (`main` is one by default) can use them, so a
+merge request can't. GitLab lists each deploy under Operate, then Environments, as `staging`.
