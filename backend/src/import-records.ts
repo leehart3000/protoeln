@@ -3,7 +3,13 @@ import path from 'node:path'
 import mongoose from 'mongoose'
 
 import { readConfig } from './config.ts'
-import { importRecords, type ImportedRecord, type ImportPlan } from './data/imports.ts'
+import {
+  importRecords,
+  type ImportedFile,
+  type ImportedRecord,
+  type ImportPlan,
+} from './data/imports.ts'
+import { s3Store } from './files/s3.ts'
 
 // Imports published records into the database named in the settings (see imports/README.md):
 //
@@ -38,7 +44,7 @@ if (into !== config.mongodbDatabase) {
 }
 
 // The plan (project, notebook and records), and each record's content from content/ID.json
-type PlanFile = Omit<ImportPlan, 'records'> & {
+type PlanFile = Omit<ImportPlan, 'records' | 'files'> & {
   records: (Omit<ImportedRecord, 'content'> & { id: string })[]
 }
 const plan = JSON.parse(await readFile(path.join(folder, 'plan.json'), 'utf8')) as PlanFile
@@ -49,9 +55,24 @@ const records = await Promise.all(
   })),
 )
 
+// The images, as listed in files/files.json, each named by its SHA-256
+type FileList = Record<string, Omit<ImportedFile, 'sha256' | 'body'>>
+const filesFolder = path.join(folder, 'files')
+const listed = JSON.parse(
+  await readFile(path.join(filesFolder, 'files.json'), 'utf8').catch(() => '{}'),
+) as FileList
+const files = await Promise.all(
+  Object.entries(listed).map(async ([sha256, file]) => {
+    const extension = file.contentType === 'image/jpeg' ? 'jpg' : file.contentType.slice(6)
+    const body = await readFile(path.join(filesFolder, `${sha256}.${extension}`))
+    return { ...file, sha256, body: new Uint8Array(body) }
+  }),
+)
+const store = config.files ? s3Store(config.files) : null
+
 await mongoose.connect(config.mongodbUri, { dbName: config.mongodbDatabase })
 try {
-  const result = await importRecords({ ...plan, records }, importer)
+  const result = await importRecords({ ...plan, records, files }, importer, store)
   console.log(
     `Project ${result.projectCode} in ${config.mongodbDatabase}: added ${result.added.length}` +
       ` entries (${result.added.join(', ') || 'none'}); ${result.skipped} were there already`,

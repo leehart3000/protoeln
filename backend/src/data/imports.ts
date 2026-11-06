@@ -1,5 +1,10 @@
+import { fileIdsOf, type DocNode } from '@protoeln/content'
+
 import { ConflictError, NotFoundError } from '../errors.ts'
+import type { FileStore } from '../files/store.ts'
 import { createEntry, createVersion, type EntrySource } from './entries.ts'
+import { storeFile } from './files.ts'
+import type { IMAGE_TYPES } from './models/file.ts'
 import { EntryModel, type ENTRY_KINDS } from './models/entry.ts'
 import { NotebookModel } from './models/notebook.ts'
 import { ProjectModel } from './models/project.ts'
@@ -32,12 +37,23 @@ export interface ImportPlan {
   }
   notebook: { title: string; description: string }
   records: ImportedRecord[]
+  // The images the records show, by SHA-256 (see imports/tools/docx_to_protoeln.py)
+  files: ImportedFile[]
+}
+
+export interface ImportedFile {
+  sha256: string
+  body: Uint8Array<ArrayBuffer>
+  contentType: (typeof IMAGE_TYPES)[number]
+  name: string
+  width: number
+  height: number
 }
 
 // Imports the plan's records, as the person with the ORCID iD `importer` (who must have signed
-// in to the site before). Returns the codes of the entries added, and how many records were
-// there already.
-export async function importRecords(plan: ImportPlan, importer: string) {
+// in to the site before), keeping their images in `store`. Returns the codes of the entries
+// added, and how many records were there already.
+export async function importRecords(plan: ImportPlan, importer: string, store: FileStore | null) {
   const user = await UserModel.findOne({ orcid: importer }).lean()
   if (user === null) {
     throw new NotFoundError(`No one with the ORCID iD ${importer} has signed in to this site`)
@@ -49,6 +65,29 @@ export async function importRecords(plan: ImportPlan, importer: string) {
       `There is already a project ${plan.project.code}, which ${importer} isn't a member of`,
     )
   }
+  // Every image a record shows must be in the plan, and kept, before any entry shows it
+  const files = new Map(plan.files.map((file) => [file.sha256, file]))
+  const needed = new Set(plan.records.flatMap((record) => fileIdsOf(record.content as DocNode)))
+  for (const sha256 of needed) {
+    if (!files.has(sha256)) throw new NotFoundError(`The plan has no file ${sha256}`)
+  }
+  if (needed.size > 0 && store === null) {
+    throw new ConflictError('The records show images, but no file store is set up')
+  }
+  for (const sha256 of needed) {
+    const { body, contentType, name, width, height } = files.get(sha256)!
+    const kept = await storeFile({
+      store: store!,
+      body,
+      contentType,
+      name,
+      width,
+      height,
+      userId: user._id,
+    })
+    if (kept !== sha256) throw new ConflictError(`The file ${name} isn't the one the plan names`)
+  }
+
   const project =
     existing ??
     (

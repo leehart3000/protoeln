@@ -713,42 +713,12 @@
       ]
     },
     {
-      "type": "paragraph",
-      "content": [
-        {
-          "type": "text",
-          "text": "[Figure not imported: ProtoELN can’t store images yet. See it in ",
-          "marks": [
-            {
-              "type": "italic"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": "the original record",
-          "marks": [
-            {
-              "type": "italic"
-            },
-            {
-              "type": "link",
-              "attrs": {
-                "href": "https://zenodo.org/records/841818"
-              }
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "text": ".]",
-          "marks": [
-            {
-              "type": "italic"
-            }
-          ]
-        }
-      ]
+      "type": "fileBlock",
+      "attrs": {
+        "fileId": "b4e696cca5e0b5c1e51c36502dcd276a57a37f98614a84964df9f08190ea8057",
+        "alt": "Two Coomassie-stained SDS-PAGE gels, each with a protein ladder (15 to 250 kDa) and lanes labelled I, FT, W and E (input, flow-through, wash and elution) for three samples.",
+        "caption": "The arrows in the original figure, pointing out the proteins’ bands, aren’t shown here; see the original record."
+      }
     },
     {
       "type": "paragraph",

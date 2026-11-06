@@ -235,6 +235,7 @@ describe('entry page', () => {
         publishedOn: '2017-07-19',
         licence: 'CC BY 4.0',
         citation: 'Harding, R. & Duan, S. (2017). https://doi.org/10.5281/zenodo.841818',
+        changes: 'Converted from Word',
       },
     }
     fakeApi({
@@ -263,6 +264,9 @@ describe('entry page', () => {
     ).toHaveAttribute('href', 'https://zenodo.org/records/841818')
     expect(within(details).getAllByRole('link', { name: /doi\.org/ })).toHaveLength(2)
     expect(within(details).getByText('huntingtin')).toBeInTheDocument()
+    expect(within(details).getByText('Changes:').nextElementSibling).toHaveTextContent(
+      'Converted from Word',
+    )
   })
 
   it('names the author of an entry written here, with no source', async () => {

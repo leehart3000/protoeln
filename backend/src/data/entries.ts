@@ -131,6 +131,8 @@ export interface EntrySource {
   publishedOn: string
   licence: string
   citation: string
+  // What the import changed, such as converting the format
+  changes: string
 }
 
 type EntryDocument = Awaited<ReturnType<typeof findEntry>>

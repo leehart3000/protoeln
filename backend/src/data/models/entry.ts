@@ -29,7 +29,8 @@ const entitySchema = new mongoose.Schema(
 
 // Where an imported entry came from (see data/imports.ts), crediting its original authors by
 // name: the record it was imported from, its DOI, who wrote it, when it was published, its
-// licence, and how to cite it. Entries written in ProtoELN have none.
+// licence, how to cite it, and what the import changed (as licences such as CC BY 4.0 ask).
+// Entries written in ProtoELN have none.
 const sourceSchema = new mongoose.Schema(
   {
     url: { type: String, required: true },
@@ -39,6 +40,7 @@ const sourceSchema = new mongoose.Schema(
     publishedOn: { type: String, default: '' },
     licence: { type: String, default: '' },
     citation: { type: String, default: '' },
+    changes: { type: String, default: '' },
   },
   { _id: false },
 )

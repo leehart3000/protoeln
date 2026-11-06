@@ -4,20 +4,35 @@
 Used once per record when preparing an import (see imports/README.md); the result is committed,
 so importing doesn't need this script or pandoc. Needs pandoc 3 (https://pandoc.org).
 
-    python3 imports/tools/docx_to_protoeln.py WRITEUP.docx RECORD_URL > content/RECORD.json
+    python3 imports/tools/docx_to_protoeln.py WRITEUP.docx RECORD_URL FILES_FOLDER \
+        > content/RECORD.json
+
+Images are saved in FILES_FOLDER, each named by its SHA-256 (its id in the content), and listed
+in FILES_FOLDER/files.json with their type and size. Pictures in old Windows formats (EMF and
+WMF), which browsers can't show, are drawn with LibreOffice at 300 dpi and saved as JPEG or
+PNG, whichever is smaller; any cropping Word applies to a picture is applied too. Images get
+no description (alt text) from Word unless it has one, so add descriptions to the content by
+hand. Needs LibreOffice, pdftoppm (Poppler) and Pillow as well as pandoc.
 
 What it keeps: headings, paragraphs, bold, italic, subscript, superscript, links, line breaks,
 lists and tables. A paragraph of the write-up's own (not in a table or list) that is only bold
-text, such as "Background:", becomes a heading, with its words unchanged. What it can't keep
-yet: images (ProtoELN can't store files yet), so each is replaced by a note linking to the
-original record; and underlining, which the content format doesn't have. The first paragraph
+text, such as "Background:", becomes a heading, with its words unchanged. What it can't keep: arrows
+and text boxes drawn over a picture in Word; and underlining, which the content format doesn't have. The first paragraph
 is left out when it only repeats the record's title. Anything else it doesn't recognise stops
 the conversion, rather than being dropped.
 """
 
+import hashlib
+import io
 import json
+import re
 import subprocess
 import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
+from PIL import Image, ImageChops
 
 
 class Unsupported(Exception):
@@ -119,28 +134,111 @@ def without_bold(content):
     return merge(out)
 
 
-def image_note(record_url):
-    return {
-        'type': 'paragraph',
-        'content': [
-            text_node('[Figure not imported: ProtoELN can’t store images yet. See it in ', [
-                {'type': 'italic'},
-            ]),
-            text_node('the original record', [
-                {'type': 'italic'},
-                {'type': 'link', 'attrs': {'href': record_url}},
-            ]),
-            text_node('.]', [{'type': 'italic'}]),
-        ],
+def word_pictures(docx):
+    # How Word shows each picture: its cropping (fractions of each side) and its description,
+    # by the picture's file in the .docx (such as media/image1.emf)
+    with zipfile.ZipFile(docx) as package:
+        rels = package.read('word/_rels/document.xml.rels').decode()
+        document = package.read('word/document.xml').decode()
+    targets = dict(re.findall(r'Id="([^"]+)"[^>]*Target="(media/[^"]+)"', rels))
+    pictures = {}
+    for drawing in re.findall(r'<w:drawing>.*?</w:drawing>', document, re.S):
+        embed = re.search(r'r:embed="([^"]+)"', drawing)
+        if not embed or embed.group(1) not in targets:
+            continue
+        crop = {side: 0.0 for side in 'ltrb'}
+        rect = re.search(r'<a:srcRect([^>]*)/>', drawing)
+        for side, value in re.findall(r'\b([ltrb])="(-?\d+)"', rect.group(1) if rect else ''):
+            crop[side] = int(value) / 100000
+        descr = re.search(r'<wp:docPr [^>]*descr="([^"]*)"', drawing)
+        pictures[targets[embed.group(1)]] = {'crop': crop, 'alt': descr.group(1) if descr else ''}
+    return pictures
+
+
+def trimmed_image(image):
+    # Without the white margins around it, keeping a little space
+    background = Image.new('RGB', image.size, (255, 255, 255))
+    box = ImageChops.difference(image.convert('RGB'), background).getbbox()
+    if box is None:
+        return image
+    pad = 12
+    return image.crop((
+        max(box[0] - pad, 0), max(box[1] - pad, 0),
+        min(box[2] + pad, image.width), min(box[3] + pad, image.height),
+    ))
+
+
+def cropped(image, crop, box=None):
+    left, top, right, bottom = box or (0, 0, image.width, image.height)
+    width, height = right - left, bottom - top
+    return image.crop((
+        round(left + crop['l'] * width), round(top + crop['t'] * height),
+        round(right - crop['r'] * width), round(bottom - crop['b'] * height),
+    ))
+
+
+def drawn_picture(path, crop):
+    # An EMF or WMF picture, drawn by LibreOffice (as a PDF) at 300 dpi
+    with tempfile.TemporaryDirectory() as folder:
+        subprocess.run(
+            ['soffice', '--headless', '--convert-to', 'pdf', '--outdir', folder, str(path)],
+            check=True, capture_output=True,
+        )
+        pdf = next(Path(folder).glob('*.pdf'))
+        subprocess.run(['pdftoppm', '-r', '300', '-png', '-singlefile', str(pdf), f'{folder}/page'],
+                       check=True, capture_output=True)
+        page = Image.open(f'{folder}/page.png').convert('RGB')
+        page.load()
+    # The picture is somewhere on the page: Word's cropping is of the picture, not the page
+    background = Image.new('RGB', page.size, (255, 255, 255))
+    box = ImageChops.difference(page, background).getbbox()
+    return trimmed_image(cropped(page, crop, box))
+
+
+def saved_image(path, crop, folder):
+    if path.suffix.lower() in ('.emf', '.wmf'):
+        image = drawn_picture(path, crop)
+    else:
+        image = cropped(Image.open(path), crop)
+    image = image.convert('RGB')
+    encoded = {}
+    for kind, options in (('png', {'optimize': True}), ('jpeg', {'quality': 88})):
+        buffer = io.BytesIO()
+        image.save(buffer, kind.upper(), **options)
+        encoded[kind] = buffer.getvalue()
+    kind = min(encoded, key=lambda name: len(encoded[name]))
+    body = encoded[kind]
+    sha256 = hashlib.sha256(body).hexdigest()
+    extension = 'jpg' if kind == 'jpeg' else 'png'
+    (folder / f'{sha256}.{extension}').write_bytes(body)
+    listed = folder / 'files.json'
+    files = json.loads(listed.read_text()) if listed.exists() else {}
+    files[sha256] = {
+        'name': f'{path.stem}.{extension}',
+        'contentType': f'image/{kind}',
+        'width': image.width,
+        'height': image.height,
     }
+    listed.write_text(json.dumps(files, indent=2, sort_keys=True) + '\n')
+    return sha256
 
 
-def cell_blocks(blocks, record_url):
-    converted = convert_blocks(blocks, record_url)
+def file_block(item, context):
+    source = Path(item['c'][2][0])
+    picture = context['pictures'].get(f'media/{source.name}', {'crop': {s: 0.0 for s in 'ltrb'}, 'alt': ''})
+    sha256 = saved_image(source, picture['crop'], context['folder'])
+    attrs = {'fileId': sha256}
+    if picture['alt']:
+        attrs['alt'] = picture['alt']
+    return {'type': 'fileBlock', 'attrs': attrs}
+
+
+def cell_blocks(blocks, context):
+    converted = convert_blocks(blocks, context)
     return converted or [{'type': 'paragraph'}]
 
 
-def table(item, record_url):
+def table(item, context):
     _attr, _caption, _specs, head, bodies, foot = item['c']
     rows = []
 
@@ -152,7 +250,7 @@ def table(item, record_url):
                 raise Unsupported('merged table cells')
             cells.append({
                 'type': 'tableHeader' if header else 'tableCell',
-                'content': cell_blocks(blocks, record_url),
+                'content': cell_blocks(blocks, context),
             })
         rows.append({'type': 'tableRow', 'content': cells})
 
@@ -169,7 +267,7 @@ def table(item, record_url):
     return {'type': 'table', 'content': rows}
 
 
-def convert_blocks(blocks, record_url, top=False):
+def convert_blocks(blocks, context, top=False):
     out = []
     for item in blocks:
         kind = item['t']
@@ -177,8 +275,8 @@ def convert_blocks(blocks, record_url, top=False):
             if any(child['t'] == 'Image' for child in item['c']):
                 rest = [child for child in item['c'] if child['t'] not in ('Image', 'Space', 'SoftBreak')]
                 if rest:
-                    out.append(paragraph(item['c'][:0] + rest))
-                out.append(image_note(record_url))
+                    out.append(paragraph(rest))
+                out += [file_block(child, context) for child in item['c'] if child['t'] == 'Image']
                 continue
             node = paragraph(item['c'])
             if top and all_bold(node):
@@ -189,24 +287,24 @@ def convert_blocks(blocks, record_url, top=False):
             out.append({'type': 'heading', 'attrs': {'level': level}, 'content': trimmed(inlines(item['c'][2]))})
         elif kind == 'BulletList':
             out.append({'type': 'bulletList', 'content': [
-                {'type': 'listItem', 'content': cell_blocks(entry, record_url)} for entry in item['c']
+                {'type': 'listItem', 'content': cell_blocks(entry, context)} for entry in item['c']
             ]})
         elif kind == 'OrderedList':
             start = item['c'][0][0]
             node = {'type': 'orderedList', 'content': [
-                {'type': 'listItem', 'content': cell_blocks(entry, record_url)} for entry in item['c'][1]
+                {'type': 'listItem', 'content': cell_blocks(entry, context)} for entry in item['c'][1]
             ]}
             if start != 1:
                 node['attrs'] = {'start': start}
             out.append(node)
         elif kind == 'BlockQuote':
-            out.append({'type': 'blockquote', 'content': cell_blocks(item['c'], record_url)})
+            out.append({'type': 'blockquote', 'content': cell_blocks(item['c'], context)})
         elif kind == 'CodeBlock':
             out.append({'type': 'codeBlock', 'content': [{'type': 'text', 'text': item['c'][1]}]})
         elif kind == 'Table':
-            out.append(table(item, record_url))
+            out.append(table(item, context))
         elif kind == 'Div':
-            out += convert_blocks(item['c'][1], record_url)
+            out += convert_blocks(item['c'][1], context)
         elif kind == 'HorizontalRule':
             continue
         else:
@@ -216,17 +314,21 @@ def convert_blocks(blocks, record_url, top=False):
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         sys.exit(__doc__)
-    docx, record_url = sys.argv[1:]
-    ast = json.loads(subprocess.run(
-        ['pandoc', '--from', 'docx', '--to', 'json', docx],
-        check=True, capture_output=True, text=True,
-    ).stdout)
-    try:
-        content = convert_blocks(ast['blocks'], record_url, top=True)
-    except Unsupported as problem:
-        sys.exit(f'{docx}: has something the converter can’t keep: {problem}')
+    docx, record_url, files_folder = sys.argv[1:]
+    folder = Path(files_folder)
+    folder.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as media:
+        ast = json.loads(subprocess.run(
+            ['pandoc', '--from', 'docx', '--to', 'json', f'--extract-media={media}', docx],
+            check=True, capture_output=True, text=True,
+        ).stdout)
+        context = {'pictures': word_pictures(docx), 'folder': folder, 'record_url': record_url}
+        try:
+            content = convert_blocks(ast['blocks'], context, top=True)
+        except Unsupported as problem:
+            sys.exit(f'{docx}: has something the converter can’t keep: {problem}')
     # The first paragraph is the record's title, which the entry has already
     if content and content[0]['type'] == 'heading':
         content = content[1:]

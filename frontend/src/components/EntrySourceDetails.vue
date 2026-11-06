@@ -7,8 +7,8 @@ import { detailList, detailTerm, detailValue } from '../styles'
 import LinkedText from './LinkedText.vue'
 
 // Where an imported entry came from, crediting its original authors by name: the record it was
-// imported from, who wrote it, when it was published, its DOI, its licence, and how to cite it.
-// Shown in the entry's Details.
+// imported from, who wrote it, when it was published, its DOI, its licence, how to cite it, and
+// what the import changed (as licences such as CC BY 4.0 ask). Shown in the entry's Details.
 const props = defineProps<{ source: EntrySource }>()
 
 const doiAddress = computed(() => (props.source.doi ? `https://doi.org/${props.source.doi}` : ''))
@@ -42,6 +42,10 @@ const authors = computed(() => props.source.authors.join('; '))
     <template v-if="source.citation">
       <dt :class="detailTerm">Cite as:</dt>
       <dd :class="detailValue"><LinkedText :text="source.citation" /></dd>
+    </template>
+    <template v-if="source.changes">
+      <dt :class="detailTerm">Changes:</dt>
+      <dd :class="detailValue"><LinkedText :text="source.changes" /></dd>
     </template>
   </dl>
 </template>

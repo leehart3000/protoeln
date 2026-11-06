@@ -126,6 +126,7 @@ interface EntryRecord extends EntrySummaryRecord {
     publishedOn?: string | null
     licence?: string | null
     citation?: string | null
+    changes?: string | null
   } | null
   coAuthorIds: Id[]
   contentFormat: string
@@ -174,6 +175,7 @@ export function entryView(
           publishedOn: entry.source.publishedOn ?? '',
           licence: entry.source.licence ?? '',
           citation: entry.source.citation ?? '',
+          changes: entry.source.changes ?? '',
         }
       : null,
     text: entry.text,
