@@ -245,14 +245,16 @@ describe('editing an entry', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Edit' }))
     await user.click(await screen.findByRole('button', { name: 'Materials table' }))
+    // The materials table is drawn a moment after it's added, so wait until it's settled
+    await screen.findByLabelText('Lot number, row 1')
     await user.type(await screen.findByLabelText('Material, row 1'), 'Coomassie dye reagent')
-    await user.type(screen.getByLabelText('Lot number, row 1'), 'EX-0042')
+    await user.type(await screen.findByLabelText('Lot number, row 1'), 'EX-0042')
     await user.click(screen.getByRole('button', { name: 'Add material' }))
     await user.type(await screen.findByLabelText('Material, row 2'), 'BSA standard')
     // A detail typed, left, and then cleared is left out (not kept as empty text)
-    await user.type(screen.getByLabelText('Supplier, row 2'), 'Pierce')
-    await user.click(screen.getByLabelText('Amount, row 2'))
-    await user.clear(screen.getByLabelText('Supplier, row 2'))
+    await user.type(await screen.findByLabelText('Supplier, row 2'), 'Pierce')
+    await user.click(await screen.findByLabelText('Amount, row 2'))
+    await user.clear(await screen.findByLabelText('Supplier, row 2'))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await screen.findByText('Saved')
 
@@ -398,5 +400,21 @@ describe('editing an entry', () => {
         },
       ],
     })
+  })
+
+  it('shows its author Edit and Create version greyed out, and no tick boxes, while read-only', async () => {
+    fakeApi(entryAnswers(mine, { '/api/v1/me': { user: null, readOnly: true } }))
+    await renderAt('/entries/ELN-2026-0001')
+
+    const edit = await screen.findByRole('button', { name: 'Edit' })
+    expect(edit).toHaveAttribute('aria-disabled', 'true')
+    expect(edit).toHaveAccessibleDescription(
+      'This site is read-only at the moment, so nothing can be changed.',
+    )
+    expect(screen.getByRole('button', { name: 'Create version' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
   })
 })

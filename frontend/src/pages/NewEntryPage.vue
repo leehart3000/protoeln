@@ -10,7 +10,9 @@ import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { EntryIcon } from '../icons'
 import { KIND_ICONS } from '../kinds'
+import { READ_ONLY_REASON } from '../permissions'
 import { fieldLabel, fieldProblem, inputClass, primaryButton, secondaryButton } from '../styles'
+import { useMe } from '../useMe'
 
 // Creating an entry in a notebook, for members of its project. Its creator is its author, and
 // it starts as an empty draft, which opens once it's created.
@@ -18,6 +20,7 @@ import { fieldLabel, fieldProblem, inputClass, primaryButton, secondaryButton } 
 const props = defineProps<{ id: string }>()
 const id = toRef(props, 'id')
 const router = useRouter()
+const me = useMe()
 const queryClient = useQueryClient()
 
 const KINDS: { value: EntryKind; label: string; hint: string }[] = [
@@ -70,7 +73,8 @@ const crumbs = computed(() =>
   <div class="mt-3">
     <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="notebook">
       <template v-if="data">
-        <p v-if="!data.project.canContribute" class="max-w-2xl text-muted">
+        <p v-if="me.data.value?.readOnly" class="max-w-2xl text-muted">{{ READ_ONLY_REASON }}</p>
+        <p v-else-if="!data.project.canContribute" class="max-w-2xl text-muted">
           Only members of {{ data.project.title }} can add entries to it.
         </p>
         <form

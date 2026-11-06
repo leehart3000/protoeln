@@ -47,6 +47,22 @@ describe('AccountMenu', () => {
     expect(await screen.findByRole('link', { name: 'Sign in' })).toBeInTheDocument()
   })
 
+  it('goes to the home page on signing out, as the page may be private', async () => {
+    fakeApi({
+      '/api/v1/me': { user: carberry },
+      '/api/v1/projects': [],
+      'POST /api/v1/auth/logout': new Response(null, { status: 204 }),
+    })
+    const user = userEvent.setup()
+    await renderAt('/projects')
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Welcome to ProtoELN' }),
+    ).toBeInTheDocument()
+  })
+
   it('offers to sign in if the API cannot be reached', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     await renderAt('/')

@@ -46,6 +46,8 @@ pnpm exec wrangler secret put PROTOELN_SITE_ADMINS
   database user's long, random password is what keeps others out.
 - **ORCID:** staging uses the sandbox client, which needs the redirect URI
   `https://staging.protoeln.org/api/v1/auth/orcid/callback`.
+- **Read-only lock:** `PROTOELN_READ_ONLY` (in `vars`) is `"false"` on staging, so it can be
+  tried out fully. See `docs/read-only.md`.
 
 ## Who can reach staging
 

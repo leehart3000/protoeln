@@ -1,20 +1,25 @@
 <script setup lang="ts">
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
+import { useRouter } from 'vue-router'
 
-import { signOut } from '../api'
+import { signOut, type Me } from '../api'
 import { SignOutIcon } from '../icons'
 
 // Signing out, in the header (on wider screens) and on the profile page (as in ProtoLIMS).
 // `buttonClass` styles the button; `labelClass` the words "Sign out" (to hide them on phones).
 defineProps<{ buttonClass: string | string[]; labelClass?: string }>()
 
+const router = useRouter()
 const queryClient = useQueryClient()
 const signingOut = useMutation({
   mutationFn: signOut,
-  // No one is signed in now, and what can be seen may have changed, so everything else shown
-  // is fetched again
+  // Signing out goes to the home page (the page someone was on may be in a private project).
+  // No one is signed in now, and what can be seen may have changed, so everything else shown is
+  // fetched again; whether the site is read-only stays as it was.
   onSuccess: async () => {
-    queryClient.setQueryData(['me'], { user: null })
+    const readOnly = queryClient.getQueryData<Me>(['me'])?.readOnly
+    await router.push('/')
+    queryClient.setQueryData(['me'], { user: null, readOnly })
     await queryClient.invalidateQueries({ predicate: (query) => query.queryKey[0] !== 'me' })
   },
 })

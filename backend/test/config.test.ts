@@ -12,6 +12,7 @@ describe('readConfig', () => {
       orcid: null,
       sessionDays: 14,
       siteAdmins: [],
+      readOnly: false,
     })
   })
 
@@ -26,6 +27,7 @@ describe('readConfig', () => {
       PROTOELN_ORCID_CLIENT_SECRET: 'secret',
       PROTOELN_SESSION_DAYS: '7',
       PROTOELN_SITE_ADMINS: '0000-0002-1825-0097, 0000-0002-1694-233X',
+      PROTOELN_READ_ONLY: 'true',
     })
 
     expect(config.port).toBe(8080)
@@ -37,10 +39,12 @@ describe('readConfig', () => {
     })
     expect(config.sessionDays).toBe(7)
     expect(config.siteAdmins).toEqual(['0000-0002-1825-0097', '0000-0002-1694-233X'])
+    expect(config.readOnly).toBe(true)
   })
 
-  it('refuses an invalid site admin ORCID iD, or session length', () => {
+  it('refuses an invalid site admin ORCID iD, session length, or read-only setting', () => {
     expect(() => readConfig({ PROTOELN_SITE_ADMINS: '1234' })).toThrow(/1234/)
     expect(() => readConfig({ PROTOELN_SESSION_DAYS: '0' })).toThrow(/SESSION_DAYS/)
+    expect(() => readConfig({ PROTOELN_READ_ONLY: 'yes' })).toThrow(/READ_ONLY/)
   })
 })

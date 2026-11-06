@@ -28,5 +28,7 @@
     "PROTOELN_MONGODB_DATABASE": "protoeln-staging",
     // Staging signs in with the ORCID sandbox, like development
     "PROTOELN_ORCID_BASE_URL": "https://sandbox.orcid.org",
+    // Staging can be changed, so everything can be tried (see docs/read-only.md)
+    "PROTOELN_READ_ONLY": "false",
   },
 }

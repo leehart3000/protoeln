@@ -15,6 +15,7 @@ async function authenticateForTests(req: Request): Promise<CurrentUser | null> {
     : null
 }
 
-export function api() {
-  return request(createApp({ authenticate: authenticateForTests }))
+// With `readOnly`, as the site is when its read-only lock is on
+export function api(options: { readOnly?: boolean } = {}) {
+  return request(createApp({ authenticate: authenticateForTests, ...options }))
 }

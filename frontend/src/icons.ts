@@ -37,6 +37,7 @@ export {
   CirclePlus as NewIcon,
   ExternalLink as ExternalIcon,
   LoaderCircle as LoadingIcon,
+  Lock as ReadOnlyIcon,
   FlaskConical as ExperimentIcon,
   FolderKanban as ProjectIcon,
   ListChecks as ProtocolIcon,

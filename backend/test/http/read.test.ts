@@ -55,7 +55,7 @@ describe('GET /api/v1/me', () => {
   it('says no one is signed in for an anonymous request', async () => {
     const response = await api().get('/api/v1/me')
 
-    expect(response.body).toEqual({ user: null })
+    expect(response.body).toEqual({ user: null, readOnly: false })
   })
 
   it('names the signed-in user', async () => {

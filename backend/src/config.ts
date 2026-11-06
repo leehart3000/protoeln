@@ -25,6 +25,8 @@ export interface Config {
   sessionDays: number
   // People who are site admins, by ORCID iD (in addition to any marked so in the database)
   siteAdmins: string[]
+  // The read-only lock: when on, nothing can be changed through the API (see docs/read-only.md)
+  readOnly: boolean
 }
 
 export function readConfig(env: Record<string, string | undefined> = process.env): Config {
@@ -38,6 +40,10 @@ export function readConfig(env: Record<string, string | undefined> = process.env
     if (!isValidOrcid(id)) {
       throw new Error(`PROTOELN_SITE_ADMINS: ${id} is not a valid ORCID iD`)
     }
+  }
+  const readOnly = env.PROTOELN_READ_ONLY ?? 'false'
+  if (readOnly !== 'true' && readOnly !== 'false') {
+    throw new Error('PROTOELN_READ_ONLY must be true or false')
   }
   const sessionDays = Number(env.PROTOELN_SESSION_DAYS ?? 14)
   if (!Number.isInteger(sessionDays) || sessionDays < 1 || sessionDays > 90) {
@@ -62,5 +68,6 @@ export function readConfig(env: Record<string, string | undefined> = process.env
         : null,
     sessionDays,
     siteAdmins,
+    readOnly: readOnly === 'true',
   }
 }

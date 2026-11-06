@@ -3,6 +3,7 @@ import { useRoute } from 'vue-router'
 
 import AccountMenu from './components/AccountMenu.vue'
 import EnvironmentBadge from './components/EnvironmentBadge.vue'
+import ReadOnlyBadge from './components/ReadOnlyBadge.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import { EntryIcon, ExternalIcon, NotebookIcon, ProjectIcon } from './icons'
 import { textLink } from './styles'
@@ -51,6 +52,7 @@ function navLinkClass(current: boolean) {
           </span>
         </RouterLink>
         <EnvironmentBadge />
+        <ReadOnlyBadge />
         <div class="ml-auto flex items-center gap-1">
           <AccountMenu />
           <ThemeToggle />

@@ -11,6 +11,7 @@ import {
   type LinkingEntry,
 } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import DisabledButton from '../components/DisabledButton.vue'
 import ContentBlocks from '../components/ContentBlocks.vue'
 import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
@@ -19,6 +20,7 @@ import VersionForm from '../components/VersionForm.vue'
 import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
 import { EditIcon, HistoryIntactIcon, HistoryProblemIcon, LoadingIcon, VersionIcon } from '../icons'
 import { KIND_ICONS } from '../kinds'
+import { READ_ONLY_REASON } from '../permissions'
 import {
   badge,
   errorBox,
@@ -31,6 +33,7 @@ import {
   tableWrapper,
   textLink,
 } from '../styles'
+import { useMe } from '../useMe'
 
 // One entry: its details, its current draft, and its versions, with a check that none of the
 // versions has been changed since it was made. Its author can edit the draft (in the editor),
@@ -61,6 +64,11 @@ function whereLinked({ draft, versions }: LinkingEntry['linkedIn']) {
   }
   return `In ${places.join(' and ')}`
 }
+
+// While the site is read-only, its author sees Edit and Create version greyed out, with why,
+// and steps can't be ticked
+const me = useMe()
+const readOnly = computed(() => me.data.value?.readOnly === true)
 
 const historyCheck = useQuery({
   queryKey: ['entry', code, 'history-check'],
@@ -154,7 +162,23 @@ const crumbs = computed(() =>
       <section aria-labelledby="draft-heading" class="mt-8">
         <div class="flex flex-wrap items-center gap-3">
           <h2 id="draft-heading" :class="sectionHeading">Current draft</h2>
-          <template v-if="data.entry.canEdit && !editing && !versioning">
+          <template v-if="data.entry.canEdit && readOnly">
+            <DisabledButton
+              :icon="EditIcon"
+              :button-class="secondaryButton"
+              :reason="READ_ONLY_REASON"
+            >
+              Edit
+            </DisabledButton>
+            <DisabledButton
+              :icon="VersionIcon"
+              :button-class="secondaryButton"
+              :reason="READ_ONLY_REASON"
+            >
+              Create version
+            </DisabledButton>
+          </template>
+          <template v-else-if="data.entry.canEdit && !editing && !versioning">
             <button
               type="button"
               :class="secondaryButton"
@@ -186,7 +210,7 @@ const crumbs = computed(() =>
             v-if="data.entry.content.content.length > 0"
             :blocks="data.entry.content.content"
             :people="data.entry.contentPeople"
-            :tick="data.entry.canEdit ? tick : undefined"
+            :tick="data.entry.canEdit && !readOnly ? tick : undefined"
             :ticking="ticking.isPending.value"
           />
           <p v-else class="text-muted">This entry is empty.</p>

@@ -94,17 +94,18 @@ async function listedEntries(user: CurrentUser | null, linkingTo?: string) {
   })
 }
 
-export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
+export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean } = {}) {
   const orcidBaseUrl = options.orcidBaseUrl ?? 'https://orcid.org'
+  const readOnly = options.readOnly ?? false
   const router = Router()
 
   // The signed-in person, for the header and their profile page: who they are, since when, and
   // their role in each project they're a member of. Their own database id stays inside, like
-  // everyone else's.
+  // everyone else's. It also says whether the site is read-only, whoever asks.
   router.get('/me', async (_req, res) => {
     const user = userOf(res)
     if (user === null) {
-      res.json({ user: null })
+      res.json({ user: null, readOnly })
       return
     }
     const [record, projects] = await Promise.all([findUserById(user.id), listProjectsOf(user.id)])
@@ -120,6 +121,7 @@ export function readRoutes(options: { orcidBaseUrl?: string } = {}) {
           role: roleIn(project, user),
         })),
       },
+      readOnly,
     })
   })
 

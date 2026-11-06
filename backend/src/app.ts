@@ -5,6 +5,7 @@ import type { Config } from './config.ts'
 import { authRoutes } from './http/auth-routes.ts'
 import { handleErrors, notFound } from './http/errors.ts'
 import { memberRoutes } from './http/member-routes.ts'
+import { refuseChanges } from './http/read-only.ts'
 import { readRoutes } from './http/routes.ts'
 import { writeRoutes } from './http/write-routes.ts'
 
@@ -16,6 +17,8 @@ export interface AppOptions {
   config?: Config
   // Used to call ORCID; tests replace it with a fake ORCID
   fetch?: typeof fetch
+  // The read-only lock (see http/read-only.ts); from the settings, unless given here (in tests)
+  readOnly?: boolean
 }
 
 // Every route is under a versioned prefix, as in ProtoLIMS, so a later, incompatible version of
@@ -35,6 +38,11 @@ export function createApp(options: AppOptions = {}) {
     res.json({ status: 'ok' })
   })
 
+  const readOnly = options.readOnly ?? options.config?.readOnly ?? false
+  if (readOnly) {
+    app.use(API, refuseChanges())
+  }
+
   if (options.config) {
     app.use(API, authRoutes({ api: API, config: options.config, fetch: options.fetch }))
   }
@@ -45,7 +53,7 @@ export function createApp(options: AppOptions = {}) {
   })
   // Where people's ORCID records are, for links to them (the sandbox's, in development)
   const orcidBaseUrl = options.config?.orcid?.baseUrl ?? 'https://orcid.org'
-  app.use(API, readRoutes({ orcidBaseUrl }))
+  app.use(API, readRoutes({ orcidBaseUrl, readOnly }))
   app.use(API, writeRoutes())
   app.use(API, memberRoutes({ orcidBaseUrl }))
 

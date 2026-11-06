@@ -9,13 +9,16 @@ import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { NotebookIcon } from '../icons'
+import { READ_ONLY_REASON } from '../permissions'
 import { fieldLabel, fieldProblem, inputClass, primaryButton, secondaryButton } from '../styles'
+import { useMe } from '../useMe'
 
 // Creating a notebook in a project, for its members. Its creator owns it.
 
 const props = defineProps<{ code: string }>()
 const code = toRef(props, 'code')
 const router = useRouter()
+const me = useMe()
 const queryClient = useQueryClient()
 
 const { data, isPending, isError } = useQuery({
@@ -50,7 +53,8 @@ const problems = computed(() => fieldProblems(creating.error.value))
   <div class="mt-3">
     <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="project">
       <template v-if="data">
-        <p v-if="!data.project.canContribute" class="max-w-2xl text-muted">
+        <p v-if="me.data.value?.readOnly" class="max-w-2xl text-muted">{{ READ_ONLY_REASON }}</p>
+        <p v-else-if="!data.project.canContribute" class="max-w-2xl text-muted">
           Only members of {{ data.project.title }} can add notebooks to it.
         </p>
         <form

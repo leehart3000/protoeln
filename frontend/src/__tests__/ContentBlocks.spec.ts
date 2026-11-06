@@ -4,8 +4,9 @@ import type { BlockNode } from '@protoeln/content'
 
 import ContentBlocks from '../components/ContentBlocks.vue'
 
+// Shown on its own, without the site's router: links to entries (RouterLink) become plain links
 function show(blocks: BlockNode[]) {
-  return render(ContentBlocks, { props: { blocks } })
+  return render(ContentBlocks, { props: { blocks }, global: { stubs: { RouterLink: true } } })
 }
 
 describe('ContentBlocks', () => {

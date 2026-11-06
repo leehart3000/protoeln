@@ -8,6 +8,7 @@ import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import { ProjectIcon } from '../icons'
+import { READ_ONLY_REASON } from '../permissions'
 import {
   fieldHint,
   fieldLabel,
@@ -48,7 +49,8 @@ const problems = computed(() => fieldProblems(creating.error.value))
 <template>
   <BreadcrumbTrail :items="[{ label: 'Projects', to: '/projects' }, { label: 'New project' }]" />
   <PageTitle :icon="ProjectIcon">New project</PageTitle>
-  <p v-if="me.isPending.value" class="mt-3 text-muted">Loading…</p>
+  <p v-if="me.data.value?.readOnly" class="mt-3 max-w-2xl text-muted">{{ READ_ONLY_REASON }}</p>
+  <p v-else-if="me.isPending.value" class="mt-3 text-muted">Loading…</p>
   <p v-else-if="!me.data.value?.user?.siteAdmin" class="mt-3 max-w-2xl text-muted">
     Only site admins can create projects.
   </p>

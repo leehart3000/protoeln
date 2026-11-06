@@ -50,6 +50,11 @@ describe('creating a project', () => {
   it.each([
     ['someone not signed in', { user: null }, 'Sign in to do this.'],
     ['someone who is not a site admin', someone(false), 'Only site admins can do this.'],
+    [
+      'a site admin, while the site is read-only',
+      { ...someone(true), readOnly: true },
+      'This site is read-only at the moment, so nothing can be changed.',
+    ],
   ])('shows %s the buttons disabled, saying why', async (_who, me, reason) => {
     fakeApi({ '/api/v1/me': me, '/api/v1/projects': [project] })
     await renderAt('/projects')
@@ -58,6 +63,16 @@ describe('creating a project', () => {
     expect(button).toHaveAttribute('aria-disabled', 'true')
     expect(button).toHaveAccessibleDescription(reason)
     expect(screen.queryByRole('link', { name: 'New project' })).not.toBeInTheDocument()
+  })
+
+  it('says why there is no form while the site is read-only', async () => {
+    fakeApi({ '/api/v1/me': { ...someone(true), readOnly: true } })
+    await renderAt('/projects/new')
+
+    expect(
+      await screen.findByText('This site is read-only at the moment, so nothing can be changed.'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Create project' })).not.toBeInTheDocument()
   })
 
   it('lets a site admin create a project, then shows it', async () => {

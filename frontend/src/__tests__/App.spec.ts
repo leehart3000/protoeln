@@ -63,4 +63,15 @@ describe('App', () => {
     // Such as "Version 0.3.0+2/1a2b3c4", or "Version unreleased/1a2b3c4" before the first release
     expect(within(footer).getByText(/^Version /)).toHaveTextContent(VERSION)
   })
+
+  it('shows a lock in the header while the site is read-only', async () => {
+    fakeApi({ '/api/v1/me': { user: null, readOnly: true } })
+    await renderAt('/')
+
+    const badge = (await screen.findByText('Read-only')).parentElement!
+    expect(badge).toHaveAttribute(
+      'title',
+      'This site is read-only at the moment, so nothing can be changed.',
+    )
+  })
 })

@@ -65,7 +65,11 @@ const cannotAdd = computed(() =>
           align="start"
         />
       </p>
-      <MembersSection v-if="data.project.canManageMembers" :code="code" />
+      <!-- Hidden while the site is read-only, as no one could change anything in it -->
+      <MembersSection
+        v-if="data.project.canManageMembers && !me.data.value?.readOnly"
+        :code="code"
+      />
     </template>
   </QueryStatus>
 </template>
