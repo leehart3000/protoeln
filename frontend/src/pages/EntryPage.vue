@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
-import { computed, defineAsyncComponent, ref, toRef } from 'vue'
+import { computed, defineAsyncComponent, h, ref, toRef } from 'vue'
 
-import { fetchEntry, fetchHistoryCheck, fetchVersions, tickStep } from '../api'
+import {
+  fetchEntry,
+  fetchHistoryCheck,
+  fetchLinkedFrom,
+  fetchVersions,
+  tickStep,
+  type LinkingEntry,
+} from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import ContentBlocks from '../components/ContentBlocks.vue'
 import FormProblem from '../components/FormProblem.vue'
@@ -10,7 +17,7 @@ import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import VersionForm from '../components/VersionForm.vue'
 import { formatDateTime, KIND_LABELS, STATUS_LABELS } from '../format'
-import { EditIcon, HistoryIntactIcon, HistoryProblemIcon, VersionIcon } from '../icons'
+import { EditIcon, HistoryIntactIcon, HistoryProblemIcon, LoadingIcon, VersionIcon } from '../icons'
 import { KIND_ICONS } from '../kinds'
 import {
   badge,
@@ -22,6 +29,7 @@ import {
   tableHead,
   tableHeader,
   tableWrapper,
+  textLink,
 } from '../styles'
 
 // One entry: its details, its current draft, and its versions, with a check that none of the
@@ -39,6 +47,21 @@ const versions = useQuery({
   queryKey: ['entry', code, 'versions'],
   queryFn: () => fetchVersions(code.value),
 })
+const linkedFrom = useQuery({
+  queryKey: ['entry', code, 'linked-from'],
+  queryFn: () => fetchLinkedFrom(code.value),
+})
+// Where another entry's link to this one is, such as "In version 1" or "In its current draft
+// and versions 1 and 2". (The entry's own status, such as Draft or Signed, is something else.)
+function whereLinked({ draft, versions }: LinkingEntry['linkedIn']) {
+  const places = draft ? ['its current draft'] : []
+  if (versions.length === 1) places.push(`version ${versions[0]}`)
+  if (versions.length > 1) {
+    places.push(`versions ${versions.slice(0, -1).join(', ')} and ${versions.at(-1)}`)
+  }
+  return `In ${places.join(' and ')}`
+}
+
 const historyCheck = useQuery({
   queryKey: ['entry', code, 'history-check'],
   queryFn: () => fetchHistoryCheck(code.value),
@@ -66,8 +89,27 @@ function tick(path: number[], done: boolean) {
 }
 
 // The editor is loaded only when someone opens it, as it's most of the website's code and most
-// visitors only read
-const EntryEditor = defineAsyncComponent(() => import('../components/EntryEditor.vue'))
+// visitors only read. If that takes more than a moment, a message says so; if it fails (say,
+// the connection dropped), another says what to do.
+const EntryEditor = defineAsyncComponent({
+  loader: () => import('../components/EntryEditor.vue'),
+  delay: 200,
+  loadingComponent: {
+    render: () =>
+      h('p', { role: 'status', class: 'mt-3 flex items-center gap-2 text-muted' }, [
+        h(LoadingIcon, { 'aria-hidden': 'true', class: 'size-4 motion-safe:animate-spin' }),
+        'Loading the editor…',
+      ]),
+  },
+  errorComponent: {
+    render: () =>
+      h(
+        'p',
+        { role: 'alert', class: 'mt-3 font-medium text-danger' },
+        "The editor couldn't be loaded. Check your connection, then reload the page.",
+      ),
+  },
+})
 
 // The editor, or the form for a new version, when open (one at a time)
 const editing = ref(false)
@@ -224,6 +266,30 @@ const crumbs = computed(() =>
             </template>
           </QueryStatus>
         </div>
+      </section>
+
+      <!-- Shown only when other entries link here -->
+      <section
+        v-if="linkedFrom.data.value?.length"
+        aria-labelledby="linked-from-heading"
+        class="mt-8"
+      >
+        <h2 id="linked-from-heading" :class="sectionHeading">Linked from</h2>
+        <p class="mt-1 max-w-2xl text-sm text-muted">
+          Entries you can read that link to this one, in their current draft or in a version.
+        </p>
+        <ul class="mt-3 divide-y divide-line rounded-lg border border-line bg-panel">
+          <li v-for="linking in linkedFrom.data.value" :key="linking.code" class="px-4 py-3">
+            <RouterLink :to="`/entries/${linking.code}`" :class="textLink" class="font-medium">
+              {{ linking.title }}
+            </RouterLink>
+            {{ ' ' }}<span class="ml-1 font-mono text-sm text-muted">{{ linking.code }}</span>
+            <p class="mt-1 text-sm text-muted">
+              {{ whereLinked(linking.linkedIn) }} · {{ linking.notebook.title }} ·
+              <span class="font-mono">{{ linking.project.code }}</span>
+            </p>
+          </li>
+        </ul>
       </section>
     </template>
   </QueryStatus>

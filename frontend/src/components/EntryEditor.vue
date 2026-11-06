@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
       <input id="entry-title" v-model="title" :class="[inputClass, 'border-line']" />
     </div>
     <div class="rounded-lg border border-line bg-panel">
-      <EditorToolbar v-if="editor" :editor="editor" />
+      <EditorToolbar v-if="editor" :editor="editor" :entry-code="entry.code" />
       <EditorContent :editor="editor" />
     </div>
     <div class="flex flex-wrap items-center gap-3">

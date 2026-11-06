@@ -236,6 +236,13 @@ const BLOCKS: Record<string, Check> = {
       for (const key of ['system', 'kind', 'url', 'label']) {
         checkString(attrs[key], at(attrsPath, key), problems)
       }
+      // Only links that are safe to follow: to a web page, or to a page of this site
+      if (typeof attrs.url === 'string' && !/^(https?:\/\/|\/(?!\/))/i.test(attrs.url)) {
+        problems.push({
+          path: at(attrsPath, 'url'),
+          message: 'should start https://, http://, or / (for a page of this site)',
+        })
+      }
       checkString(attrs.externalId, at(attrsPath, 'externalId'), problems, true)
     }),
 }

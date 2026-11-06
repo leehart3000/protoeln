@@ -90,11 +90,29 @@ export async function listEntries(notebookId: mongoose.Types.ObjectId) {
     .lean()
 }
 
-// A summary of every entry in these notebooks, most recently changed first (without content)
-export async function listEntriesIn(notebookIds: mongoose.Types.ObjectId[]) {
-  return EntryModel.find({ notebookId: { $in: notebookIds } })
-    .select('code kind title status authorId latestVersion updatedAt notebookId')
+// A summary of every entry in these notebooks, most recently changed first (without content);
+// with `linkingTo`, only those that link to that entry (by its code), in their current draft or
+// in any of their versions (as a version is a record that stays)
+export async function listEntriesIn(notebookIds: mongoose.Types.ObjectId[], linkingTo?: string) {
+  const inVersions =
+    linkingTo === undefined
+      ? []
+      : await EntryVersionModel.distinct('entryId', { linkedEntries: linkingTo })
+  const linking =
+    linkingTo === undefined
+      ? {}
+      : { $or: [{ linkedEntries: linkingTo }, { _id: { $in: inVersions } }] }
+  return EntryModel.find({ notebookId: { $in: notebookIds }, ...linking })
+    .select('code kind title status authorId latestVersion updatedAt notebookId linkedEntries')
     .sort({ updatedAt: -1 })
+    .lean()
+}
+
+// The versions (of any entry) that link to an entry, by its code: which entry, and which version
+export async function versionsLinkingTo(code: string) {
+  return EntryVersionModel.find({ linkedEntries: code })
+    .select('entryId number')
+    .sort({ number: 1 })
     .lean()
 }
 

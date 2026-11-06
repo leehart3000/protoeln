@@ -1,3 +1,4 @@
+import type { RecordLinkNode } from '@protoeln/content'
 import { Extension, mergeAttributes, Node, type Extensions } from '@tiptap/core'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
@@ -6,6 +7,7 @@ import { TableView } from '@tiptap/pm/tables'
 import { StarterKit } from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 
+import { linkTarget } from '../records'
 import MaterialsView from './MaterialsView.vue'
 
 // The Tiptap editor's set-up: exactly the blocks and marks of ProtoELN's content format
@@ -147,7 +149,7 @@ const FileBlock = keptBlock('fileBlock', { fileId: '', caption: null }, (attrs) 
 const RecordLink = keptBlock(
   'recordLink',
   { system: '', kind: '', url: '', label: '', externalId: null },
-  (attrs) => `${String(attrs.label)} (${String(attrs.system)} ${String(attrs.kind)})`,
+  (attrs) => `${String(attrs.label)} (${linkTarget(attrs as RecordLinkNode['attrs'])})`,
 )
 
 export function editorExtensions(): Extensions {

@@ -111,6 +111,19 @@ describe('checkDocument', () => {
       'content[0].content[0].content',
     ],
     [
+      'a link to a record that is not a web address',
+      {
+        type: 'doc',
+        content: [
+          {
+            type: 'recordLink',
+            attrs: { system: 'x', kind: 'y', url: 'javascript:alert(1)', label: 'Click me' },
+          },
+        ],
+      },
+      'content[0].attrs.url',
+    ],
+    [
       'a merged cell',
       {
         type: 'doc',

@@ -17,6 +17,8 @@ const entryVersionSchema = new mongoose.Schema(
     // Plain-text and Markdown copies, readable without any editor
     text: { type: String, default: '' },
     markdown: { type: String, default: '' },
+    // The codes of the entries the content links to (as for an entry's draft)
+    linkedEntries: { type: [String], default: [] },
     note: { type: String, default: '' },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     // Set explicitly (not by Mongoose's timestamps), because it is part of what the hash protects
@@ -29,6 +31,7 @@ const entryVersionSchema = new mongoose.Schema(
 )
 
 entryVersionSchema.index({ entryId: 1, number: 1 }, { unique: true })
+entryVersionSchema.index({ linkedEntries: 1 })
 makeImmutable(entryVersionSchema, 'Entry versions')
 
 export type EntryVersion = InferSchemaType<typeof entryVersionSchema>

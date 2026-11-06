@@ -44,6 +44,8 @@ const entrySchema = new mongoose.Schema(
     },
     // A plain-text copy of the content, for full-text search
     text: { type: String, default: '' },
+    // The codes of the entries the content links to, so an entry can list what links to it
+    linkedEntries: { type: [String], default: [] },
     tags: { type: [String], default: [] },
     entities: { type: [entitySchema], default: [] },
     // The number of the latest version (0 until the first version is created)
@@ -55,6 +57,7 @@ const entrySchema = new mongoose.Schema(
 )
 
 entrySchema.index({ notebookId: 1, updatedAt: -1 })
+entrySchema.index({ linkedEntries: 1 })
 
 export type Entry = InferSchemaType<typeof entrySchema>
 export const EntryModel = mongoose.model('Entry', entrySchema)

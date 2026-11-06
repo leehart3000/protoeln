@@ -7,7 +7,7 @@ import { fromProseMirror, type DocNode, type TableNode } from '@protoeln/content
 // the first test that opens it doesn't wait for the editor's code to be read and compiled.
 import '../components/EntryEditor.vue'
 
-import { notebook, protocol, versions } from './fixtures'
+import { notebook, protocol, protocolSummary, versions } from './fixtures'
 import { fakeApi, renderAt, sentBody } from './helpers'
 
 const ENTRY = '/api/v1/entries/ELN-2026-0001'
@@ -309,5 +309,94 @@ describe('editing an entry', () => {
     expect(await screen.findByRole('list', { name: 'Problems' })).toHaveTextContent(
       'content[3].attrs: should not be there',
     )
+  })
+
+  it('links to another entry, found by searching', async () => {
+    const empty = { ...mine, content: { type: 'doc' as const, content: [] } }
+    const other = {
+      ...protocolSummary,
+      code: 'ELN-2026-0003',
+      title: 'Lysate prep',
+      notebook: { id: notebook.id, title: notebook.title },
+      project: { code: 'DEMO', title: 'Example project' },
+    }
+    const fetchMock = fakeApi(
+      entryAnswers(empty, {
+        '/api/v1/entries': [{ ...other, code: 'ELN-2026-0001', title: 'Lysate test' }, other],
+        [`PUT ${ENTRY}/draft`]: { entry: empty, changed: true },
+      }),
+    )
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.click(await screen.findByRole('button', { name: 'Link to record' }))
+    // Before anything is typed, the most recently changed entries (but not this one)
+    const recent = await screen.findByRole('list', { name: 'Recently changed entries' })
+    expect(within(recent).getAllByRole('button')).toHaveLength(1)
+    await user.type(screen.getByLabelText(/^Find an entry/), 'lysate')
+    const matches = await screen.findByRole('list', { name: 'Matching entries' })
+    // The entry being edited isn't offered
+    expect(within(matches).getAllByRole('button')).toHaveLength(1)
+    await user.click(within(matches).getByRole('button', { name: /Lysate prep/ }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('Saved')
+
+    const { content } = sentBody(fetchMock, 'PUT', `${ENTRY}/draft`) as { content: unknown }
+    expect(content).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'recordLink',
+          attrs: {
+            system: 'protoeln',
+            kind: 'entry',
+            url: '/entries/ELN-2026-0003',
+            label: 'Lysate prep',
+            externalId: 'ELN-2026-0003',
+          },
+        },
+      ],
+    })
+  })
+
+  it('links to a record elsewhere, by its address', async () => {
+    const empty = { ...mine, content: { type: 'doc' as const, content: [] } }
+    const fetchMock = fakeApi(
+      entryAnswers(empty, { [`PUT ${ENTRY}/draft`]: { entry: empty, changed: true } }),
+    )
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.click(await screen.findByRole('button', { name: 'Link to record' }))
+    await user.type(
+      screen.getByLabelText(/^Find an entry/),
+      'https://lims.example.org/samples/S-0042',
+    )
+    await user.type(await screen.findByLabelText('Label'), 'Sample S-0042')
+    expect(
+      screen.getByText('Shown as: Sample S-0042 (sample on lims.example.org)'),
+    ).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add link' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('Saved')
+
+    const { content } = sentBody(fetchMock, 'PUT', `${ENTRY}/draft`) as { content: unknown }
+    expect(content).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'recordLink',
+          attrs: {
+            system: 'lims.example.org',
+            kind: 'sample',
+            url: 'https://lims.example.org/samples/S-0042',
+            label: 'Sample S-0042',
+            externalId: 'S-0042',
+          },
+        },
+      ],
+    })
   })
 })

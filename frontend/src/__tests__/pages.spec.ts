@@ -148,6 +148,59 @@ describe('entry page', () => {
     }
   }
 
+  it('lists the entries that link to it, and links to entries in its content', async () => {
+    const linking = {
+      ...protocolSummary,
+      ...where,
+      code: 'ELN-2026-0002',
+      title: 'Blot 1',
+      linkedIn: { draft: false, versions: [1, 2] },
+    }
+    const linked = {
+      ...protocol,
+      content: {
+        type: 'doc' as const,
+        content: [
+          {
+            type: 'recordLink' as const,
+            attrs: {
+              system: 'protoeln',
+              kind: 'entry',
+              url: '/entries/ELN-2026-0003',
+              label: 'Lysate prep',
+              externalId: 'ELN-2026-0003',
+            },
+          },
+        ],
+      },
+    }
+    fakeApi({
+      ...answers({ intact: true, problems: [] }),
+      '/api/v1/entries/ELN-2026-0001': {
+        entry: linked,
+        notebook: { id: notebook.id, title: notebook.title },
+        project: { code: 'DEMO', title: 'Example project' },
+      },
+      '/api/v1/entries/ELN-2026-0001/linked-from': [linking],
+    })
+    await renderAt('/entries/ELN-2026-0001')
+
+    expect(await screen.findByRole('link', { name: 'Lysate prep' })).toHaveAttribute(
+      'href',
+      '/entries/ELN-2026-0003',
+    )
+    expect(screen.getByText('(entry ELN-2026-0003)')).toBeInTheDocument()
+    const heading = await screen.findByRole('heading', { name: 'Linked from' })
+    const section = within(heading.closest('section')!)
+    expect(section.getByRole('link', { name: 'Blot 1' })).toHaveAttribute(
+      'href',
+      '/entries/ELN-2026-0002',
+    )
+    expect(section.getByText(/^In versions 1 and 2/)).toHaveTextContent(
+      'In versions 1 and 2 · Protein assays · DEMO',
+    )
+  })
+
   it('shows the entry’s content and versions, and that the history checks out', async () => {
     fakeApi(answers({ intact: true, problems: [] }))
     await renderAt('/entries/ELN-2026-0001')

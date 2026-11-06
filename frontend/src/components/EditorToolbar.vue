@@ -23,6 +23,7 @@ import {
   ParagraphIcon,
   ProtocolStepIcon,
   QuoteIcon,
+  RecordLinkIcon,
   RedoIcon,
   RowAboveIcon,
   RowBelowIcon,
@@ -33,13 +34,15 @@ import {
   UndoIcon,
   UnlinkIcon,
 } from '../icons'
+import RecordLinkForm from '../editor/RecordLinkForm.vue'
 import { inputClass, primaryButton, secondaryButton } from '../styles'
 
 // The editor's buttons: one for each block and mark of the content format. Each button says what
 // it does (its label is also its tooltip), and shows whether it's on where the cursor is. In a
 // table, a second row of buttons adds and deletes rows and columns.
 
-const props = defineProps<{ editor: Editor }>()
+// `entryCode` is the entry being edited (not offered as a link to itself)
+const props = defineProps<{ editor: Editor; entryCode?: string }>()
 
 // Whether the toolbar is stuck to the top of the window, with the content scrolling beneath it.
 // Then it's square-cornered with a shadow; otherwise its top corners are rounded to fit inside
@@ -187,8 +190,8 @@ const GROUPS: Tool[][] = [
     { label: 'Undo', icon: UndoIcon, run: () => chain().undo().run() },
     { label: 'Redo', icon: RedoIcon, run: () => chain().redo().run() },
   ],
-  // Blocks for lab work: checklists of protocol steps, ticked off on the entry page, and
-  // tables of the materials used
+  // Blocks for lab work: checklists of protocol steps, ticked off on the entry page, tables of
+  // the materials used, and links to records (other entries, or records elsewhere)
   [
     {
       label: 'Checklist',
@@ -204,6 +207,15 @@ const GROUPS: Tool[][] = [
       icon: MaterialsIcon,
       run: () => insertBlock({ type: 'materials', attrs: { items: [{ name: '' }] } }),
       active: () => props.editor.isActive('materials'),
+    },
+    {
+      label: 'Link to record',
+      icon: RecordLinkIcon,
+      run: () => {
+        linking.value = false
+        recordLinking.value = true
+      },
+      active: () => recordLinking.value,
     },
   ],
 ]
@@ -311,12 +323,15 @@ const TABLE_GROUPS: TableGroup[] = [
 
 const NOT_IN_LINK = 'Put the cursor in a link to remove it.'
 
-// Adding a link asks for its address in a small form under the toolbar
+// Adding a link asks for its address in a small form under the toolbar; adding a link to a
+// record has a form of its own there (see RecordLinkForm)
 const linking = ref(false)
+const recordLinking = ref(false)
 const href = ref('')
 
 function startLink() {
   href.value = String(props.editor.getAttributes('link').href ?? '')
+  recordLinking.value = false
   linking.value = true
 }
 
@@ -430,5 +445,11 @@ const deleteButton = `${toolShape} text-danger hover:bg-danger/10`
       <button type="submit" :class="primaryButton" class="text-sm">Apply</button>
       <button type="button" :class="secondaryButton" @click="linking = false">Cancel</button>
     </form>
+    <RecordLinkForm
+      v-if="recordLinking"
+      :entry-code="entryCode"
+      :insert="insertBlock"
+      @done="recordLinking = false"
+    />
   </div>
 </template>

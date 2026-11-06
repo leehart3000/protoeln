@@ -4,7 +4,8 @@ import { computed } from 'vue'
 
 import { InlineContent, isSafeHref } from '../content'
 import { formatDateTime } from '../format'
-import { StepDoneIcon, StepIcon } from '../icons'
+import { ExternalIcon, StepDoneIcon, StepIcon } from '../icons'
+import { isEntryLink, linkTarget } from '../records'
 import { table, tableCell, tableHead, tableHeader, tableWrapper, textLink } from '../styles'
 
 // Shows entry content (protoeln-doc/1, see docs/content-format.md) for reading. It shows each
@@ -153,12 +154,25 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
         </tbody>
       </table>
     </div>
-    <p v-else-if="block.type === 'recordLink'">
-      <a v-if="isSafeHref(block.attrs.url)" :href="block.attrs.url" :class="textLink">
+    <!-- A link to another entry stays on this site; one elsewhere opens in a new tab -->
+    <p v-else-if="block.type === 'recordLink'" class="flex flex-wrap items-baseline gap-x-2">
+      <RouterLink v-if="isEntryLink(block.attrs)" :to="block.attrs.url" :class="textLink">
         {{ block.attrs.label }}
+      </RouterLink>
+      <a
+        v-else-if="isSafeHref(block.attrs.url)"
+        :href="block.attrs.url"
+        :class="textLink"
+        class="inline-flex items-center gap-1"
+        :aria-label="`${block.attrs.label} (opens in a new tab)`"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ block.attrs.label }}
+        <ExternalIcon aria-hidden="true" class="size-3.5 shrink-0" />
       </a>
       <span v-else>{{ block.attrs.label }}</span>
-      <span class="text-muted"> ({{ block.attrs.system }} {{ block.attrs.kind }})</span>
+      <span class="text-sm text-muted">({{ linkTarget(block.attrs) }})</span>
     </p>
     <p v-else-if="block.type === 'dataBlock'" :class="placeholder">
       Data (shown here once data can be added to entries)

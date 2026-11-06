@@ -297,6 +297,18 @@ export function fetchEntry(code: string) {
   )
 }
 
+// An entry that links to another, saying where the link is: in its current draft, and in which
+// of its versions
+export interface LinkingEntry extends EntryListItem {
+  linkedIn: { draft: boolean; versions: number[] }
+}
+
+// The entries the requester can read that link to this one
+export async function fetchLinkedFrom(code: string) {
+  const path = `/api/v1/entries/${encodeURIComponent(code)}/linked-from`
+  return (await getJson<LinkingEntry[]>(path)) ?? []
+}
+
 export function fetchVersions(code: string) {
   return getJson<VersionSummary[]>(`/api/v1/entries/${encodeURIComponent(code)}/versions`)
 }

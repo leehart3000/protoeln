@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import {
   CONTENT_FORMAT,
   checkDocument,
+  linkedEntryCodes,
   pathText,
   stepsOf,
   toMarkdown,
@@ -111,6 +112,7 @@ export async function createEntry(input: {
     title: input.title,
     content,
     text: toPlainText(content),
+    linkedEntries: linkedEntryCodes(content),
   })
 }
 
@@ -150,6 +152,7 @@ async function storeDraft(
   entry.content = change.content
   entry.markModified('content')
   entry.text = toPlainText(change.content)
+  entry.linkedEntries = linkedEntryCodes(change.content)
   await entry.save({ session })
   await EntryChangeModel.create([{ entryId: entry._id, userId: change.userId, diff }], {
     session,
@@ -244,6 +247,7 @@ export async function createVersion(input: { entryId: Id; userId: Id; note?: str
           content,
           text: toPlainText(content),
           markdown: toMarkdown(content),
+          linkedEntries: linkedEntryCodes(content),
           note,
           createdBy: input.userId,
           createdAt,
@@ -253,8 +257,11 @@ export async function createVersion(input: { entryId: Id; userId: Id; note?: str
       ],
       { session },
     )
+    // A version doesn't change the draft, so the entry's updatedAt (when its draft was last
+    // saved, which a save's basedOn is checked against) stays as it was. Otherwise saving again
+    // straight after creating a version would be refused, as if someone else had saved.
     entry.latestVersion = number
-    await entry.save({ session })
+    await entry.save({ session, timestamps: false })
     return version
   })
 }
