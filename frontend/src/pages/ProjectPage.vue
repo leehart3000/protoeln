@@ -5,6 +5,7 @@ import { computed, toRef } from 'vue'
 import { fetchProject } from '../api'
 import { ROLE_LABELS } from '../format'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import EditLink from '../components/EditLink.vue'
 import MembersSection from '../components/MembersSection.vue'
 import NewButton from '../components/NewButton.vue'
 import NotebookTable from '../components/NotebookTable.vue'
@@ -58,7 +59,16 @@ const visibility = computed(() => {
   />
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="project">
     <template v-if="data">
-      <PageTitle :icon="ProjectIcon">{{ data.project.title }}</PageTitle>
+      <!-- Its admins and site admins can change its details -->
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <PageTitle :icon="ProjectIcon">{{ data.project.title }}</PageTitle>
+        <EditLink
+          v-if="data.project.canManageMembers"
+          :to="`/projects/${code}/edit`"
+          label="Edit project"
+          :read-only="me.data.value?.readOnly === true"
+        />
+      </div>
       <p v-if="data.project.description" class="mt-2 max-w-2xl text-muted">
         {{ data.project.description }}
       </p>

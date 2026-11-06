@@ -3,7 +3,7 @@ import mongoose, { type InferSchemaType } from 'mongoose'
 import { makeImmutable } from '../immutable.ts'
 
 // One operation of a JSON Patch (RFC 6902), describing part of what a save changed
-const patchOperationSchema = new mongoose.Schema(
+export const patchOperationSchema = new mongoose.Schema(
   {
     op: {
       type: String,

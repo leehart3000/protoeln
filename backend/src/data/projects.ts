@@ -1,4 +1,7 @@
+import mongoose from 'mongoose'
+
 import { ConflictError } from '../errors.ts'
+import { saveDetails } from './details.ts'
 import { ProjectModel } from './models/project.ts'
 
 // Creates a project, whose creator becomes its first admin. Codes are unique, so a code
@@ -30,4 +33,36 @@ export async function createProject(input: {
     }
     throw error
   }
+}
+
+// The details of a project that can be changed after it's created (its code never changes)
+export interface ProjectDetails {
+  title: string
+  description: string
+  publicRead: boolean
+}
+
+// Changes the details given, recording what changed (see details.ts)
+export async function updateProject(input: {
+  projectId: mongoose.Types.ObjectId
+  userId: string
+  changes: Partial<ProjectDetails>
+}) {
+  return mongoose.connection.transaction(async (session) => {
+    const project = await ProjectModel.findById(input.projectId).session(session).orFail()
+    const before: ProjectDetails = {
+      title: project.title,
+      description: project.description,
+      publicRead: project.publicRead,
+    }
+    const changed = await saveDetails({
+      kind: 'project',
+      record: project,
+      before,
+      changes: input.changes,
+      userId: input.userId,
+      session,
+    })
+    return { project: project.toObject(), changed }
+  })
 }

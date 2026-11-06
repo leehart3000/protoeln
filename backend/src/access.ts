@@ -49,6 +49,24 @@ export function canManageMembers(project: ProjectAccess, user: CurrentUser | nul
   return user?.siteAdmin === true || roleIn(project, user) === 'admin'
 }
 
+// Changing a project's details (its title, description, and whether it's public): the same
+// people as choose its members
+export function canEditProject(project: ProjectAccess, user: CurrentUser | null): boolean {
+  return canManageMembers(project, user)
+}
+
+// Changing a notebook's details (its title and description): its owner, while they can
+// contribute to its project; the project's admins; and site admins
+export function canEditNotebook(
+  notebook: { ownerId: { toString(): string } },
+  project: ProjectAccess,
+  user: CurrentUser | null,
+): boolean {
+  if (user === null) return false
+  if (canEditProject(project, user)) return true
+  return notebook.ownerId.toString() === user.id && canContribute(project, user)
+}
+
 // Signed and witnessed entries are locked: corrections are made with an addendum
 export function isLocked(status: string): boolean {
   return status === 'signed' || status === 'witnessed'

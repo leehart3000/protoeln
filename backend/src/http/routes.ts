@@ -4,6 +4,7 @@ import type { DocNode } from '@protoeln/content'
 import {
   canContribute,
   canEditEntry,
+  canEditNotebook,
   canManageMembers,
   canRead,
   roleIn,
@@ -175,7 +176,10 @@ export function readRoutes(
     const entries = await listEntries(notebook._id)
     const people = await findPeople([notebook.ownerId, ...entries.map((entry) => entry.authorId)])
     res.json({
-      notebook: notebookView(notebook, people),
+      notebook: {
+        ...notebookView(notebook, people),
+        canEdit: canEditNotebook(notebook, project, user),
+      },
       project: { ...projectRef(project), canContribute: canContribute(project, user) },
       entries: entries.map((entry) => entrySummary(entry, people)),
     })

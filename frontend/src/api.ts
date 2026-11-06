@@ -49,6 +49,8 @@ export interface Notebook {
   title: string
   description: string
   owner: Person
+  // On a notebook's own page: whether the visitor can change its title and description
+  canEdit?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -148,7 +150,7 @@ export function fieldProblems(error: Error | null): Record<string, string> {
 }
 
 async function sendJson<T>(
-  method: 'POST' | 'PUT' | 'DELETE',
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   body?: unknown,
 ): Promise<T> {
@@ -193,6 +195,30 @@ export function createProject(body: {
   publicRead: boolean
 }) {
   return sendJson<Project>('POST', '/api/v1/projects', body)
+}
+
+// Changes a project's details: only those given (its code never changes)
+export function updateProject(
+  code: string,
+  changes: Partial<{ title: string; description: string; publicRead: boolean }>,
+) {
+  return sendJson<{ project: Project; changed: boolean }>(
+    'PATCH',
+    `/api/v1/projects/${encodeURIComponent(code)}`,
+    changes,
+  )
+}
+
+// Changes a notebook's details: only those given
+export function updateNotebook(
+  id: string,
+  changes: Partial<{ title: string; description: string }>,
+) {
+  return sendJson<{ notebook: Notebook; changed: boolean }>(
+    'PATCH',
+    `/api/v1/notebooks/${encodeURIComponent(id)}`,
+    changes,
+  )
 }
 
 export function createNotebook(projectCode: string, body: { title: string; description: string }) {

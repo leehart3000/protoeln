@@ -4,6 +4,7 @@ import { computed, toRef } from 'vue'
 
 import { fetchNotebook } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import EditLink from '../components/EditLink.vue'
 import EntryTable from '../components/EntryTable.vue'
 import NewButton from '../components/NewButton.vue'
 import PageTitle from '../components/PageTitle.vue'
@@ -45,7 +46,16 @@ const crumbs = computed(() =>
   <BreadcrumbTrail :items="crumbs" />
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="notebook">
     <template v-if="data">
-      <PageTitle :icon="NotebookIcon">{{ data.notebook.title }}</PageTitle>
+      <!-- Its owner, the project's admins and site admins can change its details -->
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <PageTitle :icon="NotebookIcon">{{ data.notebook.title }}</PageTitle>
+        <EditLink
+          v-if="data.notebook.canEdit"
+          :to="`/notebooks/${id}/edit`"
+          label="Edit notebook"
+          :read-only="me.data.value?.readOnly === true"
+        />
+      </div>
       <p class="mt-2 max-w-2xl text-muted">
         <template v-if="data.notebook.description">{{ data.notebook.description }} </template>
         Kept by {{ data.notebook.owner.name }}.

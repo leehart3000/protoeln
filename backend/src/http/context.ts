@@ -88,6 +88,17 @@ export class BodyReader {
     return value
   }
 
+  // An optional text field which, if given, must not be empty (such as a new title)
+  optionalNonEmptyText(field: string): string | undefined {
+    return this.body[field] === undefined ? undefined : this.text(field)
+  }
+
+  // An optional true-or-false field, undefined if it's left out (such as a detail that isn't
+  // being changed)
+  optionalFlag(field: string): boolean | undefined {
+    return this.body[field] === undefined ? undefined : this.boolean(field)
+  }
+
   // A required true-or-false field
   boolean(field: string): boolean {
     const value = this.body[field]

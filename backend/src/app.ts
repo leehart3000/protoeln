@@ -3,6 +3,7 @@ import express, { type Request } from 'express'
 import type { CurrentUser } from './access.ts'
 import type { Config } from './config.ts'
 import { authRoutes } from './http/auth-routes.ts'
+import { detailRoutes } from './http/detail-routes.ts'
 import { handleErrors, notFound } from './http/errors.ts'
 import { memberRoutes } from './http/member-routes.ts'
 import { refuseChanges } from './http/read-only.ts'
@@ -60,6 +61,7 @@ export function createApp(options: AppOptions = {}) {
   const orcidBaseUrl = options.config?.orcid?.baseUrl ?? 'https://orcid.org'
   app.use(API, readRoutes({ orcidBaseUrl, readOnly, publicRead }))
   app.use(API, writeRoutes())
+  app.use(API, detailRoutes())
   app.use(API, memberRoutes({ orcidBaseUrl }))
 
   app.use(notFound)
