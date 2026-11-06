@@ -3,10 +3,10 @@ import { useRoute } from 'vue-router'
 
 import AccountMenu from './components/AccountMenu.vue'
 import EnvironmentBadge from './components/EnvironmentBadge.vue'
+import ExternalLink from './components/ExternalLink.vue'
 import ReadOnlyBadge from './components/ReadOnlyBadge.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
-import { EntryIcon, ExternalIcon, NotebookIcon, ProjectIcon } from './icons'
-import { textLink } from './styles'
+import { EntryIcon, NotebookIcon, ProjectIcon } from './icons'
 
 // The main navigation, as in ProtoLIMS: a link to the list of each kind of record. A link is
 // marked as the current one on its list and on the pages of its records (so "Notebooks" is
@@ -83,24 +83,8 @@ function navLinkClass(current: boolean) {
         class="mx-auto flex max-w-6xl flex-wrap justify-between gap-x-6 gap-y-2 px-4 py-6 text-sm text-muted"
       >
         <p>
-          ProtoELN is
-          <a
-            :href="SOURCE_URL"
-            :class="textLink"
-            aria-label="free software (opens in a new tab)"
-            target="_blank"
-            rel="noopener noreferrer"
-            >free software<ExternalIcon aria-hidden="true" class="ml-0.5 inline size-3.5"
-          /></a>
-          under the
-          <a
-            :href="LICENCE_URL"
-            :class="textLink"
-            aria-label="GNU AGPL v3 (opens in a new tab)"
-            target="_blank"
-            rel="noopener noreferrer"
-            >GNU AGPL v3<ExternalIcon aria-hidden="true" class="ml-0.5 inline size-3.5" /></a
-          >.
+          ProtoELN is <ExternalLink :href="SOURCE_URL" text="free software" /> under the
+          <ExternalLink :href="LICENCE_URL" text="GNU AGPL v3" after="." />
         </p>
         <p>Version {{ VERSION }}</p>
       </div>
