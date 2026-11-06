@@ -2,7 +2,11 @@ import { Extension, mergeAttributes, Node, type Extensions } from '@tiptap/core'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import { TableView } from '@tiptap/pm/tables'
 import { StarterKit } from '@tiptap/starter-kit'
+import { VueNodeViewRenderer } from '@tiptap/vue-3'
+
+import MaterialsView from './MaterialsView.vue'
 
 // The Tiptap editor's set-up: exactly the blocks and marks of ProtoELN's content format
 // (protoeln-doc/1, see docs/content-format.md), so whatever it makes can be stored. StarterKit's
@@ -71,9 +75,18 @@ const ProtocolStepKeys = Extension.create({
   },
 })
 
-// A block that the editor shows and keeps exactly as it is, but can't change yet (materials,
-// data, files and links to records elsewhere): it's described in a line of text, and can be
-// moved or deleted as a whole.
+// Tables are drawn inside a box of their own (div.tableWrapper), which scrolls sideways when a
+// table is too wide for the editor, as on the entry page, so the page never gets wider than
+// the window. Columns are at least 80 pixels wide, so cells stay readable on phones.
+const ScrollingTable = Table.extend({
+  addNodeView() {
+    return ({ node }) => new TableView(node, 80)
+  },
+})
+
+// A block that the editor shows and keeps exactly as it is, but can't change yet (data, files
+// and links to records elsewhere): it's described in a line of text, and can be moved or
+// deleted as a whole.
 function keptBlock(
   name: string,
   attributes: Record<string, unknown>,
@@ -105,16 +118,24 @@ function keptBlock(
   })
 }
 
-interface Material {
-  name?: string
-  lotNumber?: string
-}
-
-const Materials = keptBlock('materials', { items: [] }, (attrs) => {
-  const items = (attrs.items as Material[]).map((item) =>
-    item.lotNumber ? `${item.name} (lot ${item.lotNumber})` : String(item.name),
-  )
-  return `Materials: ${items.join('; ') || 'none'}`
+// Materials: a table of the reagents and consumables used, edited in place (see MaterialsView)
+const Materials = Node.create({
+  name: 'materials',
+  group: 'block',
+  atom: true,
+  selectable: true,
+  addAttributes() {
+    return { items: { default: [], rendered: false } }
+  },
+  parseHTML() {
+    return [{ tag: 'div[data-type="materials"]' }]
+  },
+  renderHTML() {
+    return ['div', { 'data-type': 'materials' }]
+  },
+  addNodeView() {
+    return VueNodeViewRenderer(MaterialsView)
+  },
 })
 
 const DataBlock = keptBlock('dataBlock', { dataItemId: '' }, () => 'Data')
@@ -143,7 +164,7 @@ export function editorExtensions(): Extensions {
     }),
     Subscript,
     Superscript,
-    Table,
+    ScrollingTable,
     TableRow,
     TableHeader,
     TableCell,

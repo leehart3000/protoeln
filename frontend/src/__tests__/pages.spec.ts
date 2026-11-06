@@ -122,7 +122,7 @@ describe('lists of every notebook and entry', () => {
 
     const link = await screen.findByRole('link', { name: 'Protein assays' })
     expect(link).toHaveAttribute('href', `/notebooks/${notebook.id}`)
-    expect(within(link.closest('tr')!).getByText('DEMO')).toBeInTheDocument()
+    expect(link.closest('tr')).toHaveTextContent('DEMO')
   })
 
   it('lists every entry, saying where each is', async () => {
@@ -131,7 +131,7 @@ describe('lists of every notebook and entry', () => {
 
     const link = await screen.findByRole('link', { name: 'Bradford assay for total protein' })
     expect(link).toHaveAttribute('href', '/entries/ELN-2026-0001')
-    expect(link.closest('tr')).toHaveTextContent('DEMO · Protein assays')
+    expect(link.closest('tr')).toHaveTextContent('Protein assays · DEMO')
   })
 })
 

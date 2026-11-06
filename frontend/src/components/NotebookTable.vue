@@ -36,6 +36,10 @@ defineProps<{ notebooks: (Notebook & { project?: ProjectRef })[]; showProject?: 
             <RouterLink :to="`/notebooks/${notebook.id}`" :class="rowLink">
               {{ notebook.title }}
             </RouterLink>
+            <!-- Its project, under its title when there's no room for the Project column -->
+            <p v-if="showProject" class="mt-1 font-mono text-xs text-muted md:hidden">
+              {{ notebook.project?.code }}
+            </p>
           </td>
           <td v-if="showProject" :class="tableCell" class="max-md:hidden">
             <span class="font-mono">{{ notebook.project?.code }}</span>

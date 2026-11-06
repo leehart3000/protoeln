@@ -226,12 +226,88 @@ describe('editing an entry', () => {
     await renderAt('/entries/ELN-2026-0001')
 
     await user.click(await screen.findByRole('button', { name: 'Edit' }))
-    await user.click(await screen.findByRole('button', { name: 'Protocol step' }))
+    await user.click(await screen.findByRole('button', { name: 'Checklist' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await screen.findByText('Saved')
 
     expect(sentBody(fetchMock, 'PUT', `${ENTRY}/draft`)).toMatchObject({
       content: { type: 'doc', content: [{ type: 'protocolStep', attrs: { done: false } }] },
     })
+  })
+
+  it('adds materials, with their details, and saves them', async () => {
+    const empty = { ...mine, content: { type: 'doc' as const, content: [] } }
+    const fetchMock = fakeApi(
+      entryAnswers(empty, { [`PUT ${ENTRY}/draft`]: { entry: empty, changed: true } }),
+    )
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.click(await screen.findByRole('button', { name: 'Materials table' }))
+    await user.type(await screen.findByLabelText('Material, row 1'), 'Coomassie dye reagent')
+    await user.type(screen.getByLabelText('Lot number, row 1'), 'EX-0042')
+    await user.click(screen.getByRole('button', { name: 'Add material' }))
+    await user.type(await screen.findByLabelText('Material, row 2'), 'BSA standard')
+    // A detail typed, left, and then cleared is left out (not kept as empty text)
+    await user.type(screen.getByLabelText('Supplier, row 2'), 'Pierce')
+    await user.click(screen.getByLabelText('Amount, row 2'))
+    await user.clear(screen.getByLabelText('Supplier, row 2'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await screen.findByText('Saved')
+
+    const { content } = sentBody(fetchMock, 'PUT', `${ENTRY}/draft`) as { content: unknown }
+    expect(content).toEqual({
+      type: 'doc',
+      content: [
+        {
+          type: 'materials',
+          attrs: {
+            items: [
+              { name: 'Coomassie dye reagent', lotNumber: 'EX-0042' },
+              { name: 'BSA standard' },
+            ],
+          },
+        },
+      ],
+    })
+  })
+
+  it('deletes a material, and the materials', async () => {
+    fakeApi(entryAnswers(mine))
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    expect(await screen.findByLabelText('Material, row 1')).toHaveValue('Coomassie dye reagent')
+    await user.click(screen.getByRole('button', { name: 'Delete material, row 1' }))
+    expect(await screen.findByText('No materials yet.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Delete materials' }))
+
+    await waitFor(() => expect(screen.queryByText('No materials yet.')).not.toBeInTheDocument())
+    expect(screen.getByRole('status')).toHaveTextContent('Unsaved changes')
+  })
+
+  it('lists what’s wrong when a save is refused for the content', async () => {
+    fakeApi(
+      entryAnswers(mine, {
+        [`PUT ${ENTRY}/draft`]: Response.json(
+          {
+            error: 'The entry content is not valid',
+            problems: [{ path: 'content[3].attrs', message: 'should not be there' }],
+          },
+          { status: 422 },
+        ),
+      }),
+    )
+    const user = userEvent.setup()
+    await renderAt('/entries/ELN-2026-0001')
+
+    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.click(await screen.findByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('list', { name: 'Problems' })).toHaveTextContent(
+      'content[3].attrs: should not be there',
+    )
   })
 })

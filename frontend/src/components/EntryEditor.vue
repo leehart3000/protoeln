@@ -2,12 +2,12 @@
 import { fromProseMirror } from '@protoeln/content'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
-import { saveDraft, type Entry } from '../api'
+import { ApiError, saveDraft, type Entry } from '../api'
 import { editorExtensions } from '../editor/extensions'
-import { SavedIcon, SaveIcon, UnsavedIcon, VersionIcon } from '../icons'
+import { CloseIcon, SavedIcon, SaveIcon, UnsavedIcon, VersionIcon } from '../icons'
 import {
   dangerButton,
   fieldLabel,
@@ -82,6 +82,13 @@ const saving = useMutation({
   },
 })
 
+// What's wrong with the content, when a save is refused for it (such as a merged table cell),
+// each with where it is in the content (as checkDocument in @protoeln/content writes it)
+const contentProblems = computed(() => {
+  const error = saving.error.value
+  return error instanceof ApiError ? error.problems : []
+})
+
 // Closing with unsaved changes asks first, on the page
 const confirmingClose = ref(false)
 const versioning = ref(false)
@@ -114,11 +121,21 @@ onBeforeUnmount(() => {
 <template>
   <div class="mt-3 max-w-3xl space-y-4">
     <FormProblem :error="saving.error.value" />
+    <ul
+      v-if="contentProblems.length > 0"
+      class="list-disc space-y-1 pl-6 text-sm font-medium text-danger"
+      aria-label="Problems"
+    >
+      <li v-for="problem in contentProblems" :key="problem.path + problem.message">
+        <span class="font-mono">{{ problem.path }}</span
+        >: {{ problem.message }}
+      </li>
+    </ul>
     <div>
       <label for="entry-title" :class="fieldLabel">Title</label>
       <input id="entry-title" v-model="title" :class="[inputClass, 'border-line']" />
     </div>
-    <div class="overflow-hidden rounded-lg border border-line bg-panel">
+    <div class="rounded-lg border border-line bg-panel">
       <EditorToolbar v-if="editor" :editor="editor" />
       <EditorContent :editor="editor" />
     </div>
@@ -152,7 +169,15 @@ onBeforeUnmount(() => {
         <VersionIcon aria-hidden="true" class="size-4 shrink-0" />
         Create version
       </button>
-      <button type="button" :class="secondaryButton" @click="close">Close editor</button>
+      <button
+        type="button"
+        :class="secondaryButton"
+        class="inline-flex items-center gap-2"
+        @click="close"
+      >
+        <CloseIcon aria-hidden="true" class="size-4 shrink-0" />
+        Close editor
+      </button>
       <!-- Always present, so screen readers announce each new notice -->
       <p role="status" class="text-sm font-medium empty:hidden">
         <span v-if="unsaved" class="inline-flex items-center gap-1.5 text-danger">

@@ -76,6 +76,17 @@
 /* The entry editor's content (Tiptap writes plain HTML elements, which Tailwind's base styles
    leave unstyled), looking like the entry when it's read (see ContentBlocks.vue) */
 @layer components {
+  /* Nothing in the content may make the page wider than the window (which would also stop the
+     toolbar staying in view on phones): long words break, and a table too wide for the editor
+     scrolls sideways in its own box (see ScrollingTable in editor/extensions.ts) */
+  .editor-content {
+    overflow-wrap: anywhere;
+  }
+
+  .editor-content .tableWrapper {
+    overflow-x: auto;
+  }
+
   .editor-content > * + * {
     margin-top: 0.75rem;
   }
@@ -161,6 +172,17 @@
   .editor-content .protocol-step[data-done='true']::before {
     content: '☑';
     color: var(--color-primary);
+  }
+
+  /* Materials, edited in place (see MaterialsView.vue) */
+  .editor-content .materials-block {
+    border: 1px solid var(--color-line);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem 0.75rem;
+  }
+
+  .editor-content .materials-block.ProseMirror-selectednode {
+    outline: 2px solid var(--color-link);
   }
 
   /* A block the editor keeps as it is, but can't change yet */

@@ -3,6 +3,7 @@
 export {
   Bold as BoldIcon,
   BookmarkPlus as VersionIcon,
+  Boxes as MaterialsIcon,
   Code as CodeIcon,
   Heading1 as Heading1Icon,
   Heading2 as Heading2Icon,
@@ -29,6 +30,7 @@ export {
   Trash as DeleteIcon,
   Undo2 as UndoIcon,
   Unlink as UnlinkIcon,
+  X as CloseIcon,
   CircleAlert as UnsavedIcon,
   CircleCheck as SavedIcon,
   CirclePlus as NewIcon,

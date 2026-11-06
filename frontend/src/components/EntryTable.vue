@@ -15,7 +15,8 @@ import {
 import RowDetails from './RowDetails.vue'
 
 // A table of entries, each row linking to its entry. With `showPlace` (in the list of every
-// entry), it also says which project and notebook each is in.
+// entry), it also says which notebook and project each is in (as ProtoLIMS does for studies):
+// in a column on wide screens, and under the title on narrower ones.
 defineProps<{
   entries: (EntrySummary & { notebook?: NotebookRef; project?: ProjectRef })[]
   showPlace?: boolean
@@ -45,10 +46,15 @@ defineProps<{
             <RouterLink :to="`/entries/${entry.code}`" :class="rowLink">
               {{ entry.title }}
             </RouterLink>
+            <!-- Where it is, under its title when there's no room for the Where column -->
+            <p v-if="showPlace" class="mt-1 text-xs text-muted lg:hidden">
+              {{ entry.notebook?.title }} ·
+              <span class="font-mono">{{ entry.project?.code }}</span>
+            </p>
           </td>
           <td v-if="showPlace" :class="tableCell" class="max-lg:hidden">
-            <span class="font-mono">{{ entry.project?.code }}</span> ·
             {{ entry.notebook?.title }}
+            <div class="mt-1 font-mono text-xs text-muted">{{ entry.project?.code }}</div>
           </td>
           <td :class="tableCell" class="max-md:hidden">
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">

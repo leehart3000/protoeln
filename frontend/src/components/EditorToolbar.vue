@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { findParentNode, type Editor } from '@tiptap/core'
+import { findParentNode, type Editor, type JSONContent } from '@tiptap/core'
+import { NodeSelection } from '@tiptap/pm/state'
 import { isInTable, selectedRect } from '@tiptap/pm/tables'
-import { computed, ref, type Component } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 
 import {
   BoldIcon,
@@ -17,6 +18,7 @@ import {
   Heading3Icon,
   ItalicIcon,
   LinkIcon,
+  MaterialsIcon,
   OrderedListIcon,
   ParagraphIcon,
   ProtocolStepIcon,
@@ -39,6 +41,22 @@ import { inputClass, primaryButton, secondaryButton } from '../styles'
 
 const props = defineProps<{ editor: Editor }>()
 
+// Whether the toolbar is stuck to the top of the window, with the content scrolling beneath it.
+// Then it's square-cornered with a shadow; otherwise its top corners are rounded to fit inside
+// the editor's border, so the content never shows past them. A line just above it (`marker`)
+// has scrolled off the top of the window when it's stuck.
+const marker = ref<HTMLElement>()
+const stuck = ref(false)
+let watcher: IntersectionObserver | undefined
+onMounted(() => {
+  if (typeof IntersectionObserver === 'undefined' || !marker.value) return // as in tests
+  watcher = new IntersectionObserver(([seen]) => {
+    stuck.value = seen !== undefined && !seen.isIntersecting && seen.boundingClientRect.top < 0
+  })
+  watcher.observe(marker.value)
+})
+onBeforeUnmount(() => watcher?.disconnect())
+
 interface Tool {
   label: string
   icon: Component
@@ -49,6 +67,25 @@ interface Tool {
 }
 
 const chain = () => props.editor.chain().focus()
+
+// Puts a new block where the cursor is; or, when a whole block is selected (as a materials
+// table is while you type in it), after that block, rather than in its place
+function insertBlock(content: JSONContent) {
+  const { selection } = props.editor.state
+  return selection instanceof NodeSelection
+    ? chain().insertContentAt(selection.to, content).run()
+    : chain().insertContent(content).run()
+}
+
+// A new table, as insertTable makes: a header row and two rows of cells, three cells wide
+function newRow(cell: 'tableHeader' | 'tableCell'): JSONContent {
+  const cells = [1, 2, 3].map(() => ({ type: cell, content: [{ type: 'paragraph' }] }))
+  return { type: 'tableRow', content: cells }
+}
+const NEW_TABLE: JSONContent = {
+  type: 'table',
+  content: [newRow('tableHeader'), newRow('tableCell'), newRow('tableCell')],
+}
 
 const GROUPS: Tool[][] = [
   [
@@ -123,18 +160,12 @@ const GROUPS: Tool[][] = [
       active: () => props.editor.isActive('orderedList'),
     },
     {
-      label: 'Protocol step',
-      icon: ProtocolStepIcon,
-      run: () =>
-        props.editor.isActive('protocolStep')
-          ? chain().setParagraph().run()
-          : chain().setNode('protocolStep', { done: false }).run(),
-      active: () => props.editor.isActive('protocolStep'),
-    },
-    {
       label: 'Table',
       icon: TableIcon,
-      run: () => chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+      run: () =>
+        props.editor.state.selection instanceof NodeSelection
+          ? insertBlock(NEW_TABLE)
+          : chain().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
       active: () => props.editor.isActive('table'),
       unavailable: () =>
         props.editor.isActive('table') ? "A table can't go inside a table." : undefined,
@@ -155,6 +186,25 @@ const GROUPS: Tool[][] = [
   [
     { label: 'Undo', icon: UndoIcon, run: () => chain().undo().run() },
     { label: 'Redo', icon: RedoIcon, run: () => chain().redo().run() },
+  ],
+  // Blocks for lab work: checklists of protocol steps, ticked off on the entry page, and
+  // tables of the materials used
+  [
+    {
+      label: 'Checklist',
+      icon: ProtocolStepIcon,
+      run: () =>
+        props.editor.isActive('protocolStep')
+          ? chain().setParagraph().run()
+          : chain().setNode('protocolStep', { done: false }).run(),
+      active: () => props.editor.isActive('protocolStep'),
+    },
+    {
+      label: 'Materials table',
+      icon: MaterialsIcon,
+      run: () => insertBlock({ type: 'materials', attrs: { items: [{ name: '' }] } }),
+      active: () => props.editor.isActive('materials'),
+    },
   ],
 ]
 
@@ -182,6 +232,8 @@ interface TableTool {
   // Why it can't be used where the cursor is, if it can't
   unavailable?: () => string | undefined
   pressed?: () => boolean
+  // Whether it deletes something (shown in red)
+  deletes?: true
 }
 
 interface TableGroup {
@@ -192,7 +244,14 @@ interface TableGroup {
 const TABLE_GROUPS: TableGroup[] = [
   {
     name: 'Table',
-    tools: [{ label: 'Delete table', icon: DeleteIcon, run: () => chain().deleteTable().run() }],
+    tools: [
+      {
+        label: 'Delete table',
+        icon: DeleteIcon,
+        run: () => chain().deleteTable().run(),
+        deletes: true,
+      },
+    ],
   },
   {
     name: 'Row',
@@ -208,6 +267,7 @@ const TABLE_GROUPS: TableGroup[] = [
       {
         label: 'Delete row',
         icon: DeleteIcon,
+        deletes: true,
         run: () => (wouldEmpty('rows') ? chain().deleteTable().run() : chain().deleteRow().run()),
       },
     ],
@@ -228,6 +288,7 @@ const TABLE_GROUPS: TableGroup[] = [
       {
         label: 'Delete column',
         icon: DeleteIcon,
+        deletes: true,
         run: () =>
           wouldEmpty('columns') ? chain().deleteTable().run() : chain().deleteColumn().run(),
       },
@@ -269,12 +330,20 @@ function applyLink() {
   linking.value = false
 }
 
-const toolButton =
-  'inline-flex size-9 items-center justify-center rounded-md text-muted hover:bg-line/50 hover:text-fg aria-pressed:bg-primary/15 aria-pressed:text-primary aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent'
+const toolShape =
+  'inline-flex size-9 items-center justify-center rounded-md aria-pressed:bg-primary/15 aria-pressed:text-primary aria-disabled:cursor-not-allowed aria-disabled:opacity-40 aria-disabled:hover:bg-transparent'
+const toolButton = `${toolShape} text-muted hover:bg-line/50 hover:text-fg`
+// Deleting is in red, so it isn't mistaken for the tools around it
+const deleteButton = `${toolShape} text-danger hover:bg-danger/10`
 </script>
 
 <template>
-  <div class="border-b border-line">
+  <div ref="marker" aria-hidden="true"></div>
+  <!-- The toolbar stays in view at the top of the window while you scroll a long entry -->
+  <div
+    class="sticky top-0 z-10 border-b border-line bg-panel"
+    :class="stuck ? 'shadow-md' : 'rounded-t-[7px]'"
+  >
     <div role="toolbar" aria-label="Formatting" class="flex flex-wrap items-center gap-0.5 p-1.5">
       <template v-for="(group, index) in GROUPS" :key="index">
         <span v-if="index > 0" aria-hidden="true" class="mx-0.5 h-6 w-px bg-line"></span>
@@ -331,7 +400,7 @@ const toolButton =
           v-for="tool in group.tools"
           :key="tool.label"
           type="button"
-          :class="toolButton"
+          :class="tool.deletes ? deleteButton : toolButton"
           :aria-label="tool.label"
           :title="tool.unavailable?.() ?? tool.label"
           :aria-pressed="tool.pressed?.()"
