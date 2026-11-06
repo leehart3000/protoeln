@@ -3,6 +3,7 @@ import { Extension, mergeAttributes, Node, type Extensions } from '@tiptap/core'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import type { DOMOutputSpec } from '@tiptap/pm/model'
 import { TableView } from '@tiptap/pm/tables'
 import { StarterKit } from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
@@ -142,9 +143,40 @@ const Materials = Node.create({
 
 const DataBlock = keptBlock('dataBlock', { dataItemId: '' }, () => 'Data')
 
-const FileBlock = keptBlock('fileBlock', { fileId: '', caption: null }, (attrs) =>
-  attrs.caption ? `File: ${String(attrs.caption)}` : 'File',
-)
+// An image (see ContentImage): shown in the editor too, and kept as it is. Adding images in
+// the editor comes later; for now they come from imports.
+const FileBlock = Node.create({
+  name: 'fileBlock',
+  group: 'block',
+  atom: true,
+  selectable: true,
+  addAttributes() {
+    return {
+      fileId: { default: '', rendered: false },
+      caption: { default: null, rendered: false },
+      alt: { default: null, rendered: false },
+    }
+  },
+  parseHTML() {
+    return [{ tag: 'figure[data-type="fileBlock"]' }]
+  },
+  renderHTML({ node }) {
+    const { fileId, caption, alt } = node.attrs as {
+      fileId: string
+      caption: string | null
+      alt: string | null
+    }
+    const image: DOMOutputSpec = /^[0-9a-f]{64}$/.test(fileId)
+      ? ['img', { src: `/api/v1/files/${fileId}`, alt: alt ?? '', class: 'editor-image' }]
+      : ['p', {}, 'Image']
+    return [
+      'figure',
+      { 'data-type': 'fileBlock', class: 'kept-block', contenteditable: 'false' },
+      image,
+      ['figcaption', {}, caption ?? ''],
+    ]
+  },
+})
 
 const RecordLink = keptBlock(
   'recordLink',

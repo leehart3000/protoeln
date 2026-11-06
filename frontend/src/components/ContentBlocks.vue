@@ -7,6 +7,7 @@ import { formatDateTime } from '../format'
 import { ExternalIcon, StepDoneIcon, StepIcon } from '../icons'
 import { isEntryLink, linkTarget } from '../records'
 import { table, tableCell, tableHead, tableHeader, tableWrapper, textLink } from '../styles'
+import ContentImage from './ContentImage.vue'
 
 // Shows entry content (protoeln-doc/1, see docs/content-format.md) for reading. It shows each
 // kind of block in the format, and calls itself for blocks inside blocks (list items, quotes
@@ -177,8 +178,11 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
     <p v-else-if="block.type === 'dataBlock'" :class="placeholder">
       Data (shown here once data can be added to entries)
     </p>
-    <p v-else-if="block.type === 'fileBlock'" :class="placeholder">
-      {{ block.attrs.caption || 'A file' }} (shown here once files can be added to entries)
-    </p>
+    <ContentImage
+      v-else-if="block.type === 'fileBlock'"
+      :file-id="block.attrs.fileId"
+      :alt="block.attrs.alt"
+      :caption="block.attrs.caption"
+    />
   </template>
 </template>

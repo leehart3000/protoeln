@@ -194,6 +194,14 @@
     font-size: 0.875rem;
   }
 
+  /* An image in the editor, kept as it is (see FileBlock in editor/extensions.ts) */
+  .editor-content .editor-image {
+    max-width: 100%;
+    max-height: 16rem;
+    height: auto;
+    background: white;
+  }
+
   .editor-content .kept-block.ProseMirror-selectednode {
     outline: 2px solid var(--color-link);
   }

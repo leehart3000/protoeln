@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen } from '@testing-library/vue'
 import type { BlockNode } from '@protoeln/content'
 
 import ContentBlocks from '../components/ContentBlocks.vue'
@@ -87,5 +87,29 @@ describe('ContentBlocks', () => {
 
     expect(screen.getByText('Done:')).toBeInTheDocument()
     expect(screen.getByText('To do:')).toBeInTheDocument()
+  })
+
+  it('shows an image from the API, with its description and caption', () => {
+    const fileId = 'a'.repeat(64)
+    show([{ type: 'fileBlock', attrs: { fileId, alt: 'A gel', caption: 'Figure 1' } }])
+
+    expect(screen.getByRole('img', { name: 'A gel' })).toHaveAttribute(
+      'src',
+      `/api/v1/files/${fileId}`,
+    )
+    expect(screen.getByText('Figure 1').tagName).toBe('FIGCAPTION')
+  })
+
+  it("says so when an image can't be shown", async () => {
+    show([
+      { type: 'fileBlock', attrs: { fileId: 'b'.repeat(64), alt: 'A gel' } },
+      { type: 'fileBlock', attrs: { fileId: '../not-a-file' } },
+    ])
+
+    await fireEvent.error(screen.getByRole('img', { name: 'A gel' }))
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getAllByText(/This image can't be shown here/)).toHaveLength(2)
+    expect(screen.getByText(/It shows: A gel/)).toBeInTheDocument()
   })
 })

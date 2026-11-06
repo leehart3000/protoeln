@@ -27,6 +27,27 @@ function pressEnter(blocks: JSONContent[], position: number) {
   return fromProseMirror(editor.getJSON()).content
 }
 
+describe('images in the editor', () => {
+  it('are shown, and kept exactly as they are', () => {
+    const image = {
+      type: 'fileBlock',
+      attrs: { fileId: 'c'.repeat(64), alt: 'A gel', caption: 'Figure 1' },
+    }
+    const element = document.createElement('div')
+    editor = new Editor({
+      element,
+      extensions: editorExtensions(),
+      content: { type: 'doc', content: [image] },
+    })
+
+    expect(element.querySelector('img')?.getAttribute('src')).toBe(
+      `/api/v1/files/${'c'.repeat(64)}`,
+    )
+    expect(element.querySelector('img')?.getAttribute('alt')).toBe('A gel')
+    expect(fromProseMirror(editor.getJSON()).content).toEqual([image])
+  })
+})
+
 describe('protocol steps in the editor', () => {
   it('start a new, unticked step on Enter at the end of a step', () => {
     // "Mix" is at positions 1 to 4
