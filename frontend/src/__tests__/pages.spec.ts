@@ -114,7 +114,7 @@ describe('project page', () => {
     })
     await renderAt('/projects/DEMO')
 
-    expect(await screen.findByText('Source repository')).toBeInTheDocument()
+    expect(await screen.findByText('Source repository:')).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: 'https://zenodo.org/records/1 (opens in a new tab)' }),
     ).toHaveAttribute('href', 'https://zenodo.org/records/1')
@@ -124,7 +124,7 @@ describe('project page', () => {
         name: 'https://creativecommons.org/licenses/by/4.0/ (opens in a new tab)',
       }),
     ).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/')
-    expect(screen.queryByText('Citation')).not.toBeInTheDocument()
+    expect(screen.queryByText('Citation:')).not.toBeInTheDocument()
   })
 
   it('says who can see the project, and the visitor’s role in it', async () => {
@@ -133,10 +133,11 @@ describe('project page', () => {
     })
     await renderAt('/projects/DEMO')
 
-    expect(await screen.findByText('Public')).toBeInTheDocument()
-    expect(screen.getByText(/Anyone can read it, without signing in/)).toHaveTextContent(
-      'Your role: Admin.',
-    )
+    const details = await screen.findByRole('region', { name: 'Details' })
+    expect(within(details).getByText('Public')).toBeInTheDocument()
+    expect(within(details).getByText('Anyone can read it, without signing in.')).toBeInTheDocument()
+    expect(within(details).getByText('Your role:').nextElementSibling).toHaveTextContent('Admin')
+    expect(within(details).getByText('Code:').nextElementSibling).toHaveTextContent('DEMO')
   })
 
   it('calls a project private if the site doesn’t show public projects to everyone', async () => {
@@ -174,6 +175,11 @@ describe('notebook page', () => {
     expect(
       await screen.findByRole('link', { name: 'Bradford assay for total protein' }),
     ).toHaveAttribute('href', '/entries/ELN-2026-0001')
+    const details = screen.getByRole('region', { name: 'Details' })
+    expect(within(details).getByText('Measuring protein in cell lysates.')).toBeInTheDocument()
+    expect(within(details).getByText('Kept by:').nextElementSibling).toHaveTextContent(
+      'Josiah Carberry',
+    )
     const row = screen.getByRole('link', { name: 'Bradford assay for total protein' }).closest('tr')
     expect(within(row!).getByText('Protocol')).toBeInTheDocument()
     expect(within(row!).getByText('Draft')).toBeInTheDocument()

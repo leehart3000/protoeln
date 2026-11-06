@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, toRef } from 'vue'
 
 import { fetchProject } from '../api'
-import { ROLE_LABELS } from '../format'
+import { formatDate, ROLE_LABELS } from '../format'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
-import EditLink from '../components/EditLink.vue'
+import DetailsCard from '../components/DetailsCard.vue'
 import LinkedText from '../components/LinkedText.vue'
 import MembersSection from '../components/MembersSection.vue'
 import NewButton from '../components/NewButton.vue'
@@ -14,7 +14,7 @@ import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { ProjectIcon } from '../icons'
 import { readableByAnyone, refusal } from '../permissions'
-import { badge, sectionHeading } from '../styles'
+import { badge, detailList, detailTerm, detailValue, sectionHeading } from '../styles'
 import { useMe } from '../useMe'
 
 const props = defineProps<{ code: string }>()
@@ -60,44 +60,48 @@ const visibility = computed(() => {
   />
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="project">
     <template v-if="data">
-      <!-- Its admins and site admins can change its details -->
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle :icon="ProjectIcon">{{ data.project.title }}</PageTitle>
-        <EditLink
-          v-if="data.project.canManageMembers"
-          :to="`/projects/${code}/edit`"
-          label="Edit project"
-          :read-only="me.data.value?.readOnly === true"
-        />
-      </div>
-      <p v-if="data.project.description" class="mt-2 max-w-2xl text-muted">
-        {{ data.project.description }}
-      </p>
-      <p v-if="visibility" class="mt-3 max-w-2xl text-sm text-muted">
-        <span :class="badge" class="mr-1.5 text-fg">{{ visibility.label }}</span>
-        {{ visibility.text }}
-        <template v-if="data.project.yourRole">
-          Your role: {{ ROLE_LABELS[data.project.yourRole] }}.
-        </template>
-      </p>
-      <!-- Credit for data that comes from elsewhere, if the project gives any -->
-      <dl
-        v-if="data.project.sourceRepository || data.project.licence || data.project.citation"
-        class="mt-4 grid max-w-3xl grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm"
+      <PageTitle :icon="ProjectIcon">{{ data.project.title }}</PageTitle>
+      <!-- Its admins and site admins can change these -->
+      <DetailsCard
+        :edit-to="`/projects/${code}/edit`"
+        edit-label="Edit project"
+        :can-edit="data.project.canManageMembers"
+        :read-only="me.data.value?.readOnly === true"
       >
-        <template v-if="data.project.sourceRepository">
-          <dt class="text-muted">Source repository</dt>
-          <dd><LinkedText :text="data.project.sourceRepository" /></dd>
-        </template>
-        <template v-if="data.project.licence">
-          <dt class="text-muted">Licence</dt>
-          <dd><LinkedText :text="data.project.licence" /></dd>
-        </template>
-        <template v-if="data.project.citation">
-          <dt class="text-muted">Citation</dt>
-          <dd><LinkedText :text="data.project.citation" /></dd>
-        </template>
-      </dl>
+        <p v-if="data.project.description" class="mt-3 max-w-3xl text-muted">
+          <LinkedText :text="data.project.description" />
+        </p>
+        <dl :class="detailList">
+          <dt :class="detailTerm">Code:</dt>
+          <dd :class="detailValue" class="font-mono">{{ data.project.code }}</dd>
+          <template v-if="visibility">
+            <dt :class="detailTerm">Access:</dt>
+            <dd :class="detailValue">
+              <span :class="badge" class="mr-1.5">{{ visibility.label }}</span>
+              <span class="font-normal text-muted">{{ visibility.text }}</span>
+            </dd>
+          </template>
+          <template v-if="data.project.yourRole">
+            <dt :class="detailTerm">Your role:</dt>
+            <dd :class="detailValue">{{ ROLE_LABELS[data.project.yourRole] }}</dd>
+          </template>
+          <!-- Credit for data that comes from elsewhere, if the project gives any -->
+          <template v-if="data.project.sourceRepository">
+            <dt :class="detailTerm">Source repository:</dt>
+            <dd :class="detailValue"><LinkedText :text="data.project.sourceRepository" /></dd>
+          </template>
+          <template v-if="data.project.licence">
+            <dt :class="detailTerm">Licence:</dt>
+            <dd :class="detailValue"><LinkedText :text="data.project.licence" /></dd>
+          </template>
+          <template v-if="data.project.citation">
+            <dt :class="detailTerm">Citation:</dt>
+            <dd :class="detailValue"><LinkedText :text="data.project.citation" /></dd>
+          </template>
+          <dt :class="detailTerm">Created:</dt>
+          <dd :class="detailValue">{{ formatDate(data.project.createdAt) }}</dd>
+        </dl>
+      </DetailsCard>
 
       <div class="mt-8 mb-3 flex items-center gap-3">
         <h2 :class="sectionHeading">Notebooks</h2>

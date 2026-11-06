@@ -23,6 +23,13 @@ export const errorBox =
 
 export const sectionHeading = 'font-brand text-xl font-semibold tracking-tight'
 
+// A list of a record's details, as label and value pairs (as ProtoLIMS's DetailList): one
+// above the other on phones, side by side from small screens up. Labels end with a colon.
+export const detailList =
+  'mt-6 grid gap-y-1 text-sm sm:grid-cols-[max-content_1fr] sm:gap-x-3 sm:gap-y-2'
+export const detailTerm = 'text-muted'
+export const detailValue = 'mb-2 font-medium sm:mb-0'
+
 export const tableWrapper = 'overflow-x-auto rounded-lg border border-line bg-panel'
 
 export const table = 'w-full text-left text-sm'

@@ -3,15 +3,17 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed, toRef } from 'vue'
 
 import { fetchNotebook } from '../api'
+import { formatDate } from '../format'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
-import EditLink from '../components/EditLink.vue'
+import DetailsCard from '../components/DetailsCard.vue'
 import EntryTable from '../components/EntryTable.vue'
+import LinkedText from '../components/LinkedText.vue'
 import NewButton from '../components/NewButton.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
 import { NotebookIcon } from '../icons'
 import { refusal } from '../permissions'
-import { sectionHeading } from '../styles'
+import { detailList, detailTerm, detailValue, sectionHeading, textLink } from '../styles'
 import { useMe } from '../useMe'
 
 const props = defineProps<{ id: string }>()
@@ -46,20 +48,30 @@ const crumbs = computed(() =>
   <BreadcrumbTrail :items="crumbs" />
   <QueryStatus :pending="isPending" :failed="isError" :missing="data === null" what="notebook">
     <template v-if="data">
-      <!-- Its owner, the project's admins and site admins can change its details -->
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <PageTitle :icon="NotebookIcon">{{ data.notebook.title }}</PageTitle>
-        <EditLink
-          v-if="data.notebook.canEdit"
-          :to="`/notebooks/${id}/edit`"
-          label="Edit notebook"
-          :read-only="me.data.value?.readOnly === true"
-        />
-      </div>
-      <p class="mt-2 max-w-2xl text-muted">
-        <template v-if="data.notebook.description">{{ data.notebook.description }} </template>
-        Kept by {{ data.notebook.owner.name }}.
-      </p>
+      <PageTitle :icon="NotebookIcon">{{ data.notebook.title }}</PageTitle>
+      <!-- Its owner, the project's admins and site admins can change these -->
+      <DetailsCard
+        :edit-to="`/notebooks/${id}/edit`"
+        edit-label="Edit notebook"
+        :can-edit="data.notebook.canEdit === true"
+        :read-only="me.data.value?.readOnly === true"
+      >
+        <p v-if="data.notebook.description" class="mt-3 max-w-3xl text-muted">
+          <LinkedText :text="data.notebook.description" />
+        </p>
+        <dl :class="detailList">
+          <dt :class="detailTerm">Project:</dt>
+          <dd :class="detailValue">
+            <RouterLink :to="`/projects/${data.project.code}`" :class="textLink">{{
+              data.project.title
+            }}</RouterLink>
+          </dd>
+          <dt :class="detailTerm">Kept by:</dt>
+          <dd :class="detailValue">{{ data.notebook.owner.name }}</dd>
+          <dt :class="detailTerm">Created:</dt>
+          <dd :class="detailValue">{{ formatDate(data.notebook.createdAt) }}</dd>
+        </dl>
+      </DetailsCard>
 
       <div class="mt-8 mb-3 flex items-center gap-3">
         <h2 :class="sectionHeading">Entries</h2>
