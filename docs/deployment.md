@@ -67,8 +67,9 @@ checks match.
 ## Deploying
 
 Every push to `main` deploys to `staging.protoeln.org` by itself, once all of GitLab CI's checks
-have passed (the `deploy-staging` job in `.gitlab-ci.yml`; see "Automatic deploys" below). To
-deploy by hand instead, for example from a branch,
+have passed (the `deploy-staging` job in `.gitlab-ci.yml`; see "Automatic deploys" below), and
+a release tag deploys to protoeln.org (see "Production" below). To deploy by hand instead, for
+example from a branch,
 
 ```sh
 just deploy
@@ -99,3 +100,47 @@ GitLab CI deploys with a Cloudflare API token that can only deploy Workers. It's
 
 "Protect variable" means only protected branches (`main` is one by default) can use them, so a
 merge request can't. GitLab lists each deploy under Operate, then Environments, as `staging`.
+
+## Production (protoeln.org)
+
+protoeln.org is the public, read-only demo. It's the `production` environment in
+`backend/wrangler.jsonc`: its own Worker (`protoeln`), its own database (`protoeln`), the real
+ORCID (not the sandbox), and its own secrets. Its read-only lock is on, and every deploy keeps it
+on; its data changes only by import (see `docs/read-only.md`).
+
+### Setting it up (once)
+
+1. **Database:** in Atlas, add a database user `protoeln-production` with a long, random password
+   and only the built-in role `readWrite` on the `protoeln` database. Keep the connection string
+   in your password safe.
+2. **Address:** in Cloudflare's DNS for protoeln.org, make sure there's no record for
+   `protoeln.org` itself (Cloudflare adds one for the Worker when it's first deployed, and won't
+   if one is there already).
+3. **ORCID:** add `https://protoeln.org/api/v1/auth/orcid/callback` to the redirect URIs of the
+   production ORCID client (the one ProtoLIMS uses).
+4. **First deploy**, by hand, from your computer: `just deploy-production`.
+5. **Secrets**, as for staging but with `--env production` (in `backend`):
+
+   ```sh
+   pnpm exec wrangler secret put PROTOELN_MONGODB_URI --env production
+   pnpm exec wrangler secret put PROTOELN_ORCID_CLIENT_ID --env production
+   pnpm exec wrangler secret put PROTOELN_ORCID_CLIENT_SECRET --env production
+   pnpm exec wrangler secret put PROTOELN_SITE_ADMINS --env production
+   ```
+
+6. **Until launch**, protect protoeln.org with Cloudflare Access, as staging is (see "Who can
+   reach staging"), and remove that protection to launch.
+7. **Release tags:** in GitLab, protect tags matching `v*` (Settings, then Repository, then
+   Protected tags), so that CI can use the Cloudflare token for them.
+
+### Releasing
+
+Tag a commit on main with its version, and push the tag:
+
+```sh
+git tag -a v0.1.0 -m "ProtoELN 0.1.0"
+git push origin v0.1.0
+```
+
+GitLab CI runs every check, then deploys it to protoeln.org (the `deploy-production` job). The
+footer then shows "Version 0.1.0".

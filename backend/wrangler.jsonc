@@ -1,7 +1,8 @@
 // Cloudflare Workers set-up for ProtoELN (see docs/deployment.md). One Worker serves the
 // website's files and passes /api requests to the API, so both share one address, as in
 // development. Secrets (the MongoDB connection string and the ORCID client secret) are set with
-// `wrangler secret put`, never written here.
+// `wrangler secret put`, never written here. The settings at the top are staging's; production
+// (protoeln.org) is the "production" environment at the bottom, deployed with --env production.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "protoeln-staging",
@@ -30,5 +31,24 @@
     "PROTOELN_ORCID_BASE_URL": "https://sandbox.orcid.org",
     // Staging can be changed, so everything can be tried (see docs/read-only.md)
     "PROTOELN_READ_ONLY": "false",
+  },
+  "env": {
+    // protoeln.org, the public demo. It uses the files, Durable Object class and other settings
+    // above, but has its own Worker, address, database, ORCID (the real one, not the sandbox)
+    // and secrets. Bindings and settings aren't inherited, so they're repeated here.
+    "production": {
+      "name": "protoeln",
+      "routes": [{ "pattern": "protoeln.org", "custom_domain": true }],
+      "durable_objects": {
+        "bindings": [{ "name": "API", "class_name": "Api" }],
+      },
+      "vars": {
+        "PROTOELN_PUBLIC_URL": "https://protoeln.org",
+        "PROTOELN_MONGODB_DATABASE": "protoeln",
+        "PROTOELN_ORCID_BASE_URL": "https://orcid.org",
+        // Every deploy locks it: its data changes only by import (see docs/read-only.md)
+        "PROTOELN_READ_ONLY": "true",
+      },
+    },
   },
 }

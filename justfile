@@ -141,3 +141,10 @@ deploy:
     just check
     VITE_APP_ENVIRONMENT=Staging {{web}} build
     {{api}} deploy
+
+# The same, to protoeln.org (usually done by GitLab CI for a release tag; see docs/deployment.md).
+# The website has no environment badge.
+deploy-production:
+    just check
+    VITE_APP_ENVIRONMENT= {{web}} build
+    {{api}} exec wrangler deploy --env production
