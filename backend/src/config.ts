@@ -27,6 +27,9 @@ export interface Config {
   siteAdmins: string[]
   // The read-only lock: when on, nothing can be changed through the API (see docs/read-only.md)
   readOnly: boolean
+  // When on, anyone can read the projects marked public, without signing in. When off, every
+  // project can be seen only by its members and site admins, whatever it's marked.
+  publicRead: boolean
 }
 
 export function readConfig(env: Record<string, string | undefined> = process.env): Config {
@@ -44,6 +47,10 @@ export function readConfig(env: Record<string, string | undefined> = process.env
   const readOnly = env.PROTOELN_READ_ONLY ?? 'false'
   if (readOnly !== 'true' && readOnly !== 'false') {
     throw new Error('PROTOELN_READ_ONLY must be true or false')
+  }
+  const publicRead = env.PROTOELN_PUBLIC_READ ?? 'false'
+  if (publicRead !== 'true' && publicRead !== 'false') {
+    throw new Error('PROTOELN_PUBLIC_READ must be true or false')
   }
   const sessionDays = Number(env.PROTOELN_SESSION_DAYS ?? 14)
   if (!Number.isInteger(sessionDays) || sessionDays < 1 || sessionDays > 90) {
@@ -69,5 +76,6 @@ export function readConfig(env: Record<string, string | undefined> = process.env
     sessionDays,
     siteAdmins,
     readOnly: readOnly === 'true',
+    publicRead: publicRead === 'true',
   }
 }

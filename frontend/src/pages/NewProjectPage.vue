@@ -107,6 +107,10 @@ const problems = computed(() => fieldProblems(creating.error.value))
         <span class="font-medium">Public</span>
         <span class="block text-sm text-muted">
           Anyone can read it, without signing in. Only its contributors and admins can add to it.
+          <template v-if="me.data.value?.publicRead === false">
+            This site doesn't show public projects to everyone at the moment, so only its members
+            will see it until it does.
+          </template>
         </span>
       </span>
     </label>

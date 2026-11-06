@@ -31,7 +31,8 @@ const cannotCreate = computed(() =>
 
 function access(project: Project) {
   if (project.yourRole) return ROLE_LABELS[project.yourRole]
-  return project.publicRead ? 'Public' : ''
+  // (A project marked public is only public if the site lets anyone read public projects)
+  return project.publicRead && me.data.value?.publicRead ? 'Public' : ''
 }
 </script>
 

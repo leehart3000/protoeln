@@ -24,6 +24,17 @@ describe('About page', () => {
     expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute('href', '/privacy')
   })
 
+  it('says whether anyone can read public projects', async () => {
+    fakeApi({})
+    const { unmount } = await renderAt('/about')
+    expect(await screen.findByText(/Anyone can read a public project/)).toBeInTheDocument()
+    unmount()
+
+    fakeApi({ '/api/v1/me': { user: null, readOnly: false, publicRead: false } })
+    await renderAt('/about')
+    expect(await screen.findByText(/This site is private/)).toBeInTheDocument()
+  })
+
   it('says whether the site can be changed at the moment', async () => {
     fakeApi({})
     const { unmount } = await renderAt('/about')

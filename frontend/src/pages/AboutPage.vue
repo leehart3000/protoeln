@@ -20,10 +20,13 @@ const me = useMe()
 const howItsUsed = computed(() => {
   const details = me.data.value
   if (details === undefined) return ''
+  const reading = details.publicRead
+    ? 'Anyone can read a public project without signing in; other projects can be seen only by their members.'
+    : 'This site is private: its projects can be seen only by their members, once signed in.'
   const changing = details.readOnly
     ? "It's read-only at the moment, so nothing can be changed."
     : 'Members of a project can add and change its notebooks and entries, and every change is recorded.'
-  return `Anyone can read a public project without signing in; other projects can be seen only by their members. ${changing}`
+  return `${reading} ${changing}`
 })
 </script>
 

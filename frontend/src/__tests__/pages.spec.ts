@@ -47,7 +47,18 @@ describe('projects page', () => {
       'href',
       '/projects/DEMO',
     )
-    expect(screen.getByText('Public')).toBeInTheDocument()
+    expect(await screen.findByText('Public')).toBeInTheDocument()
+  })
+
+  it("doesn't call a project public if the site doesn't show public projects to everyone", async () => {
+    fakeApi({
+      '/api/v1/me': { user: null, readOnly: false, publicRead: false },
+      '/api/v1/projects': [project],
+    })
+    await renderAt('/projects')
+
+    await screen.findByRole('link', { name: 'Example project' })
+    expect(screen.queryByText('Public')).not.toBeInTheDocument()
   })
 
   it('says when there are no projects to see', async () => {

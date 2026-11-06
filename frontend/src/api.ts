@@ -111,8 +111,9 @@ export interface HistoryCheck {
   problems: string[]
 }
 
-// The signed-in person (null if no one is), with their role in each project they're in, and
-// whether the site is read-only (nothing can be changed; see docs/read-only.md)
+// The signed-in person (null if no one is), with their role in each project they're in;
+// whether the site is read-only (nothing can be changed; see docs/read-only.md); and whether
+// it lets anyone read the projects marked public (PROTOELN_PUBLIC_READ)
 export interface Me {
   user: {
     name: string
@@ -123,6 +124,7 @@ export interface Me {
     roles: { project: ProjectRef; role: ProjectRole }[]
   } | null
   readOnly?: boolean
+  publicRead?: boolean
 }
 
 // A request the API refused, with its reason and, for invalid details, what's wrong with each

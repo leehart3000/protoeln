@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, type Response } from 'express'
 
 import { canManageMembers } from '../access.ts'
 import { membersOf, removeRole, setRole } from '../data/members.ts'
@@ -6,7 +6,6 @@ import { PROJECT_ROLES } from '../data/models/project.ts'
 import { isValidOrcid } from '../data/orcid.ts'
 import { findProjectByCode } from '../data/queries.ts'
 import { ForbiddenError, InvalidError } from '../errors.ts'
-import type { CurrentUser } from '../access.ts'
 import { BodyReader, checkCanRead, requireUser } from './context.ts'
 import { memberView } from './views.ts'
 
@@ -18,9 +17,10 @@ export function memberRoutes(options: { orcidBaseUrl?: string } = {}) {
   const orcidBaseUrl = options.orcidBaseUrl ?? 'https://orcid.org'
   const router = Router()
 
-  async function managedProject(code: string, user: CurrentUser) {
+  async function managedProject(res: Response, code: string) {
+    const user = requireUser(res)
     const project = await findProjectByCode(code)
-    checkCanRead(project, user)
+    checkCanRead(res, project)
     if (!canManageMembers(project, user)) {
       throw new ForbiddenError("Only the project's admins can see and change its members")
     }
@@ -44,13 +44,13 @@ export function memberRoutes(options: { orcidBaseUrl?: string } = {}) {
   }
 
   router.get('/projects/:code/members', async (req, res) => {
-    const project = await managedProject(req.params.code, requireUser(res))
+    const project = await managedProject(res, req.params.code)
     res.json(await members(project._id))
   })
 
   router.put('/projects/:code/members/:orcid', async (req, res) => {
     const user = requireUser(res)
-    const project = await managedProject(req.params.code, user)
+    const project = await managedProject(res, req.params.code)
     checkOrcid(req.params.orcid)
     const body = new BodyReader(req.body)
     const role = body.oneOf('role', PROJECT_ROLES)
@@ -67,7 +67,7 @@ export function memberRoutes(options: { orcidBaseUrl?: string } = {}) {
 
   router.delete('/projects/:code/members/:orcid', async (req, res) => {
     const user = requireUser(res)
-    const project = await managedProject(req.params.code, user)
+    const project = await managedProject(res, req.params.code)
     checkOrcid(req.params.orcid)
 
     await removeRole({

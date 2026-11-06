@@ -37,15 +37,24 @@ describe('access rules', () => {
     ['an admin', user('a'), true, true],
     ['a site admin', user('s', true), true, true],
   ])('lets %s read (%s) and contribute (%s)', (_who, who, read, contribute) => {
-    expect(canRead(project, who)).toBe(read)
+    expect(canRead(project, who, true)).toBe(read)
     expect(canContribute(project, who)).toBe(contribute)
   })
 
   it('lets anyone read a public project, but not contribute to it', () => {
     const open = { ...project, publicRead: true }
 
-    expect(canRead(open, null)).toBe(true)
+    expect(canRead(open, null, true)).toBe(true)
     expect(canContribute(open, null)).toBe(false)
+  })
+
+  it('lets only members and site admins read a public project, if the site is not public', () => {
+    const open = { ...project, publicRead: true }
+
+    expect(canRead(open, null, false)).toBe(false)
+    expect(canRead(open, user('x'), false)).toBe(false)
+    expect(canRead(open, user('v'), false)).toBe(true)
+    expect(canRead(open, user('s', true), false)).toBe(true)
   })
 
   it('lets only admins and site admins manage members', () => {

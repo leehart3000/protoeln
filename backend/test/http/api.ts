@@ -15,7 +15,8 @@ async function authenticateForTests(req: Request): Promise<CurrentUser | null> {
     : null
 }
 
-// With `readOnly`, as the site is when its read-only lock is on
-export function api(options: { readOnly?: boolean } = {}) {
-  return request(createApp({ authenticate: authenticateForTests, ...options }))
+// With `readOnly`, as the site is when its read-only lock is on. Anyone can read public
+// projects, as on protoeln.org, unless `publicRead` is false.
+export function api(options: { readOnly?: boolean; publicRead?: boolean } = {}) {
+  return request(createApp({ authenticate: authenticateForTests, publicRead: true, ...options }))
 }

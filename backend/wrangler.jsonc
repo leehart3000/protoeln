@@ -31,6 +31,8 @@
     "PROTOELN_ORCID_BASE_URL": "https://sandbox.orcid.org",
     // Staging can be changed, so everything can be tried (see docs/read-only.md)
     "PROTOELN_READ_ONLY": "false",
+    // Anyone can read the projects marked public (see docs/deployment.md)
+    "PROTOELN_PUBLIC_READ": "true",
   },
   "env": {
     // protoeln.org, the public demo. It uses the files, Durable Object class and other settings
@@ -48,6 +50,7 @@
         "PROTOELN_ORCID_BASE_URL": "https://orcid.org",
         // Every deploy locks it: its data changes only by import (see docs/read-only.md)
         "PROTOELN_READ_ONLY": "true",
+        "PROTOELN_PUBLIC_READ": "true",
       },
     },
   },

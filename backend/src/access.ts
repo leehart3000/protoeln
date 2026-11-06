@@ -22,8 +22,18 @@ export function roleIn(project: ProjectAccess, user: CurrentUser | null): Projec
   return (member?.role as ProjectRole | undefined) ?? null
 }
 
-export function canRead(project: ProjectAccess, user: CurrentUser | null): boolean {
-  return project.publicRead || user?.siteAdmin === true || roleIn(project, user) !== null
+// Reading a project: anyone, if it's public and the site lets anyone read public projects
+// (sitePublicRead, from PROTOELN_PUBLIC_READ); otherwise its members and site admins
+export function canRead(
+  project: ProjectAccess,
+  user: CurrentUser | null,
+  sitePublicRead: boolean,
+): boolean {
+  return (
+    (sitePublicRead && project.publicRead) ||
+    user?.siteAdmin === true ||
+    roleIn(project, user) !== null
+  )
 }
 
 // Creating notebooks and entries, commenting and reviewing (not for viewers)

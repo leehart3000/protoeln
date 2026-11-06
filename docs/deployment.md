@@ -48,6 +48,10 @@ pnpm exec wrangler secret put PROTOELN_SITE_ADMINS
   `https://staging.protoeln.org/api/v1/auth/orcid/callback`.
 - **Read-only lock:** `PROTOELN_READ_ONLY` (in `vars`) is `"false"` on staging, so it can be
   tried out fully. See `docs/read-only.md`.
+- **Public projects:** `PROTOELN_PUBLIC_READ` (in `vars`) is `"true"` on staging and production,
+  so anyone can read the projects marked public. When it's `"false"` (the default, for a lab's
+  own private site), every project can be seen only by its members and site admins, however
+  it's marked.
 
 ## Who can reach staging
 

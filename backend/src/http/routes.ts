@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router, type Response } from 'express'
 import type { DocNode } from '@protoeln/content'
 
 import {
@@ -26,7 +26,7 @@ import {
   listProjectsOf,
   versionsLinkingTo,
 } from '../data/queries.ts'
-import { checkCanRead, userOf } from './context.ts'
+import { checkCanRead, sitePublicRead, userOf } from './context.ts'
 import {
   entrySummary,
   entryView,
@@ -49,9 +49,16 @@ export function accessIn(project: ProjectAccess, user: CurrentUser | null) {
   }
 }
 
+// The projects the requester can read
+async function readableProjects(res: Response) {
+  const user = userOf(res)
+  const publicRead = sitePublicRead(res)
+  return (await listProjects()).filter((project) => canRead(project, user, publicRead))
+}
+
 // The projects the requester can read, and their notebooks, each found by its id
-async function readableNotebooks(user: CurrentUser | null) {
-  const projects = (await listProjects()).filter((project) => canRead(project, user))
+async function readableNotebooks(res: Response) {
+  const projects = await readableProjects(res)
   const notebooks = await listNotebooksIn(projects.map((project) => project._id))
   const projectById = new Map(projects.map((project) => [project._id.toHexString(), project]))
   const projectOf = (notebook: (typeof notebooks)[number]) =>
@@ -62,8 +69,8 @@ async function readableNotebooks(user: CurrentUser | null) {
 // A summary of every entry the requester can read (or only those linking to an entry), with
 // the notebook and project each is in, most recently changed first. Those linking to an entry
 // also say where the link is (`linkedIn`): in the current draft, and in which versions.
-async function listedEntries(user: CurrentUser | null, linkingTo?: string) {
-  const { notebooks, projectOf } = await readableNotebooks(user)
+async function listedEntries(res: Response, linkingTo?: string) {
+  const { notebooks, projectOf } = await readableNotebooks(res)
   const notebookById = new Map(notebooks.map((notebook) => [notebook._id.toHexString(), notebook]))
   const entries = await listEntriesIn(
     notebooks.map((notebook) => notebook._id),
@@ -94,18 +101,22 @@ async function listedEntries(user: CurrentUser | null, linkingTo?: string) {
   })
 }
 
-export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean } = {}) {
+export function readRoutes(
+  options: { orcidBaseUrl?: string; readOnly?: boolean; publicRead?: boolean } = {},
+) {
   const orcidBaseUrl = options.orcidBaseUrl ?? 'https://orcid.org'
   const readOnly = options.readOnly ?? false
+  const publicRead = options.publicRead ?? false
   const router = Router()
 
   // The signed-in person, for the header and their profile page: who they are, since when, and
   // their role in each project they're a member of. Their own database id stays inside, like
-  // everyone else's. It also says whether the site is read-only, whoever asks.
+  // everyone else's. It also says, whoever asks, whether the site is read-only, and whether it
+  // lets anyone read its public projects.
   router.get('/me', async (_req, res) => {
     const user = userOf(res)
     if (user === null) {
-      res.json({ user: null, readOnly })
+      res.json({ user: null, readOnly, publicRead })
       return
     }
     const [record, projects] = await Promise.all([findUserById(user.id), listProjectsOf(user.id)])
@@ -122,23 +133,20 @@ export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean 
         })),
       },
       readOnly,
+      publicRead,
     })
   })
 
   router.get('/projects', async (_req, res) => {
     const user = userOf(res)
-    const projects = await listProjects()
-    res.json(
-      projects
-        .filter((project) => canRead(project, user))
-        .map((project) => projectView(project, accessIn(project, user))),
-    )
+    const projects = await readableProjects(res)
+    res.json(projects.map((project) => projectView(project, accessIn(project, user))))
   })
 
   router.get('/projects/:code', async (req, res) => {
     const user = userOf(res)
     const project = await findProjectByCode(req.params.code)
-    checkCanRead(project, user)
+    checkCanRead(res, project)
     const notebooks = await listNotebooks(project._id)
     const people = await findPeople(notebooks.map((notebook) => notebook.ownerId))
     res.json({
@@ -149,7 +157,7 @@ export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean 
 
   // Every notebook the requester can read, across projects, most recently changed first
   router.get('/notebooks', async (_req, res) => {
-    const { notebooks, projectOf } = await readableNotebooks(userOf(res))
+    const { notebooks, projectOf } = await readableNotebooks(res)
     const people = await findPeople(notebooks.map((notebook) => notebook.ownerId))
     res.json(
       notebooks.map((notebook) => ({
@@ -163,7 +171,7 @@ export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean 
     const user = userOf(res)
     const notebook = await findNotebook(req.params.id)
     const project = await findProjectById(notebook.projectId)
-    checkCanRead(project, user)
+    checkCanRead(res, project)
     const entries = await listEntries(notebook._id)
     const people = await findPeople([notebook.ownerId, ...entries.map((entry) => entry.authorId)])
     res.json({
@@ -175,7 +183,7 @@ export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean 
 
   // A summary of every entry the requester can read, across projects, most recently changed first
   router.get('/entries', async (_req, res) => {
-    res.json(await listedEntries(userOf(res)))
+    res.json(await listedEntries(res))
   })
 
   // The entries the requester can read that link to this one, in their current drafts or in any
@@ -183,9 +191,8 @@ export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean 
   router.get('/entries/:code/linked-from', async (req, res) => {
     const entry = await findEntryByCode(req.params.code)
     const notebook = await findNotebook(entry.notebookId.toHexString())
-    const user = userOf(res)
-    checkCanRead(await findProjectById(notebook.projectId), user)
-    res.json(await listedEntries(user, entry.code))
+    checkCanRead(res, await findProjectById(notebook.projectId))
+    res.json(await listedEntries(res, entry.code))
   })
 
   router.get('/entries/:code', async (req, res) => {
@@ -193,7 +200,7 @@ export function readRoutes(options: { orcidBaseUrl?: string; readOnly?: boolean 
     const notebook = await findNotebook(entry.notebookId.toHexString())
     const project = await findProjectById(notebook.projectId)
     const user = userOf(res)
-    checkCanRead(project, user)
+    checkCanRead(res, project)
     const people = await findPeople([entry.authorId, ...entry.coAuthorIds])
     const named = await findPeopleNamedIn(entry.content as DocNode)
     res.json({

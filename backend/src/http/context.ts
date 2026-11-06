@@ -8,6 +8,12 @@ export function userOf(res: Response): CurrentUser | null {
   return (res.locals.user as CurrentUser | null | undefined) ?? null
 }
 
+// Whether the site lets anyone read its public projects (PROTOELN_PUBLIC_READ), as set by
+// createApp in app.ts
+export function sitePublicRead(res: Response): boolean {
+  return res.locals.sitePublicRead === true
+}
+
 export function requireUser(res: Response): CurrentUser {
   const user = userOf(res)
   if (user === null) {
@@ -18,15 +24,15 @@ export function requireUser(res: Response): CurrentUser {
 
 // People who can't read a project are told it was not found, so private projects don't
 // reveal that they exist
-export function checkCanRead(project: ProjectAccess, user: CurrentUser | null) {
-  if (!canRead(project, user)) {
+export function checkCanRead(res: Response, project: ProjectAccess) {
+  if (!canRead(project, userOf(res), sitePublicRead(res))) {
     throw new NotFoundError('Project not found')
   }
 }
 
-export function checkCanContribute(project: ProjectAccess, user: CurrentUser) {
-  checkCanRead(project, user)
-  if (!canContribute(project, user)) {
+export function checkCanContribute(res: Response, project: ProjectAccess) {
+  checkCanRead(res, project)
+  if (!canContribute(project, requireUser(res))) {
     throw new ForbiddenError("Only the project's contributors and admins can do this")
   }
 }

@@ -22,6 +22,7 @@ const config: Config = {
   sessionDays: 14,
   siteAdmins: [],
   readOnly: false,
+  publicRead: false,
 }
 
 // A fake ORCID: its signing keys, and the ID token it hands out for a code

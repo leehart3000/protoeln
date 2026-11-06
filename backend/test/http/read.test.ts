@@ -55,7 +55,7 @@ describe('GET /api/v1/me', () => {
   it('says no one is signed in for an anonymous request', async () => {
     const response = await api().get('/api/v1/me')
 
-    expect(response.body).toEqual({ user: null, readOnly: false })
+    expect(response.body).toEqual({ user: null, readOnly: false, publicRead: true })
   })
 
   it('names the signed-in user', async () => {
@@ -111,6 +111,38 @@ describe('GET /api/v1/projects', () => {
       'viewer',
       null,
     ])
+  })
+})
+
+describe('a site that lets no one read public projects', () => {
+  const privateSite = () => api({ publicRead: false })
+
+  it('says so, whoever asks', async () => {
+    const response = await privateSite().get('/api/v1/me')
+
+    expect(response.body).toEqual({ user: null, readOnly: false, publicRead: false })
+  })
+
+  it.each([
+    ['anyone', undefined, []],
+    ['an outsider', 'outsider', []],
+    ['a contributor', 'member', ['LAB']],
+    ['a site admin', 'admin', ['LAB', 'PUB']],
+  ] as const)('lists only the projects %s is a member of', async (_who, as, codes) => {
+    const call = privateSite().get('/api/v1/projects')
+    const response = await (as ? call.set('X-Test-User', ids[as]) : call)
+
+    expect(response.body.map((project: { code: string }) => project.code)).toEqual(codes)
+  })
+
+  it('says a project marked public is not found, to anyone who is not a member', async () => {
+    const anonymous = await privateSite().get('/api/v1/projects/PUB')
+    const outsider = await privateSite()
+      .get('/api/v1/projects/PUB')
+      .set('X-Test-User', ids.outsider)
+
+    expect(anonymous.status).toBe(404)
+    expect(outsider.status).toBe(404)
   })
 })
 

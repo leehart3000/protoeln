@@ -19,6 +19,9 @@ export interface AppOptions {
   fetch?: typeof fetch
   // The read-only lock (see http/read-only.ts); from the settings, unless given here (in tests)
   readOnly?: boolean
+  // Whether anyone can read the site's public projects (see canRead in access.ts); from the
+  // settings, unless given here (in tests). Off if neither says.
+  publicRead?: boolean
 }
 
 // Every route is under a versioned prefix, as in ProtoLIMS, so a later, incompatible version of
@@ -47,13 +50,15 @@ export function createApp(options: AppOptions = {}) {
     app.use(API, authRoutes({ api: API, config: options.config, fetch: options.fetch }))
   }
 
+  const publicRead = options.publicRead ?? options.config?.publicRead ?? false
   app.use(API, async (req, res, next) => {
     res.locals.user = await authenticate(req)
+    res.locals.sitePublicRead = publicRead
     next()
   })
   // Where people's ORCID records are, for links to them (the sandbox's, in development)
   const orcidBaseUrl = options.config?.orcid?.baseUrl ?? 'https://orcid.org'
-  app.use(API, readRoutes({ orcidBaseUrl, readOnly }))
+  app.use(API, readRoutes({ orcidBaseUrl, readOnly, publicRead }))
   app.use(API, writeRoutes())
   app.use(API, memberRoutes({ orcidBaseUrl }))
 

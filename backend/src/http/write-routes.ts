@@ -17,7 +17,7 @@ import {
   findVersion,
   listVersions,
 } from '../data/queries.ts'
-import { BodyReader, checkCanContribute, checkCanRead, requireUser, userOf } from './context.ts'
+import { BodyReader, checkCanContribute, checkCanRead, requireUser } from './context.ts'
 import { entryView, notebookView, projectView, versionSummary, versionView } from './views.ts'
 
 // Creating notebooks and entries, saving drafts, ticking protocol steps, and creating and
@@ -78,7 +78,7 @@ export function writeRoutes() {
   router.post('/projects/:code/notebooks', async (req, res) => {
     const user = requireUser(res)
     const project = await findProjectByCode(req.params.code)
-    checkCanContribute(project, user)
+    checkCanContribute(res, project)
     const body = new BodyReader(req.body)
     const title = body.text('title')
     const description = body.optionalText('description')
@@ -96,7 +96,7 @@ export function writeRoutes() {
   router.post('/notebooks/:id/entries', async (req, res) => {
     const user = requireUser(res)
     const notebook = await findNotebook(req.params.id)
-    checkCanContribute(await findProjectById(notebook.projectId), user)
+    checkCanContribute(res, await findProjectById(notebook.projectId))
     const body = new BodyReader(req.body)
     const kind = body.oneOf('kind', ENTRY_KINDS)
     const title = body.text('title')
@@ -116,7 +116,7 @@ export function writeRoutes() {
   router.put('/entries/:code/draft', async (req, res) => {
     const user = requireUser(res)
     const { entry, project } = await projectOfEntry(req.params.code)
-    checkCanContribute(project, user)
+    checkCanContribute(res, project)
     const body = new BodyReader(req.body)
     const basedOn = body.date('basedOn')
     const title = body.text('title')
@@ -132,7 +132,7 @@ export function writeRoutes() {
   router.put('/entries/:code/steps', async (req, res) => {
     const user = requireUser(res)
     const { entry, project } = await projectOfEntry(req.params.code)
-    checkCanContribute(project, user)
+    checkCanContribute(res, project)
     const body = new BodyReader(req.body)
     const basedOn = body.date('basedOn')
     const path = body.indexPath('path')
@@ -146,7 +146,7 @@ export function writeRoutes() {
   router.post('/entries/:code/versions', async (req, res) => {
     const user = requireUser(res)
     const { entry, project } = await projectOfEntry(req.params.code)
-    checkCanContribute(project, user)
+    checkCanContribute(res, project)
     const body = new BodyReader(req.body)
     const note = body.optionalText('note')
     body.done()
@@ -158,7 +158,7 @@ export function writeRoutes() {
 
   router.get('/entries/:code/versions', async (req, res) => {
     const { entry, project } = await projectOfEntry(req.params.code)
-    checkCanRead(project, userOf(res))
+    checkCanRead(res, project)
     const versions = await listVersions(entry._id)
     const people = await findPeople(versions.map((version) => version.createdBy))
     res.json(versions.map((version) => versionSummary(version, people)))
@@ -166,7 +166,7 @@ export function writeRoutes() {
 
   router.get('/entries/:code/versions/:number', async (req, res) => {
     const { entry, project } = await projectOfEntry(req.params.code)
-    checkCanRead(project, userOf(res))
+    checkCanRead(res, project)
     const version = await findVersion(entry._id, Number(req.params.number))
     const people = await findPeople([version.createdBy])
     const named = await findPeopleNamedIn(version.content as DocNode)
@@ -176,7 +176,7 @@ export function writeRoutes() {
   // Recalculates the hashes of every version, reporting any that have been tampered with
   router.get('/entries/:code/history-check', async (req, res) => {
     const { entry, project } = await projectOfEntry(req.params.code)
-    checkCanRead(project, userOf(res))
+    checkCanRead(res, project)
     const problems = await verifyVersions(entry._id)
     res.json({ intact: problems.length === 0, problems })
   })

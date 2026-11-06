@@ -41,7 +41,7 @@ describe('the read-only lock', () => {
     expect(projects.status).toBe(200)
 
     const me = await api({ readOnly: true }).get('/api/v1/me')
-    expect(me.body).toEqual({ user: null, readOnly: true })
+    expect(me.body).toEqual({ user: null, readOnly: true, publicRead: true })
   })
 
   it('still lets people sign out', async () => {
