@@ -30,6 +30,10 @@ interface ProjectRecord {
   title: string
   description: string
   publicRead: boolean
+  // (Missing from projects created before they were added)
+  sourceRepository?: string
+  licence?: string
+  citation?: string
   links: {
     system: string
     kind: string
@@ -60,6 +64,9 @@ export function projectView(project: ProjectRecord, access: ProjectAccessView) {
     title: project.title,
     description: project.description,
     publicRead: project.publicRead,
+    sourceRepository: project.sourceRepository ?? '',
+    licence: project.licence ?? '',
+    citation: project.citation ?? '',
     links: project.links.map((link) => ({
       system: link.system,
       kind: link.kind,

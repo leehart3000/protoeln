@@ -86,6 +86,7 @@ describe('creating a project', () => {
 
     await user.type(await screen.findByLabelText('Code'), 'LAB2')
     await user.type(screen.getByLabelText('Title'), 'Lab two')
+    await user.type(screen.getByLabelText(/Licence/), 'CC BY 4.0')
     await user.click(screen.getByRole('button', { name: 'Create project' }))
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Lab two' })).toBeInTheDocument()
@@ -94,6 +95,9 @@ describe('creating a project', () => {
       title: 'Lab two',
       description: '',
       publicRead: false,
+      sourceRepository: '',
+      licence: 'CC BY 4.0',
+      citation: '',
     })
   })
 

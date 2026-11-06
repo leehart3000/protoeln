@@ -11,6 +11,9 @@ export async function createProject(input: {
   title: string
   description?: string
   publicRead: boolean
+  sourceRepository?: string
+  licence?: string
+  citation?: string
   creatorId: string
 }) {
   const taken = () => new ConflictError(`There is already a project with the code ${input.code}`)
@@ -23,6 +26,9 @@ export async function createProject(input: {
       title: input.title,
       description: input.description,
       publicRead: input.publicRead,
+      sourceRepository: input.sourceRepository,
+      licence: input.licence,
+      citation: input.citation,
       members: [{ userId: input.creatorId, role: 'admin' }],
     })
     return project.toObject()
@@ -40,6 +46,9 @@ export interface ProjectDetails {
   title: string
   description: string
   publicRead: boolean
+  sourceRepository: string
+  licence: string
+  citation: string
 }
 
 // Changes the details given, recording what changed (see details.ts)
@@ -54,6 +63,9 @@ export async function updateProject(input: {
       title: project.title,
       description: project.description,
       publicRead: project.publicRead,
+      sourceRepository: project.sourceRepository,
+      licence: project.licence,
+      citation: project.citation,
     }
     const changed = await saveDetails({
       kind: 'project',

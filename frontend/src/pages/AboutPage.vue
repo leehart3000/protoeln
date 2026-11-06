@@ -38,7 +38,8 @@ const howItsUsed = computed(() => {
       companion to <ExternalLink href="https://protolims.org" text="ProtoLIMS" after="." /> Each
       <RouterLink to="/projects" :class="textLink">project</RouterLink> has notebooks, and each
       notebook has entries: what was planned, done and found. An entry can hold checklists of
-      protocol steps, tables of materials, and links to records in ProtoLIMS or another LIMS.
+      protocol steps, tables of materials, and links to records in ProtoLIMS or another LIMS. Each
+      project's page says where its data came from, how it's licensed, and how to cite it.
     </p>
     <p>
       Every save of an entry is recorded, with who made it and when. When an entry is ready, it can

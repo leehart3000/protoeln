@@ -81,6 +81,26 @@ describe('PATCH /api/v1/projects/:code', () => {
     ])
   })
 
+  it('changes its credit: source, licence and citation', async () => {
+    const response = await api().patch('/api/v1/projects/LAB').set('X-Test-User', ids.admin).send({
+      sourceRepository: 'https://zenodo.org/records/1',
+      licence: 'CC BY 4.0',
+      citation: 'Lab (2026). https://doi.org/10.5281/zenodo.1',
+    })
+
+    expect(response.body.project).toMatchObject({
+      sourceRepository: 'https://zenodo.org/records/1',
+      licence: 'CC BY 4.0',
+      citation: 'Lab (2026). https://doi.org/10.5281/zenodo.1',
+    })
+    const changes = await changesOf('project', projectId)
+    expect(changes.at(-1)!.diff.map((operation) => operation.path)).toEqual([
+      '/sourceRepository',
+      '/licence',
+      '/citation',
+    ])
+  })
+
   it('records nothing when nothing changes', async () => {
     const before = (await changesOf('project', projectId)).length
     const response = await api()

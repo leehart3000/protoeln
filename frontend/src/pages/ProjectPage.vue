@@ -6,6 +6,7 @@ import { fetchProject } from '../api'
 import { ROLE_LABELS } from '../format'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
 import EditLink from '../components/EditLink.vue'
+import LinkedText from '../components/LinkedText.vue'
 import MembersSection from '../components/MembersSection.vue'
 import NewButton from '../components/NewButton.vue'
 import NotebookTable from '../components/NotebookTable.vue'
@@ -79,6 +80,24 @@ const visibility = computed(() => {
           Your role: {{ ROLE_LABELS[data.project.yourRole] }}.
         </template>
       </p>
+      <!-- Credit for data that comes from elsewhere, if the project gives any -->
+      <dl
+        v-if="data.project.sourceRepository || data.project.licence || data.project.citation"
+        class="mt-4 grid max-w-3xl grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm"
+      >
+        <template v-if="data.project.sourceRepository">
+          <dt class="text-muted">Source repository</dt>
+          <dd><LinkedText :text="data.project.sourceRepository" /></dd>
+        </template>
+        <template v-if="data.project.licence">
+          <dt class="text-muted">Licence</dt>
+          <dd><LinkedText :text="data.project.licence" /></dd>
+        </template>
+        <template v-if="data.project.citation">
+          <dt class="text-muted">Citation</dt>
+          <dd><LinkedText :text="data.project.citation" /></dd>
+        </template>
+      </dl>
 
       <div class="mt-8 mb-3 flex items-center gap-3">
         <h2 :class="sectionHeading">Notebooks</h2>

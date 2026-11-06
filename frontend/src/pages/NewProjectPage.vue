@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import { createProject, fieldProblems } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import CreditFields from '../components/CreditFields.vue'
 import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import { ProjectIcon } from '../icons'
@@ -29,6 +30,9 @@ const code = ref('')
 const title = ref('')
 const description = ref('')
 const publicRead = ref(false)
+const sourceRepository = ref('')
+const licence = ref('')
+const citation = ref('')
 
 const creating = useMutation({
   mutationFn: () =>
@@ -37,6 +41,9 @@ const creating = useMutation({
       title: title.value,
       description: description.value,
       publicRead: publicRead.value,
+      sourceRepository: sourceRepository.value,
+      licence: licence.value,
+      citation: citation.value,
     }),
   onSuccess: async (project) => {
     await queryClient.invalidateQueries({ queryKey: ['projects'] })
@@ -101,6 +108,11 @@ const problems = computed(() => fieldProblems(creating.error.value))
         :class="[inputClass, 'border-line']"
       ></textarea>
     </div>
+    <CreditFields
+      v-model:source-repository="sourceRepository"
+      v-model:licence="licence"
+      v-model:citation="citation"
+    />
     <label class="flex items-start gap-3">
       <input v-model="publicRead" type="checkbox" class="mt-1 size-4 accent-primary" />
       <span>

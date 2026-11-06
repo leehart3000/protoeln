@@ -16,6 +16,11 @@ export interface Project {
   title: string
   description: string
   publicRead: boolean
+  // Credit (free text, in which web addresses become links): where the data comes from, how
+  // it's licensed and how to cite it
+  sourceRepository: string
+  licence: string
+  citation: string
   links: {
     system: string
     kind: string
@@ -188,19 +193,23 @@ export function changeRole(projectCode: string, orcid: string, role: ProjectRole
     : sendJson<Member[]>('PUT', membersPath(projectCode, orcid), { role })
 }
 
-export function createProject(body: {
-  code: string
-  title: string
-  description: string
-  publicRead: boolean
-}) {
+// The credit for a project's data (see Project)
+export interface ProjectCredit {
+  sourceRepository: string
+  licence: string
+  citation: string
+}
+
+export function createProject(
+  body: { code: string; title: string; description: string; publicRead: boolean } & ProjectCredit,
+) {
   return sendJson<Project>('POST', '/api/v1/projects', body)
 }
 
 // Changes a project's details: only those given (its code never changes)
 export function updateProject(
   code: string,
-  changes: Partial<{ title: string; description: string; publicRead: boolean }>,
+  changes: Partial<{ title: string; description: string; publicRead: boolean } & ProjectCredit>,
 ) {
   return sendJson<{ project: Project; changed: boolean }>(
     'PATCH',

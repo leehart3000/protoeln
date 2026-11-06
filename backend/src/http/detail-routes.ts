@@ -9,7 +9,8 @@ import { BodyReader, checkCanRead, requireUser } from './context.ts'
 import { accessIn } from './routes.ts'
 import { notebookView, projectView } from './views.ts'
 
-// Changing a project's or notebook's details after it's created, as ProtoLIMS's edit pages do.
+// Changing a project's or notebook's details after it's created (for a project, also its
+// credit: where its data comes from, its licence and how to cite it), as ProtoLIMS's edit pages do.
 // Only the details sent change, so two people changing different details don't undo each
 // other's changes; a project's code never changes. Each change is recorded with who made it
 // and when (see data/details.ts). Answers with the record as it now is.
@@ -29,12 +30,15 @@ export function detailRoutes() {
     const title = body.optionalNonEmptyText('title')
     const description = body.optionalText('description')
     const publicRead = body.optionalFlag('publicRead')
+    const sourceRepository = body.optionalText('sourceRepository')
+    const licence = body.optionalText('licence')
+    const citation = body.optionalText('citation')
     body.done()
 
     const result = await updateProject({
       projectId: project._id,
       userId: user.id,
-      changes: { title, description, publicRead },
+      changes: { title, description, publicRead, sourceRepository, licence, citation },
     })
     res.json({
       project: projectView(result.project, accessIn(result.project, user)),

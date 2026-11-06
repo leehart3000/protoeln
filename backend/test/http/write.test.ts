@@ -62,10 +62,12 @@ beforeEach(async () => {
 
 describe('POST /api/v1/projects', () => {
   it('lets a site admin create a project, of which they become an admin', async () => {
-    const response = await api()
-      .post('/api/v1/projects')
-      .set('X-Test-User', ids.admin)
-      .send({ code: 'NEW1', title: 'New project', publicRead: true })
+    const response = await api().post('/api/v1/projects').set('X-Test-User', ids.admin).send({
+      code: 'NEW1',
+      title: 'New project',
+      publicRead: true,
+      licence: 'CC BY 4.0 https://creativecommons.org/licenses/by/4.0/',
+    })
 
     expect(response.status).toBe(201)
     expect(response.body).toMatchObject({
@@ -73,6 +75,9 @@ describe('POST /api/v1/projects', () => {
       title: 'New project',
       description: '',
       publicRead: true,
+      sourceRepository: '',
+      licence: 'CC BY 4.0 https://creativecommons.org/licenses/by/4.0/',
+      citation: '',
       yourRole: 'admin',
       canContribute: true,
     })

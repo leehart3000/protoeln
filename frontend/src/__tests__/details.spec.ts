@@ -67,6 +67,20 @@ describe('editing a project', () => {
     expect(sentBody(fetchMock, 'PATCH', '/api/v1/projects/DEMO')).toEqual({ title: 'Renamed' })
   })
 
+  it('changes its credit', async () => {
+    const fetchMock = fakeApi({
+      '/api/v1/projects/DEMO': { project: admin, notebooks: [] },
+      'PATCH /api/v1/projects/DEMO': { project: { ...admin, licence: 'CC0' }, changed: true },
+    })
+    await renderAt('/projects/DEMO/edit')
+
+    await userEvent.type(await screen.findByLabelText(/Licence/), 'CC0')
+    await userEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await screen.findByRole('heading', { level: 1, name: 'Example project' })
+    expect(sentBody(fetchMock, 'PATCH', '/api/v1/projects/DEMO')).toEqual({ licence: 'CC0' })
+  })
+
   it('says what is wrong with a change the API refuses', async () => {
     fakeApi({
       '/api/v1/projects/DEMO': { project: admin, notebooks: [] },

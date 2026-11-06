@@ -35,6 +35,12 @@ const projectSchema = new mongoose.Schema(
     links: { type: [linkSchema], default: [] },
     // Whether anyone, signed in or not, can read the project (as on the public demo)
     publicRead: { type: Boolean, default: false },
+    // Credit, as in ProtoLIMS, for data that comes from elsewhere: where it comes from (such as
+    // a Zenodo record), how it's licensed (such as CC BY 4.0), and how to cite it. Free text;
+    // the website shows web addresses in them as links.
+    sourceRepository: { type: String, default: '' },
+    licence: { type: String, default: '' },
+    citation: { type: String, default: '' },
   },
   { collection: 'projects', timestamps: true },
 )

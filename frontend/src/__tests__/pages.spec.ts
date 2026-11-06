@@ -100,6 +100,33 @@ describe('project page', () => {
     expect(screen.getByText('Invented example data, for trying out ProtoELN.')).toBeInTheDocument()
   })
 
+  it('gives credit for its data, with web addresses as links', async () => {
+    fakeApi({
+      '/api/v1/projects/DEMO': {
+        project: {
+          ...project,
+          sourceRepository: 'https://zenodo.org/records/1',
+          licence: 'CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).',
+          citation: '',
+        },
+        notebooks: [],
+      },
+    })
+    await renderAt('/projects/DEMO')
+
+    expect(await screen.findByText('Source repository')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'https://zenodo.org/records/1 (opens in a new tab)' }),
+    ).toHaveAttribute('href', 'https://zenodo.org/records/1')
+    // The bracket and full stop after the address aren't part of it
+    expect(
+      screen.getByRole('link', {
+        name: 'https://creativecommons.org/licenses/by/4.0/ (opens in a new tab)',
+      }),
+    ).toHaveAttribute('href', 'https://creativecommons.org/licenses/by/4.0/')
+    expect(screen.queryByText('Citation')).not.toBeInTheDocument()
+  })
+
   it('says who can see the project, and the visitor’s role in it', async () => {
     fakeApi({
       '/api/v1/projects/DEMO': { project: { ...project, yourRole: 'admin' }, notebooks: [] },

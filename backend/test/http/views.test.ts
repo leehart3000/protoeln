@@ -32,6 +32,8 @@ describe('projectView', () => {
       access,
     )
 
+    // A project created before credit was recorded has none
+    expect([view.sourceRepository, view.licence, view.citation]).toEqual(['', '', ''])
     expect(view.links).toEqual([
       {
         system: 'protolims',

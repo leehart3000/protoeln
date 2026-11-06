@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import { fetchProject, fieldProblems, updateProject, type Project } from '../api'
 import BreadcrumbTrail from '../components/BreadcrumbTrail.vue'
+import CreditFields from '../components/CreditFields.vue'
 import FormProblem from '../components/FormProblem.vue'
 import PageTitle from '../components/PageTitle.vue'
 import QueryStatus from '../components/QueryStatus.vue'
@@ -32,6 +33,9 @@ const { data, isPending, isError } = useQuery({
 const title = ref('')
 const description = ref('')
 const publicRead = ref(false)
+const sourceRepository = ref('')
+const licence = ref('')
+const citation = ref('')
 
 // The form starts with the project's details as they are, once they've loaded
 const initial = ref<Project | null>(null)
@@ -43,6 +47,9 @@ watch(
       title.value = project.title
       description.value = project.description
       publicRead.value = project.publicRead
+      sourceRepository.value = project.sourceRepository
+      licence.value = project.licence
+      citation.value = project.citation
     }
   },
   { immediate: true },
@@ -53,6 +60,11 @@ function changedDetails(project: Project) {
     ...(title.value !== project.title && { title: title.value }),
     ...(description.value !== project.description && { description: description.value }),
     ...(publicRead.value !== project.publicRead && { publicRead: publicRead.value }),
+    ...(sourceRepository.value !== project.sourceRepository && {
+      sourceRepository: sourceRepository.value,
+    }),
+    ...(licence.value !== project.licence && { licence: licence.value }),
+    ...(citation.value !== project.citation && { citation: citation.value }),
   }
 }
 
@@ -116,6 +128,11 @@ const problems = computed(() => fieldProblems(saving.error.value))
             :class="[inputClass, 'border-line']"
           ></textarea>
         </div>
+        <CreditFields
+          v-model:source-repository="sourceRepository"
+          v-model:licence="licence"
+          v-model:citation="citation"
+        />
         <label class="flex items-start gap-3">
           <input v-model="publicRead" type="checkbox" class="mt-1 size-4 accent-primary" />
           <span>

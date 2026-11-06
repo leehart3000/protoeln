@@ -59,6 +59,9 @@ export function writeRoutes() {
     const title = body.text('title')
     const description = body.optionalText('description')
     const publicRead = body.optionalBoolean('publicRead', false)
+    const sourceRepository = body.optionalText('sourceRepository')
+    const licence = body.optionalText('licence')
+    const citation = body.optionalText('citation')
     body.done()
 
     const project = await createProject({
@@ -66,6 +69,9 @@ export function writeRoutes() {
       title,
       description,
       publicRead,
+      sourceRepository,
+      licence,
+      citation,
       creatorId: user.id,
     })
     res
