@@ -59,9 +59,12 @@ Files shown in entries, such as images, are kept in an S3-compatible object stor
 R2 on staging and production. Locally, without one, entries show no images. Each site has its
 own bucket, reached with an access key that can only read and write that bucket:
 
-- Buckets: `protoeln-files-staging` (staging) and `protoeln-files` (production), both in
-  western Europe, neither public (files are served by the API, which checks who may see them).
-- Settings: `PROTOELN_FILES_ENDPOINT` (`https://ACCOUNT_ID.r2.cloudflarestorage.com`) and
+- Buckets: `protoeln-files-staging` (staging) and `protoeln-files` (production), both in the
+  EU jurisdiction (so their data stays in the EU; it can't be changed after a bucket is made),
+  neither public (files are served by the API, which checks who may see them). Each has its
+  own account API token, with Object Read & Write on that bucket only.
+- Settings: `PROTOELN_FILES_ENDPOINT` (`https://ACCOUNT_ID.eu.r2.cloudflarestorage.com`, the EU
+  jurisdiction's address) and
   `PROTOELN_FILES_BUCKET` in `vars`; `PROTOELN_FILES_ACCESS_KEY_ID` and
   `PROTOELN_FILES_SECRET_ACCESS_KEY` as secrets. Set all four, or none: the API won't start
   with only some of them.

@@ -14,7 +14,7 @@ export const SITE = {
   processors: [
     {
       name: 'Cloudflare',
-      role: 'serves the website and runs the application, from its global network, keeps files such as images in entries (in Europe), and forwards email',
+      role: 'serves the website and runs the application, from its global network, keeps files such as images in entries (in the EU), and forwards email',
     },
     { name: 'MongoDB Atlas', role: 'hosts the database, on AWS in Ireland' },
     { name: 'ORCID', role: 'confirms who you are when you sign in' },

@@ -33,6 +33,10 @@
     "PROTOELN_READ_ONLY": "false",
     // Anyone can read the projects marked public (see docs/deployment.md)
     "PROTOELN_PUBLIC_READ": "true",
+    // Files such as images are kept in R2, in the EU jurisdiction (see "Files" in
+    // docs/deployment.md); its access key is a secret
+    "PROTOELN_FILES_ENDPOINT": "https://5cee0fb1868d6127bb4c6039b5a9b290.eu.r2.cloudflarestorage.com",
+    "PROTOELN_FILES_BUCKET": "protoeln-files-staging",
   },
   "env": {
     // protoeln.org, the public demo. It uses the files, Durable Object class and other settings
