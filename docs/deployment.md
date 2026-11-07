@@ -38,6 +38,8 @@ pnpm exec wrangler secret put PROTOELN_MONGODB_URI
 pnpm exec wrangler secret put PROTOELN_ORCID_CLIENT_ID
 pnpm exec wrangler secret put PROTOELN_ORCID_CLIENT_SECRET
 pnpm exec wrangler secret put PROTOELN_SITE_ADMINS
+pnpm exec wrangler secret put PROTOELN_FILES_ACCESS_KEY_ID
+pnpm exec wrangler secret put PROTOELN_FILES_SECRET_ACCESS_KEY
 ```
 
 - **MongoDB:** staging has its own Atlas database user, which can only read and write the
@@ -149,6 +151,8 @@ on; its data changes only by import (see `docs/read-only.md`).
    pnpm exec wrangler secret put PROTOELN_ORCID_CLIENT_ID --env production
    pnpm exec wrangler secret put PROTOELN_ORCID_CLIENT_SECRET --env production
    pnpm exec wrangler secret put PROTOELN_SITE_ADMINS --env production
+   pnpm exec wrangler secret put PROTOELN_FILES_ACCESS_KEY_ID --env production
+   pnpm exec wrangler secret put PROTOELN_FILES_SECRET_ACCESS_KEY --env production
    ```
 
 6. **Until launch**, protect protoeln.org with Cloudflare Access, as staging is (see "Who can

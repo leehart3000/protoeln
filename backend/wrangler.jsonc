@@ -55,6 +55,8 @@
         // Every deploy locks it: its data changes only by import (see docs/read-only.md)
         "PROTOELN_READ_ONLY": "true",
         "PROTOELN_PUBLIC_READ": "true",
+        "PROTOELN_FILES_ENDPOINT": "https://5cee0fb1868d6127bb4c6039b5a9b290.eu.r2.cloudflarestorage.com",
+        "PROTOELN_FILES_BUCKET": "protoeln-files",
       },
     },
   },
