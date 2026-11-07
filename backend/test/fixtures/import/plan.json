@@ -1,0 +1,29 @@
+{
+  "project": {
+    "code": "IMP",
+    "title": "Imported test project",
+    "description": "Invented, for the tests.",
+    "sourceRepository": "https://example.org",
+    "licence": "CC BY 4.0",
+    "citation": ""
+  },
+  "notebook": {
+    "title": "Imported",
+    "description": ""
+  },
+  "records": [
+    {
+      "id": "1",
+      "title": "Record 1",
+      "kind": "experiment",
+      "tags": ["test"],
+      "url": "https://example.org/records/1",
+      "doi": "",
+      "authors": ["Example, Ada"],
+      "publishedOn": "2017-01-01",
+      "licence": "CC BY 4.0",
+      "citation": "",
+      "changes": "None"
+    }
+  ]
+}

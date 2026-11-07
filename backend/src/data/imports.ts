@@ -12,7 +12,7 @@ import { UserModel } from './models/user.ts'
 import { createNotebook } from './notebooks.ts'
 
 // Importing published records, such as the write-ups of an open lab notebook on Zenodo, into a
-// project and notebook of their own (see imports/README.md). Each record becomes an entry
+// project and notebook of their own (see docs/imports.md). Each record becomes an entry
 // with a first version, crediting its original authors by name (`source`). The person who
 // runs the import is shown as the entry's author ("Imported by"): no account is made in anyone
 // else's name. Importing again adds only the records not imported yet, and never changes
@@ -22,7 +22,7 @@ export interface ImportedRecord extends EntrySource {
   title: string
   kind: (typeof ENTRY_KINDS)[number]
   tags: string[]
-  // In protoeln-doc/1 (see imports/tools/docx_to_protoeln.py)
+  // In protoeln-doc/1 (see tools/docx_to_protoeln.py)
   content: unknown
 }
 
@@ -37,7 +37,7 @@ export interface ImportPlan {
   }
   notebook: { title: string; description: string }
   records: ImportedRecord[]
-  // The images the records show, by SHA-256 (see imports/tools/docx_to_protoeln.py)
+  // The images the records show, by SHA-256 (see tools/docx_to_protoeln.py)
   files: ImportedFile[]
 }
 

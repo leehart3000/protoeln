@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises'
-import { checkDocument, fileIdsOf, type DocNode, type FileBlockNode } from '@protoeln/content'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { verifyVersions } from '../../src/data/entries.ts'
@@ -160,46 +158,5 @@ describe('importRecords', () => {
 
     await ProjectModel.create({ code: 'HTT', title: 'Someone else’s' })
     await expect(importRecords(plan, IMPORTER, store)).rejects.toThrow(/isn't a member/)
-  })
-})
-
-describe('the Harding import', () => {
-  it('has content in the content format for every record in its plan', async () => {
-    const folder = new URL('../../imports/harding/', import.meta.url)
-    const harding = JSON.parse(await readFile(new URL('plan.json', folder), 'utf8')) as {
-      records: { id: string }[]
-    }
-
-    expect(harding.records.length).toBeGreaterThan(0)
-    for (const { id } of harding.records) {
-      const content = JSON.parse(await readFile(new URL(`content/${id}.json`, folder), 'utf8'))
-      expect(checkDocument(content), id).toEqual([])
-    }
-  })
-
-  it('has every image its records show, each named by its SHA-256 and described', async () => {
-    const folder = new URL('../../imports/harding/', import.meta.url)
-    const harding = JSON.parse(await readFile(new URL('plan.json', folder), 'utf8')) as {
-      records: { id: string }[]
-    }
-    const listed = JSON.parse(
-      await readFile(new URL('files/files.json', folder), 'utf8'),
-    ) as Record<string, { contentType: string }>
-
-    for (const { id } of harding.records) {
-      const content = JSON.parse(
-        await readFile(new URL(`content/${id}.json`, folder), 'utf8'),
-      ) as DocNode
-      for (const sha256 of fileIdsOf(content)) {
-        const extension = listed[sha256]?.contentType === 'image/jpeg' ? 'jpg' : 'png'
-        const body = await readFile(new URL(`files/${sha256}.${extension}`, folder))
-        expect(sha256Of(body), id).toBe(sha256)
-      }
-      for (const block of content.content.filter(
-        (node): node is FileBlockNode => node.type === 'fileBlock',
-      )) {
-        expect(block.attrs.alt, id).toBeTruthy()
-      }
-    }
   })
 })
