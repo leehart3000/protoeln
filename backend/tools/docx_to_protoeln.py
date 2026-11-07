@@ -307,10 +307,18 @@ def convert_blocks(blocks, context, top=False):
         kind = item['t']
         if kind in ('Para', 'Plain'):
             if any(child['t'] == 'Image' for child in item['c']):
-                rest = [child for child in item['c'] if child['t'] not in ('Image', 'Space', 'SoftBreak')]
-                if rest:
-                    out.append(paragraph(rest))
-                out += [file_block(child, context) for child in item['c'] if child['t'] == 'Image']
+                # Pictures become blocks of their own, in their place among the paragraph's text
+                text = []
+                for child in item['c']:
+                    if child['t'] == 'Image':
+                        if paragraph(text).get('content'):
+                            out.append(paragraph(text))
+                        text = []
+                        out.append(file_block(child, context))
+                    else:
+                        text.append(child)
+                if paragraph(text).get('content'):
+                    out.append(paragraph(text))
                 continue
             node = paragraph(item['c'])
             if top and all_bold(node):
