@@ -19,6 +19,13 @@ export function formatDay(value: string) {
   })
 }
 
+// A file size, as in "8 bytes", "41 kB" or "2.3 MB" (in thousands, as file managers show)
+export function formatSize(bytes: number) {
+  if (bytes < 1000) return `${bytes} bytes`
+  if (bytes < 1_000_000) return `${Math.round(bytes / 1000)} kB`
+  return `${(bytes / 1_000_000).toFixed(1)} MB`
+}
+
 // A date and time, as in "3 Nov 2026, 18:22" (as in ProtoLIMS)
 export function formatDateTime(value: string) {
   return new Date(value).toLocaleString('en-GB', {

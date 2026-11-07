@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { fileURLToPath } from 'node:url'
 
+import { sha256Of } from '../../src/data/files.ts'
 import { checkImport, readImportFolder } from '../../src/data/import-folder.ts'
 
 // A small, invented import folder: one record showing one image
@@ -46,5 +47,38 @@ describe('checkImport', () => {
       `https://example.org/records/1: shows ${'f'.repeat(64)}, which isn't in files/`,
       `https://example.org/records/1: an image (${image!.sha256}) has no alt`,
     ])
+  })
+
+  it('needs no description for a spreadsheet, but refuses one with macros', async () => {
+    const plan = await readImportFolder(folder)
+    const csv = new TextEncoder().encode('a,b\n') as Uint8Array<ArrayBuffer>
+    const xlsm = new TextEncoder().encode('PK xl/vbaProject.bin') as Uint8Array<ArrayBuffer>
+    const sheet = (
+      body: Uint8Array<ArrayBuffer>,
+      contentType: 'text/csv' | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ) => ({
+      sha256: sha256Of(body),
+      body,
+      contentType,
+      name: 'data',
+    })
+    const content = {
+      type: 'doc',
+      content: [
+        { type: 'fileBlock', attrs: { fileId: sha256Of(csv) } },
+        { type: 'fileBlock', attrs: { fileId: sha256Of(xlsm) } },
+      ],
+    }
+
+    const problems = checkImport({
+      ...plan,
+      records: [{ ...plan.records[0]!, content }],
+      files: [
+        sheet(csv, 'text/csv'),
+        sheet(xlsm, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+      ],
+    })
+
+    expect(problems).toEqual([`files/${sha256Of(xlsm)}: Spreadsheets with macros are refused`])
   })
 })

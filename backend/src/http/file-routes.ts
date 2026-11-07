@@ -2,13 +2,21 @@ import { Router } from 'express'
 
 import { canRead } from '../access.ts'
 import { findFile, projectsShowing } from '../data/files.ts'
+import { isImage } from '../data/models/file.ts'
 import { NotFoundError } from '../errors.ts'
 import { fileKey, type FileStore } from '../files/store.ts'
 import { sitePublicRead, userOf } from './context.ts'
 
 // Serves the files entries show, such as images, to whoever can read an entry (a draft or a
 // version) that shows them; to anyone else, and on a site with no file store, a file is "not
-// found", as a private project is. Files are found by their SHA-256 and never change.
+// found", as a private project is. Files are found by their SHA-256 and never change. Images
+// are shown in pages; anything else (a spreadsheet) is only ever downloaded, with its name.
+
+// How a download is named: plainly for older browsers, and exactly (RFC 6266)
+function downloadAs(name: string) {
+  const plain = name.replace(/[^\x20-\x7e]|["\\]/g, '_') || 'file'
+  return `attachment; filename="${plain}"; filename*=UTF-8''${encodeURIComponent(name)}`
+}
 
 export function fileRoutes(store: FileStore | null) {
   const router = Router()
@@ -29,9 +37,9 @@ export function fileRoutes(store: FileStore | null) {
     }
 
     res.set({
-      // As recorded when it was added, which is one of the image types browsers show safely
+      // As recorded when it was added: an image type browsers show safely, or a spreadsheet
       'Content-Type': file.contentType,
-      'Content-Disposition': 'inline',
+      'Content-Disposition': isImage(file.contentType) ? 'inline' : downloadAs(file.name),
       // A file never changes, but who can see it can, so only the browser keeps a copy
       'Cache-Control': 'private, max-age=3600',
       ETag: `"${file.sha256}"`,

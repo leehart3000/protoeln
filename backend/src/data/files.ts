@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto'
 import mongoose from 'mongoose'
 
 import { fileKey, type FileStore } from '../files/store.ts'
-import { FileModel, IMAGE_TYPES } from './models/file.ts'
+import { ConflictError } from '../errors.ts'
+import { FileModel, type FileType } from './models/file.ts'
 import { EntryVersionModel } from './models/entry-version.ts'
 import { EntryModel } from './models/entry.ts'
 import { NotebookModel } from './models/notebook.ts'
@@ -17,17 +18,42 @@ export function sha256Of(body: Uint8Array) {
   return createHash('sha256').update(body).digest('hex')
 }
 
+// The largest file kept: the API reads a file whole to serve it
+export const MAX_FILE_BYTES = 25 * 1024 * 1024
+
+function contains(body: Uint8Array, text: string, encoding: 'latin1' | 'utf16le') {
+  return Buffer.from(body.buffer, body.byteOffset, body.byteLength).includes(
+    Buffer.from(text, encoding),
+  )
+}
+
+// Why a file can't be kept, if it can't: it's too big, or it's a spreadsheet with macros
+// (programs that could run when it's opened). An .xlsx with macros holds xl/vbaProject.bin;
+// an .xls holds a _VBA_PROJECT part, named in UTF-16.
+export function refusal(body: Uint8Array, contentType: FileType): string | null {
+  if (body.byteLength > MAX_FILE_BYTES) {
+    return `Files can be at most ${MAX_FILE_BYTES / 1024 / 1024} MB`
+  }
+  const macros =
+    (contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
+      contains(body, 'vbaProject.bin', 'latin1')) ||
+    (contentType === 'application/vnd.ms-excel' && contains(body, '_VBA_PROJECT', 'utf16le'))
+  return macros ? 'Spreadsheets with macros are refused' : null
+}
+
 // Keeps a file, if it isn't kept already, and records it. Returns its SHA-256, which is its id
-// in entry content (fileBlock).
+// in entry content (fileBlock). Refuses a file that's too big or has macros (see refusal).
 export async function storeFile(input: {
   store: FileStore
   body: Uint8Array<ArrayBuffer>
-  contentType: (typeof IMAGE_TYPES)[number]
+  contentType: FileType
   name: string
   width?: number
   height?: number
   userId: mongoose.Types.ObjectId | string
 }) {
+  const refused = refusal(input.body, input.contentType)
+  if (refused !== null) throw new ConflictError(`${input.name}: ${refused}`)
   const sha256 = sha256Of(input.body)
   if (!(await input.store.has(fileKey(sha256)))) {
     await input.store.put(fileKey(sha256), input.body, input.contentType)
@@ -59,6 +85,21 @@ export async function projectsShowing(sha256: string) {
   const notebookIds = [...drafts, ...versioned].map((entry) => entry.notebookId)
   const projectIds = await NotebookModel.distinct('projectId', { _id: { $in: notebookIds } })
   return ProjectModel.find({ _id: { $in: projectIds } }).lean()
+}
+
+// The name, type and size of each file a document shows, by SHA-256, so pages can show
+// spreadsheets as downloads with their names (and know which files are images)
+export async function fileInfoFor(sha256s: string[]) {
+  if (sha256s.length === 0) return {}
+  const files = await FileModel.find({ sha256: { $in: sha256s } })
+    .select('sha256 name contentType size')
+    .lean()
+  return Object.fromEntries(
+    files.map((file) => [
+      file.sha256,
+      { name: file.name, contentType: file.contentType, size: file.size },
+    ]),
+  )
 }
 
 export async function findFile(sha256: string) {

@@ -88,11 +88,21 @@ export interface Entry extends EntrySummary {
   content: DocNode
   // The names of the people the content refers to by ORCID iD (who ticked each step)
   contentPeople: Record<string, string>
+  // The name, type and size of each file the content shows, by SHA-256
+  contentFiles: Record<string, FileInfo>
   text: string
   tags: string[]
   // Where an imported entry came from, crediting its original authors (null if written here)
   source: EntrySource | null
   createdAt: string
+}
+
+// A file an entry shows: an image, or a spreadsheet to download
+export interface FileInfo {
+  name: string
+  contentType: string
+  // In bytes
+  size: number
 }
 
 export interface EntrySource {
@@ -368,6 +378,7 @@ export interface Version extends VersionSummary {
   contentFormat: string
   content: DocNode
   contentPeople: Record<string, string>
+  contentFiles: Record<string, FileInfo>
   text: string
   markdown: string
 }

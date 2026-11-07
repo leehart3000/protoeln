@@ -4,7 +4,7 @@ import { ConflictError, NotFoundError } from '../errors.ts'
 import type { FileStore } from '../files/store.ts'
 import { createEntry, createVersion, type EntrySource } from './entries.ts'
 import { storeFile } from './files.ts'
-import type { IMAGE_TYPES } from './models/file.ts'
+import type { FileType } from './models/file.ts'
 import { EntryModel, type ENTRY_KINDS } from './models/entry.ts'
 import { NotebookModel } from './models/notebook.ts'
 import { ProjectModel } from './models/project.ts'
@@ -44,10 +44,11 @@ export interface ImportPlan {
 export interface ImportedFile {
   sha256: string
   body: Uint8Array<ArrayBuffer>
-  contentType: (typeof IMAGE_TYPES)[number]
+  contentType: FileType
   name: string
-  width: number
-  height: number
+  // An image's size in pixels
+  width?: number
+  height?: number
 }
 
 // Imports the plan's records, as the person with the ORCID iD `importer` (who must have signed

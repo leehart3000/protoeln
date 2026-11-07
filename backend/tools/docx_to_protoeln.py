@@ -4,7 +4,12 @@
 Used once per record when preparing an import folder (see docs/imports.md), which is kept with
 the site it's for, outside the repository; importing doesn't need this script or pandoc.
 
-    python3 tools/docx_to_protoeln.py WRITEUP.docx RECORD_URL FOLDER/files > FOLDER/content/ID.json
+    python3 tools/docx_to_protoeln.py WRITEUP.docx RECORD_URL FOLDER/files [--attach FILE ...] \
+        > FOLDER/content/ID.json
+
+With --attach, the record's other files (spreadsheets: .xlsx, .xls or .csv) are saved in
+FOLDER/files too, unchanged, and offered for download at the end of the write-up, under a
+heading "Files". Spreadsheets with macros are refused when importing.
 
 Images are saved in FOLDER/files, each named by its SHA-256 (its id in the content), and listed
 in FOLDER/files/files.json with their type and size. Pictures in old Windows formats (EMF and
@@ -207,20 +212,47 @@ def saved_image(path, crop, folder):
         image.save(buffer, kind.upper(), **options)
         encoded[kind] = buffer.getvalue()
     kind = min(encoded, key=lambda name: len(encoded[name]))
-    body = encoded[kind]
-    sha256 = hashlib.sha256(body).hexdigest()
     extension = 'jpg' if kind == 'jpeg' else 'png'
-    (folder / f'{sha256}.{extension}').write_bytes(body)
-    listed = folder / 'files.json'
-    files = json.loads(listed.read_text()) if listed.exists() else {}
-    files[sha256] = {
+    return listed_file(folder, encoded[kind], extension, {
         'name': f'{path.stem}.{extension}',
         'contentType': f'image/{kind}',
         'width': image.width,
         'height': image.height,
-    }
+    })
+
+
+SPREADSHEETS = {
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.xls': 'application/vnd.ms-excel',
+    '.csv': 'text/csv',
+}
+
+
+def listed_file(folder, body, extension, details):
+    # Saves a file in the files folder, named by its SHA-256, and lists it in files.json
+    sha256 = hashlib.sha256(body).hexdigest()
+    (folder / f'{sha256}.{extension}').write_bytes(body)
+    listed = folder / 'files.json'
+    files = json.loads(listed.read_text()) if listed.exists() else {}
+    files[sha256] = details
     listed.write_text(json.dumps(files, indent=2, sort_keys=True) + '\n')
     return sha256
+
+
+def attachment_blocks(paths, folder):
+    # The record's other files, unchanged, for download at the end of the write-up
+    if not paths:
+        return []
+    blocks = [{'type': 'heading', 'attrs': {'level': 2}, 'content': [{'type': 'text', 'text': 'Files'}]}]
+    for path in map(Path, paths):
+        content_type = SPREADSHEETS.get(path.suffix.lower())
+        if content_type is None:
+            sys.exit(f'{path}: only spreadsheets (.xlsx, .xls or .csv) can be attached')
+        sha256 = listed_file(folder, path.read_bytes(), path.suffix.lower()[1:], {
+            'name': path.name, 'contentType': content_type,
+        })
+        blocks.append({'type': 'fileBlock', 'attrs': {'fileId': sha256}})
+    return blocks
 
 
 def file_block(item, context):
@@ -316,9 +348,14 @@ def convert_blocks(blocks, context, top=False):
 
 
 def main():
-    if len(sys.argv) != 4:
+    arguments = sys.argv[1:]
+    attach = []
+    if '--attach' in arguments:
+        at = arguments.index('--attach')
+        arguments, attach = arguments[:at], arguments[at + 1:]
+    if len(arguments) != 3:
         sys.exit(__doc__)
-    docx, record_url, files_folder = sys.argv[1:]
+    docx, record_url, files_folder = arguments
     folder = Path(files_folder)
     folder.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as media:
@@ -334,6 +371,7 @@ def main():
     # The first paragraph is the record's title, which the entry has already
     if content and content[0]['type'] == 'heading':
         content = content[1:]
+    content += attachment_blocks(attach, folder)
     json.dump({'type': 'doc', 'content': content}, sys.stdout, ensure_ascii=False, indent=2)
     print()
 

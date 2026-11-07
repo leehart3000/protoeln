@@ -339,6 +339,7 @@ describe('entry page', () => {
         contentFormat: 'protoeln-doc/1',
         content: protocol.content,
         contentPeople: {},
+        contentFiles: {},
         text: '',
         markdown: '',
       },

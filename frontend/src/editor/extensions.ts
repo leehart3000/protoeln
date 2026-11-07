@@ -8,6 +8,7 @@ import { TableView } from '@tiptap/pm/tables'
 import { StarterKit } from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 
+import type { FileInfo } from '../api'
 import { linkTarget } from '../records'
 import MaterialsView from './MaterialsView.vue'
 
@@ -143,13 +144,17 @@ const Materials = Node.create({
 
 const DataBlock = keptBlock('dataBlock', { dataItemId: '' }, () => 'Data')
 
-// An image (see ContentImage): shown in the editor too, and kept as it is. Adding images in
-// the editor comes later; for now they come from imports.
-const FileBlock = Node.create({
+// An image (see ContentImage), shown in the editor too, or another file, such as a
+// spreadsheet, named; either is kept as it is. `files` (the entry's contentFiles) says which
+// files aren't images. Adding files in the editor comes later; for now they come from imports.
+const FileBlock = Node.create<{ files: Record<string, FileInfo> }>({
   name: 'fileBlock',
   group: 'block',
   atom: true,
   selectable: true,
+  addOptions() {
+    return { files: {} }
+  },
   addAttributes() {
     return {
       fileId: { default: '', rendered: false },
@@ -166,9 +171,13 @@ const FileBlock = Node.create({
       caption: string | null
       alt: string | null
     }
-    const image: DOMOutputSpec = /^[0-9a-f]{64}$/.test(fileId)
-      ? ['img', { src: `/api/v1/files/${fileId}`, alt: alt ?? '', class: 'editor-image' }]
-      : ['p', {}, 'Image']
+    const file = this.options.files[fileId]
+    const image: DOMOutputSpec =
+      file && !file.contentType.startsWith('image/')
+        ? ['p', {}, `File: ${file.name}`]
+        : /^[0-9a-f]{64}$/.test(fileId)
+          ? ['img', { src: `/api/v1/files/${fileId}`, alt: alt ?? '', class: 'editor-image' }]
+          : ['p', {}, 'Image']
     return [
       'figure',
       { 'data-type': 'fileBlock', class: 'kept-block', contenteditable: 'false' },
@@ -184,7 +193,8 @@ const RecordLink = keptBlock(
   (attrs) => `${String(attrs.label)} (${linkTarget(attrs as RecordLinkNode['attrs'])})`,
 )
 
-export function editorExtensions(): Extensions {
+// `files` gives the name and type of each file the entry shows (its contentFiles)
+export function editorExtensions(files: Record<string, FileInfo> = {}): Extensions {
   return [
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
@@ -206,7 +216,7 @@ export function editorExtensions(): Extensions {
     ProtocolStepKeys,
     Materials,
     DataBlock,
-    FileBlock,
+    FileBlock.configure({ files }),
     RecordLink,
   ]
 }

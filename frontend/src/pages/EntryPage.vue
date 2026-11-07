@@ -233,6 +233,7 @@ const crumbs = computed(() =>
             v-if="data.entry.content.content.length > 0"
             :blocks="data.entry.content.content"
             :people="data.entry.contentPeople"
+            :files="data.entry.contentFiles"
             :tick="data.entry.canEdit && !readOnly ? tick : undefined"
             :ticking="ticking.isPending.value"
           />

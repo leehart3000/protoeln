@@ -76,6 +76,7 @@ export const protocol: Entry = {
     ],
   },
   contentPeople: {},
+  contentFiles: {},
   text: '',
   tags: [],
   source: null,

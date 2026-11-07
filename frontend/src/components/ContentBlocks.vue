@@ -2,11 +2,13 @@
 import type { BlockNode } from '@protoeln/content'
 import { computed } from 'vue'
 
+import type { FileInfo } from '../api'
 import { InlineContent, isSafeHref } from '../content'
 import { formatDateTime } from '../format'
 import { ExternalIcon, StepDoneIcon, StepIcon } from '../icons'
 import { isEntryLink, linkTarget } from '../records'
 import { table, tableCell, tableHead, tableHeader, tableWrapper, textLink } from '../styles'
+import ContentDownload from './ContentDownload.vue'
 import ContentImage from './ContentImage.vue'
 
 // Shows entry content (protoeln-doc/1, see docs/content-format.md) for reading. It shows each
@@ -24,11 +26,14 @@ const props = withDefaults(
     path?: number[]
     // Names of the people who ticked steps, by ORCID iD
     people?: Record<string, string>
+    // The name, type and size of each file shown, by SHA-256: images are shown, and anything
+    // else (a spreadsheet) is offered as a download
+    files?: Record<string, FileInfo>
     tick?: (path: number[], done: boolean) => void
     // Whether a tick is being saved
     ticking?: boolean
   }>(),
-  { path: () => [], people: () => ({}), tick: undefined, ticking: false },
+  { path: () => [], people: () => ({}), files: () => ({}), tick: undefined, ticking: false },
 )
 
 // Who ticked a step, and when
@@ -38,7 +43,18 @@ function doneText(attrs: { doneBy?: string; doneAt?: string }) {
 }
 
 // Passed on to the blocks inside blocks
-const passOn = computed(() => ({ people: props.people, tick: props.tick, ticking: props.ticking }))
+const passOn = computed(() => ({
+  people: props.people,
+  files: props.files,
+  tick: props.tick,
+  ticking: props.ticking,
+}))
+
+// A file that isn't an image (one the API knows; an unknown file is tried as an image)
+function isDownload(fileId: string) {
+  const file = props.files[fileId]
+  return file !== undefined && !file.contentType.startsWith('image/')
+}
 
 const MATERIAL_COLUMNS = [
   { key: 'name', label: 'Material' },
@@ -186,6 +202,12 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
     <p v-else-if="block.type === 'dataBlock'" :class="placeholder">
       Data (shown here once data can be added to entries)
     </p>
+    <ContentDownload
+      v-else-if="block.type === 'fileBlock' && isDownload(block.attrs.fileId)"
+      :file-id="block.attrs.fileId"
+      :file="files[block.attrs.fileId]!"
+      :caption="block.attrs.caption"
+    />
     <ContentImage
       v-else-if="block.type === 'fileBlock'"
       :file-id="block.attrs.fileId"

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createEntry, createVersion, saveDraft } from '../../src/data/entries.ts'
-import { sha256Of, storeFile } from '../../src/data/files.ts'
+import { MAX_FILE_BYTES, sha256Of, storeFile } from '../../src/data/files.ts'
 import { FileModel } from '../../src/data/models/file.ts'
 import { NotebookModel } from '../../src/data/models/notebook.ts'
 import { ProjectModel } from '../../src/data/models/project.ts'
@@ -15,7 +15,8 @@ import { api } from './api.ts'
 
 const store = memoryStore()
 const ids = { member: '', outsider: '' }
-const files = { open: '', closed: '', old: '' }
+const files = { open: '', closed: '', old: '', sheet: '' }
+let sheetEntryCode = ''
 
 function image(name: string) {
   return new TextEncoder().encode(`not really a PNG: ${name}`) as Uint8Array<ArrayBuffer>
@@ -47,6 +48,13 @@ beforeAll(async () => {
   files.open = await keep('open.png')
   files.closed = await keep('closed.png')
   files.old = await keep('old.png')
+  files.sheet = await storeFile({
+    store,
+    body: new TextEncoder().encode('a,b\n1,2\n') as Uint8Array<ArrayBuffer>,
+    contentType: 'text/csv',
+    name: 'Résultats 1.csv',
+    userId: member!._id,
+  })
 
   await createEntry({
     notebookId: openBook!._id,
@@ -62,6 +70,14 @@ beforeAll(async () => {
     title: 'Lab gel',
     content: showing(files.closed),
   })
+  const withSheet = await createEntry({
+    notebookId: openBook!._id,
+    authorId: member!._id,
+    kind: 'experiment',
+    title: 'Results',
+    content: { type: 'doc', content: [{ type: 'fileBlock', attrs: { fileId: files.sheet } }] },
+  })
+  sheetEntryCode = withSheet.code
   // Version 1 shows the old image; the draft has since dropped it
   const changed = await createEntry({
     notebookId: openBook!._id,
@@ -143,5 +159,43 @@ describe('GET /api/v1/files/:sha256', () => {
     const entry = await EntryModel.findOne({ title: 'Open gel' }).orFail().lean()
 
     expect(entry.files).toEqual([files.open])
+  })
+})
+
+describe('spreadsheets', () => {
+  it('are only ever downloaded, with their names', async () => {
+    const response = await api({ files: store }).get(`/api/v1/files/${files.sheet}`)
+
+    expect(response.status).toBe(200)
+    expect(response.headers['content-type']).toMatch(/^text\/csv/)
+    expect(response.headers['content-disposition']).toBe(
+      `attachment; filename="R_sultats 1.csv"; filename*=UTF-8''R%C3%A9sultats%201.csv`,
+    )
+  })
+
+  it('are listed with an entry, with their names, types and sizes', async () => {
+    const response = await api({ files: store }).get(`/api/v1/entries/${sheetEntryCode}`)
+
+    expect(response.body.entry.contentFiles).toEqual({
+      [files.sheet]: { name: 'Résultats 1.csv', contentType: 'text/csv', size: 8 },
+    })
+  })
+
+  it('are refused if they have macros, or are too big', async () => {
+    const keep = (
+      body: Uint8Array<ArrayBuffer>,
+      contentType:
+        | 'application/vnd.ms-excel'
+        | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        | 'text/csv',
+    ) => storeFile({ store, body, contentType, name: 'x', userId: ids.member })
+    const xlsm = new TextEncoder().encode('PK...xl/vbaProject.bin...') as Uint8Array<ArrayBuffer>
+    const xls = new Uint8Array(Buffer.from('....\u0000_VBA_PROJECT....', 'utf16le'))
+
+    await expect(
+      keep(xlsm, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+    ).rejects.toThrow(/macros/)
+    await expect(keep(xls, 'application/vnd.ms-excel')).rejects.toThrow(/macros/)
+    await expect(keep(new Uint8Array(MAX_FILE_BYTES + 1), 'text/csv')).rejects.toThrow(/at most/)
   })
 })

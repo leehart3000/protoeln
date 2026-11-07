@@ -11,6 +11,7 @@ import {
   type CurrentUser,
   type ProjectAccess,
 } from '../access.ts'
+import { fileInfoFor } from '../data/files.ts'
 import {
   findEntryByCode,
   findNotebook,
@@ -207,8 +208,9 @@ export function readRoutes(
     checkCanRead(res, project)
     const people = await findPeople([entry.authorId, ...entry.coAuthorIds])
     const named = await findPeopleNamedIn(entry.content as DocNode)
+    const files = await fileInfoFor(entry.files ?? [])
     res.json({
-      entry: entryView(entry, people, canEditEntry(entry, project, user), named),
+      entry: entryView(entry, people, canEditEntry(entry, project, user), named, files),
       notebook: notebookRef(notebook),
       project: projectRef(project),
     })

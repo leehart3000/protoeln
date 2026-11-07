@@ -149,15 +149,20 @@ export function entrySummary(entry: EntrySummaryRecord, people: People) {
   }
 }
 
+// The name, type and size of each file a document shows, by SHA-256
+export type FileInfo = Record<string, { name: string; contentType: string; size: number }>
+
 // `updatedAt` is also what a save sends back as `basedOn`
 // `canEdit` is whether the requester can change it (see canEditEntry in access.ts)
 // `named` gives the names of people the content refers to by ORCID iD (who ticked each
 // protocol step; see findPeopleNamedIn in data/queries.ts)
+// `files` gives the name, type and size of each file the content shows (see fileInfoFor)
 export function entryView(
   entry: EntryRecord,
   people: People,
   canEdit: boolean,
   named: Map<string, string> = new Map(),
+  files: FileInfo = {},
 ) {
   return {
     ...entrySummary(entry, people),
@@ -166,6 +171,7 @@ export function entryView(
     contentFormat: entry.contentFormat,
     content: entry.content,
     contentPeople: Object.fromEntries(named),
+    contentFiles: files,
     // Where an imported entry came from (null for entries written here)
     source: entry.source
       ? {
@@ -216,17 +222,19 @@ export function versionSummary(version: VersionSummaryRecord, people: People) {
   }
 }
 
-// `named` gives the names of the people the content refers to by ORCID iD, as for an entry
+// `named` and `files` are as for an entry
 export function versionView(
   version: VersionRecord,
   people: People,
   named: Map<string, string> = new Map(),
+  files: FileInfo = {},
 ) {
   return {
     ...versionSummary(version, people),
     contentFormat: version.contentFormat,
     content: version.content,
     contentPeople: Object.fromEntries(named),
+    contentFiles: files,
     text: version.text,
     markdown: version.markdown,
   }

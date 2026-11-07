@@ -111,6 +111,30 @@ describe('ContentBlocks', () => {
     expect(screen.getByText('B').closest('td')).not.toHaveAttribute('colspan')
   })
 
+  it('offers a spreadsheet as a download, with its name, kind and size', () => {
+    const fileId = 'd'.repeat(64)
+    render(ContentBlocks, {
+      props: {
+        blocks: [{ type: 'fileBlock', attrs: { fileId, caption: 'Raw data' } }],
+        files: {
+          [fileId]: {
+            name: 'TOC004A04.xls',
+            contentType: 'application/vnd.ms-excel',
+            size: 2_300_000,
+          },
+        },
+      },
+      global: { stubs: { RouterLink: true } },
+    })
+
+    const link = screen.getByRole('link', { name: 'TOC004A04.xls' })
+    expect(link).toHaveAttribute('href', `/api/v1/files/${fileId}`)
+    expect(link).toHaveAttribute('download', 'TOC004A04.xls')
+    expect(screen.getByText('(Excel spreadsheet (older format), 2.3 MB)')).toBeInTheDocument()
+    expect(screen.getByText('Raw data')).toBeInTheDocument()
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
   it('shows an image from the API, with its description and caption', () => {
     const fileId = 'a'.repeat(64)
     show([{ type: 'fileBlock', attrs: { fileId, alt: 'A gel', caption: 'Figure 1' } }])

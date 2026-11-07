@@ -42,7 +42,7 @@ const EMPTY = { type: 'doc', content: [{ type: 'paragraph' }] }
 
 const editor = useEditor({
   content: props.entry.content.content.length > 0 ? props.entry.content : EMPTY,
-  extensions: editorExtensions(),
+  extensions: editorExtensions(props.entry.contentFiles),
   editorProps: {
     attributes: {
       class: 'editor-content min-h-48 p-4 focus:outline-none sm:p-6',

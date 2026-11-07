@@ -80,6 +80,7 @@ const crumbs = computed(() => {
           v-if="version.data.value.content.content.length > 0"
           :blocks="version.data.value.content.content"
           :people="version.data.value.contentPeople"
+          :files="version.data.value.contentFiles"
         />
         <p v-else class="text-muted">This version is empty.</p>
       </div>

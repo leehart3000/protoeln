@@ -2,6 +2,7 @@ import { Router } from 'express'
 import type { DocNode } from '@protoeln/content'
 
 import { createEntry, createVersion, saveDraft, tickStep, verifyVersions } from '../data/entries.ts'
+import { fileInfoFor } from '../data/files.ts'
 import { ENTRY_KINDS } from '../data/models/entry.ts'
 import { PROJECT_CODE } from '../data/models/project.ts'
 import { createNotebook } from '../data/notebooks.ts'
@@ -38,7 +39,7 @@ async function savedEntryView(entry: Awaited<ReturnType<typeof saveDraft>>['entr
   const saved = entry.toObject()
   const people = await findPeople([saved.authorId, ...saved.coAuthorIds])
   const named = await findPeopleNamedIn(saved.content as DocNode)
-  return entryView(saved, people, true, named)
+  return entryView(saved, people, true, named, await fileInfoFor(saved.files))
 }
 
 export function writeRoutes() {
@@ -176,7 +177,7 @@ export function writeRoutes() {
     const version = await findVersion(entry._id, Number(req.params.number))
     const people = await findPeople([version.createdBy])
     const named = await findPeopleNamedIn(version.content as DocNode)
-    res.json(versionView(version, people, named))
+    res.json(versionView(version, people, named, await fileInfoFor(version.files ?? [])))
   })
 
   // Recalculates the hashes of every version, reporting any that have been tampered with

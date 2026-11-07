@@ -61,6 +61,25 @@ describe('tables in the editor', () => {
   })
 })
 
+describe('spreadsheets in the editor', () => {
+  it('are named, not shown as pictures, and kept as they are', () => {
+    const fileId = 'e'.repeat(64)
+    const sheet = { type: 'fileBlock', attrs: { fileId } }
+    const element = document.createElement('div')
+    editor = new Editor({
+      element,
+      extensions: editorExtensions({
+        [fileId]: { name: 'data.csv', contentType: 'text/csv', size: 8 },
+      }),
+      content: { type: 'doc', content: [sheet] },
+    })
+
+    expect(element.querySelector('img')).toBeNull()
+    expect(element.textContent).toContain('File: data.csv')
+    expect(fromProseMirror(editor.getJSON()).content).toEqual([sheet])
+  })
+})
+
 describe('images in the editor', () => {
   it('are shown, and kept exactly as they are', () => {
     const image = {

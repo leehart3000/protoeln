@@ -26,6 +26,7 @@ export {
   Subscript as SubscriptIcon,
   Superscript as SuperscriptIcon,
   Table as TableIcon,
+  FileSpreadsheet as SpreadsheetIcon,
   TableCellsMerge as MergeCellsIcon,
   TableCellsSplit as SplitCellIcon,
   TextQuote as QuoteIcon,
