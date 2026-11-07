@@ -95,7 +95,9 @@ The importer must have signed in to the site before, and the site's file store m
 from the settings, so an import never goes into the wrong database. The import checks the
 folder first, and stops if anything is wrong. It writes to the database directly, so it works
 while the site is read-only. Running it again adds only the records not imported yet, and
-changes nothing already there.
+changes nothing already there. Files over 5 MiB are uploaded in parts, and an upload that fails
+on the way (a dropped connection, say) is tried again a few times; files already in the store
+aren't sent again.
 
 ```sh
 pnpm --dir backend import-records FOLDER --as YOUR-ORCID-iD --into DATABASE
