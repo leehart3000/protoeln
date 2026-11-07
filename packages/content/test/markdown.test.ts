@@ -8,7 +8,7 @@ describe('toMarkdown', () => {
     expect(toMarkdown(example)).toBe(
       [
         '## Aim',
-        'Measure **p53** in _H_<sub>2</sub>_O_  \nSee `run_01.csv` and [the protocol](https://example.org/p) (10<sup>-3</sup> M, 2 \\* 3 \\#1)',
+        'Measure **p53** in _H_<sub>2</sub>_O_  \nSee `run_01.csv` and [the protocol](https://example.org/p) (10<sup>-3</sup> M, 2 \\* 3 \\#1), <mark>urgent</mark>',
         '- Control\n- Treated',
         '3. Lyse',
         '> Keep on ice.',

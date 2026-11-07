@@ -20,7 +20,8 @@ no description (alt text) from Word unless it has one, so add descriptions to th
 hand. Needs pandoc 3 (https://pandoc.org), LibreOffice, pdftoppm (Poppler) and Pillow.
 
 What it keeps: headings, paragraphs, bold, italic, subscript, superscript, links, line breaks,
-lists, tables and pictures. A paragraph of the write-up's own (not in a table or list) that is
+lists, tables and pictures. Highlighted or coloured text (other than black or grey) is
+highlighted, as the content format has no colours. A paragraph of the write-up's own (not in a table or list) that is
 only bold text, such as "Background:", becomes a heading, with its words unchanged. What it
 can't keep: arrows and text boxes drawn over a picture in Word; and underlining, which the
 content format doesn't have. The first paragraph is left out when it only repeats the record's
@@ -52,6 +53,43 @@ def text_node(text, marks):
     return node
 
 
+def colour(value):
+    # A CSS colour as red, green and blue (0 to 255), if it's one of the usual forms
+    value = value.strip().lower()
+    names = {'red': (255, 0, 0), 'yellow': (255, 255, 0), 'black': (0, 0, 0),
+             'white': (255, 255, 255)}
+    if value in names:
+        return names[value]
+    if re.fullmatch(r'#[0-9a-f]{3}', value):
+        return tuple(int(digit * 2, 16) for digit in value[1:])
+    if re.fullmatch(r'#[0-9a-f]{6}', value):
+        return tuple(int(value[at:at + 2], 16) for at in (1, 3, 5))
+    found = re.fullmatch(r'rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)', value)
+    if found and (found.group(4) is None or float(found.group(4)) > 0):
+        return tuple(int(part) for part in found.groups()[:3])
+    return None
+
+
+def highlighted(attr):
+    # Whether text is marked out: highlighted (<mark>, or a background colour other than
+    # white), or in a colour other than black or grey, such as red. The content format has no
+    # colours, so these become its highlight.
+    _id, classes, keyvals = attr
+    if 'mark' in classes:
+        return True
+    for declaration in dict(keyvals).get('style', '').split(';'):
+        name, _, value = declaration.partition(':')
+        rgb = colour(value)
+        if rgb is None:
+            continue
+        name = name.strip().lower()
+        if name in ('background', 'background-color') and min(rgb) < 240:
+            return True
+        if name == 'color' and max(rgb) - min(rgb) > 40:
+            return True
+    return False
+
+
 def inlines(items, marks=()):
     out = []
     for item in items:
@@ -72,6 +110,8 @@ def inlines(items, marks=()):
             out += inlines(item['c'], (*marks, {'type': 'subscript'}))
         elif kind == 'Code':
             out.append(text_node(item['c'][1], (*marks, {'type': 'code'})))
+        elif kind == 'Span' and highlighted(item['c'][0]):
+            out += inlines(item['c'][1], (*marks, {'type': 'highlight'}))
         elif kind in ('Underline', 'SmallCaps', 'Span'):
             # No underlining or small capitals in the content format: the words are kept
             out += inlines(item['c'] if kind != 'Span' else item['c'][1], marks)

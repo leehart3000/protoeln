@@ -125,3 +125,32 @@ describe('protocol steps in the editor', () => {
     ])
   })
 })
+
+describe('highlighting in the editor', () => {
+  it('is kept as it is, and can be added to text', () => {
+    const highlighted = { type: 'text', text: 'not pursued', marks: [{ type: 'highlight' }] }
+    const element = document.createElement('div')
+    editor = new Editor({
+      element,
+      extensions: editorExtensions(),
+      content: {
+        type: 'doc',
+        content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Yield ' }, highlighted] }],
+      },
+    })
+
+    expect(element.querySelector('mark')?.textContent).toBe('not pursued')
+    editor.chain().setTextSelection({ from: 1, to: 6 }).toggleMark('highlight').run()
+    expect(fromProseMirror(editor.getJSON()).content).toEqual([
+      {
+        type: 'paragraph',
+        content: [
+          { type: 'text', text: 'Yield', marks: [{ type: 'highlight' }] },
+          { type: 'text', text: ' ' },
+          highlighted,
+        ],
+      },
+    ])
+    expect(checkDocument(fromProseMirror(editor.getJSON()))).toEqual([])
+  })
+})

@@ -12,6 +12,8 @@ export type Mark =
   | { type: 'code' }
   | { type: 'subscript' }
   | { type: 'superscript' }
+  // Text marked out, as with a highlighter pen
+  | { type: 'highlight' }
   | { type: 'link'; attrs: { href: string } }
 
 export interface TextNode {

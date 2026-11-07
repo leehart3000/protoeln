@@ -17,9 +17,9 @@ copy into plan.json.
 
 A page's parts are kept in order. Rich text keeps paragraphs, bold, italic, subscript,
 superscript, links, line breaks, lists and tables; a paragraph that is only bold text, such as
-"Procedure", becomes a heading. Coloured and highlighted text keeps its words but not its colour,
-which the content format doesn't have. Attached pictures (PNG, JPEG, GIF or WebP) are shown in
-place; other attached files (PDF, Word, ChemDraw, spreadsheets) are offered for download,
+"Procedure", becomes a heading. Coloured (other than black or grey) and highlighted text is
+highlighted, as the content format has no colours. Attached pictures (PNG, JPEG, GIF or WebP)
+are shown in place; other attached files (PDF, Word, ChemDraw, spreadsheets) are offered for download,
 unchanged, under a heading "Files" when they follow text. ALT.json gives each picture's
 description (alt text), by its file name in attachments/original (such as 3-DMK171-1.jpg), as
 pictures get none from LabArchives.

@@ -2,8 +2,9 @@ import type { BlockNode, DocNode, InlineNode, Mark, TableNode, TextNode } from '
 import { tableGrid } from './tables.ts'
 
 // A Markdown copy of a document (CommonMark with GitHub's tables and task lists), so that
-// content stays readable and portable without any editor. Subscript and superscript, which
-// Markdown lacks, are written as the HTML tags <sub> and <sup>, which Markdown allows.
+// content stays readable and portable without any editor. Subscript, superscript and
+// highlighting, which Markdown lacks, are written as the HTML tags <sub>, <sup> and <mark>,
+// which Markdown allows.
 
 // Characters that Markdown would otherwise read as formatting
 function escape(text: string): string {
@@ -22,6 +23,8 @@ function applyMark(text: string, mark: Mark): string {
       return `<sub>${text}</sub>`
     case 'superscript':
       return `<sup>${text}</sup>`
+    case 'highlight':
+      return `<mark>${text}</mark>`
     case 'link':
       return `[${text}](${mark.attrs.href})`
   }

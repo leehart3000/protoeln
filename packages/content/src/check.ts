@@ -89,6 +89,7 @@ const MARKS: Record<string, Check> = {
   code: () => {},
   subscript: () => {},
   superscript: () => {},
+  highlight: () => {},
   link: (value, path, problems) =>
     checkAttrs(value as Record<string, unknown>, path, problems, (attrs, attrsPath) =>
       checkString(attrs.href, at(attrsPath, 'href'), problems),

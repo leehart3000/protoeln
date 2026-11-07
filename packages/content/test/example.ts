@@ -25,7 +25,8 @@ export const example: DocNode = {
         },
         { type: 'text', text: ' (10' },
         { type: 'text', text: '-3', marks: [{ type: 'superscript' }] },
-        { type: 'text', text: ' M, 2 * 3 #1)' },
+        { type: 'text', text: ' M, 2 * 3 #1), ' },
+        { type: 'text', text: 'urgent', marks: [{ type: 'highlight' }] },
       ],
     },
     {

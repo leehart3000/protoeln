@@ -25,6 +25,7 @@ export {
   SquareCode as CodeBlockIcon,
   Subscript as SubscriptIcon,
   Superscript as SuperscriptIcon,
+  Highlighter as HighlightIcon,
   Table as TableIcon,
   FileSpreadsheet as SpreadsheetIcon,
   FileText as DocumentIcon,

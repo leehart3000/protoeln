@@ -1,5 +1,5 @@
 import type { RecordLinkNode } from '@protoeln/content'
-import { Extension, mergeAttributes, Node, type Extensions } from '@tiptap/core'
+import { Extension, Mark, mergeAttributes, Node, type Extensions } from '@tiptap/core'
 import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
@@ -76,6 +76,20 @@ const ProtocolStepKeys = Extension.create({
         })
       },
     }
+  },
+})
+
+// Highlighted text, as with a highlighter pen (Ctrl or Cmd + Shift + H), kept as <mark>
+const Highlight = Mark.create({
+  name: 'highlight',
+  parseHTML() {
+    return [{ tag: 'mark' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['mark', HTMLAttributes, 0]
+  },
+  addKeyboardShortcuts() {
+    return { 'Mod-Shift-h': () => this.editor.commands.toggleMark(this.name) }
   },
 })
 
@@ -208,6 +222,7 @@ export function editorExtensions(files: Record<string, FileInfo> = {}): Extensio
     }),
     Subscript,
     Superscript,
+    Highlight,
     ScrollingTable,
     TableRow,
     TableHeader,

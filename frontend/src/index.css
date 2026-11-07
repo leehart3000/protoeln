@@ -29,6 +29,7 @@
   --color-danger: #a4262c;
   --color-danger-bg: #fdeeee;
   --color-danger-line: #f1b5b8;
+  --color-highlight: #fce9b8;
 }
 
 @layer base {
@@ -49,6 +50,7 @@
     --color-danger: #f5b5ba;
     --color-danger-bg: #3b1a24;
     --color-danger-line: #7d3340;
+    --color-highlight: #4d3d12;
   }
 
   body {
@@ -61,6 +63,14 @@
   h2,
   h3 {
     color: var(--color-primary);
+  }
+
+  /* Highlighted text in entries, as with a highlighter pen, readable in either theme */
+  mark {
+    background-color: var(--color-highlight);
+    color: inherit;
+    border-radius: 0.125rem;
+    padding-inline: 0.1em;
   }
 }
 

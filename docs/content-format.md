@@ -32,8 +32,8 @@ can be introduced alongside this one.
 
 Inline content is `text` (which must not be empty) and `hardBreak` (a line break within a block).
 
-Text can carry these marks: `bold`, `italic`, `code`, `subscript`, `superscript` and `link`
-(with `attrs.href`).
+Text can carry these marks: `bold`, `italic`, `code`, `subscript`, `superscript`, `highlight`
+(text marked out, as with a highlighter pen) and `link` (with `attrs.href`).
 
 ## From an editor
 
@@ -57,7 +57,8 @@ Each entry version stores two copies made from its content, so it stays readable
 editor:
 
 - **Plain text** (`toPlainText`): every word of text, without formatting; used for search.
-- **Markdown** (`toMarkdown`): CommonMark with GitHub's tables and task lists. Subscript and
-  superscript, which Markdown lacks, are written as `<sub>` and `<sup>`.
+- **Markdown** (`toMarkdown`): CommonMark with GitHub's tables and task lists. Subscript,
+  superscript and highlighting, which Markdown lacks, are written as `<sub>`, `<sup>` and
+  `<mark>`.
 
 Data and file blocks appear in both as references (`[Data: …]`, `[File: …]`).

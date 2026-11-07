@@ -57,6 +57,7 @@ function mark(value: unknown): Mark {
     case 'code':
     case 'subscript':
     case 'superscript':
+    case 'highlight':
       return { type: value.type }
     case 'link':
       return { type: 'link', attrs: { href: String(attrsOf(value).href ?? '') } }

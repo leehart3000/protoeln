@@ -67,8 +67,8 @@ Each page becomes a record, named by the page's name (such as DMK171-1).
 
    Each page's parts are kept in order. Attached pictures are shown, and other attached files
    (PDFs, Word, ChemDraw and spreadsheets) are offered for download, unchanged, under a
-   heading "Files" when they follow text. Coloured and highlighted text keeps its words but not
-   its colour.
+   heading "Files" when they follow text. Coloured text (other than black or grey) and
+   highlighted text is highlighted, as the content format has no colours.
 
 3. Describe each picture in `FOLDER/alt.json`, by its file name in `attachments/original`
    (such as `"3-DMK171-1.jpg": "Reaction scheme: …"`), and convert again. The converter lists

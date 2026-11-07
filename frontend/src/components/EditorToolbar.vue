@@ -13,6 +13,7 @@ import {
   ColumnRightIcon,
   DeleteIcon,
   HeaderRowIcon,
+  HighlightIcon,
   Heading1Icon,
   Heading2Icon,
   Heading3Icon,
@@ -122,6 +123,12 @@ const GROUPS: Tool[][] = [
       icon: SuperscriptIcon,
       run: () => chain().toggleSuperscript().run(),
       active: () => props.editor.isActive('superscript'),
+    },
+    {
+      label: 'Highlight',
+      icon: HighlightIcon,
+      run: () => chain().toggleMark('highlight').run(),
+      active: () => props.editor.isActive('highlight'),
     },
   ],
   [

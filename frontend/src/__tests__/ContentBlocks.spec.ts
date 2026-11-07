@@ -19,6 +19,8 @@ describe('ContentBlocks', () => {
           { type: 'text', text: '2', marks: [{ type: 'subscript' }] },
           { type: 'text', text: 'O is ' },
           { type: 'text', text: 'water', marks: [{ type: 'bold' }, { type: 'italic' }] },
+          { type: 'text', text: ', ' },
+          { type: 'text', text: 'not pursued', marks: [{ type: 'highlight' }] },
         ],
       },
     ])
@@ -26,6 +28,7 @@ describe('ContentBlocks', () => {
     expect(screen.getByText('2').tagName).toBe('SUB')
     expect(screen.getByText('water').tagName).toBe('EM')
     expect(screen.getByText('water').parentElement?.tagName).toBe('STRONG')
+    expect(screen.getByText('not pursued').tagName).toBe('MARK')
   })
 
   it('links only to web and email addresses, so content cannot run script', () => {

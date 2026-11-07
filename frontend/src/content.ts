@@ -24,6 +24,8 @@ function wrap(mark: Mark, child: string | VNode): string | VNode {
       return h('sub', [child])
     case 'superscript':
       return h('sup', [child])
+    case 'highlight':
+      return h('mark', [child])
     case 'link':
       if (!isSafeHref(mark.attrs.href)) return child
       // Web links open in a new tab, so readers keep their place in the entry (as elsewhere on

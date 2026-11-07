@@ -8,7 +8,7 @@ describe('toPlainText', () => {
     expect(toPlainText(example)).toBe(
       [
         'Aim',
-        'Measure p53 in H2O\nSee run_01.csv and the protocol (10-3 M, 2 * 3 #1)',
+        'Measure p53 in H2O\nSee run_01.csv and the protocol (10-3 M, 2 * 3 #1), urgent',
         '- Control\n- Treated',
         '3. Lyse',
         'Keep on ice.',
