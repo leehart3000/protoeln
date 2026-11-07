@@ -75,7 +75,9 @@ const crumbs = computed(() => {
         </dd>
         <dd v-else>None: this is the first version</dd>
       </dl>
-      <div class="mt-6 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 sm:p-6">
+      <div
+        class="mt-6 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 wrap-break-word sm:p-6"
+      >
         <ContentBlocks
           v-if="version.data.value.content.content.length > 0"
           :blocks="version.data.value.content.content"

@@ -226,7 +226,7 @@ const crumbs = computed(() =>
         <EntryEditor v-if="editing" :entry="data.entry" @close="editing = false" />
         <div
           v-else
-          class="mt-3 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 sm:p-6"
+          class="mt-3 max-w-3xl space-y-3 rounded-lg border border-line bg-panel p-4 wrap-break-word sm:p-6"
         >
           <FormProblem :error="ticking.error.value" />
           <ContentBlocks
