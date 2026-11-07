@@ -26,6 +26,9 @@ coverage/
 *.tsbuildinfo
 .eslintcache
 
+# --- Python (the import converters in backend/tools) ---
+__pycache__/
+
 # --- Playwright ---
 test-results/
 playwright-report/

@@ -52,6 +52,32 @@ authors (as CC BY 4.0 asks). Each entry gets a first version, noting where it wa
 4. Add the record's details to `plan.json`, from its page.
 5. Check the folder (below).
 
+## Adding pages from a LabArchives export
+
+LabArchives notebooks can be exported as an offline HTML version: a folder with a page per
+numbered HTML file (`1.html`, `2.html` …) and the attached files in `attachments/original`.
+Each page becomes a record, named by the page's name (such as DMK171-1).
+
+1. Unzip the export.
+2. Convert all its pages, from the `backend` folder (needs pandoc 3 and Python's Pillow):
+
+   ```sh
+   python3 tools/labarchives_to_protoeln.py EXPORT FOLDER --alt FOLDER/alt.json > pages.json
+   ```
+
+   Each page's parts are kept in order. Attached pictures are shown, and other attached files
+   (PDFs, Word, ChemDraw and spreadsheets) are offered for download, unchanged, under a
+   heading "Files" when they follow text. Coloured and highlighted text keeps its words but not
+   its colour.
+
+3. Describe each picture in `FOLDER/alt.json`, by its file name in `attachments/original`
+   (such as `"3-DMK171-1.jpg": "Reaction scheme: …"`), and convert again. The converter lists
+   the pictures that have no description yet.
+4. Add the project, notebook and records to `plan.json`, using the page list in `pages.json`.
+   An export's pages share one address (its DOI), so give each record the address followed by
+   the page's name (such as `https://doi.org/DOI#DMK171-1`), so that each is imported once.
+5. Check the folder (below).
+
 ## Checking
 
 The check reads the folder without connecting to any database. It finds content that isn't in
