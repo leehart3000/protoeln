@@ -48,13 +48,31 @@ describe('ContentBlocks', () => {
       },
     ])
 
-    expect(screen.getByRole('link', { name: 'a safe link' })).toHaveAttribute(
-      'href',
-      'https://protoeln.org',
-    )
-    expect(screen.queryByRole('link', { name: 'an unsafe one' })).not.toBeInTheDocument()
+    // (The test library leaves out the space before the hidden words; browsers keep it)
+    const safe = screen.getByRole('link', { name: /^a safe link ?\(opens in a new tab\)$/ })
+    expect(safe).toHaveAttribute('href', 'https://protoeln.org')
+    expect(safe).toHaveAttribute('target', '_blank')
+    expect(safe).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(screen.queryByRole('link', { name: /an unsafe one/ })).not.toBeInTheDocument()
     // The unsafe link's text is still shown, as plain text
-    expect(container).toHaveTextContent('a safe link and an unsafe one')
+    expect(container).toHaveTextContent('a safe link (opens in a new tab) and an unsafe one')
+  })
+
+  it('opens email links where they are, not in a new tab', () => {
+    show([
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: 'write to us',
+            marks: [{ type: 'link', attrs: { href: 'mailto:privacy@protoeln.org' } }],
+          },
+        ],
+      },
+    ])
+
+    expect(screen.getByRole('link', { name: 'write to us' })).not.toHaveAttribute('target')
   })
 
   it('shows lists, including blocks inside list items', () => {

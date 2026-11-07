@@ -1,6 +1,7 @@
 import type { InlineNode, Mark } from '@protoeln/content'
 import { h, type FunctionalComponent, type VNode } from 'vue'
 
+import { ExternalIcon } from './icons'
 import { textLink } from './styles'
 
 // Shows the text inside a block of entry content, with its marks (bold, links and so on). See
@@ -24,9 +25,28 @@ function wrap(mark: Mark, child: string | VNode): string | VNode {
     case 'superscript':
       return h('sup', [child])
     case 'link':
-      return isSafeHref(mark.attrs.href)
+      if (!isSafeHref(mark.attrs.href)) return child
+      // Web links open in a new tab, so readers keep their place in the entry (as elsewhere on
+      // the site, with the same icon and words for screen readers); email links don't
+      return /^mailto:/i.test(mark.attrs.href)
         ? h('a', { href: mark.attrs.href, class: textLink }, [child])
-        : child
+        : h(
+            'a',
+            {
+              href: mark.attrs.href,
+              class: textLink,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+            },
+            [
+              child,
+              h(ExternalIcon, {
+                'aria-hidden': 'true',
+                class: 'ml-0.5 inline size-3.5 align-baseline',
+              }),
+              h('span', { class: 'sr-only' }, ' (opens in a new tab)'),
+            ],
+          )
   }
 }
 
