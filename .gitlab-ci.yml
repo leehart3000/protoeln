@@ -104,6 +104,11 @@ deploy-staging:
     # The whole history, so the footer can say how many commits this is after the last release
     GIT_DEPTH: '0'
   script:
+    # The footer's version comes from `git describe` (see buildInfo in frontend/vite.config.ts),
+    # which needs git (not in node:24-slim) and the release tags
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends git ca-certificates > /dev/null
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+    - git fetch --tags --force --quiet
     - pnpm --dir frontend build
     - pnpm --dir backend run deploy
 
