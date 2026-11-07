@@ -65,8 +65,12 @@ export interface CodeBlockNode {
   content?: TextNode[]
 }
 
+// A cell can be merged with the cells to its right (colspan) or below (rowspan); a cell that
+// spans one column and one row has no attrs. The cells a merged cell covers aren't in the
+// rows at all, as in HTML.
 export interface TableCellNode {
   type: 'tableCell' | 'tableHeader'
+  attrs?: { colspan?: number; rowspan?: number }
   content: BlockNode[]
 }
 

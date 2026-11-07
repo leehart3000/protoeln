@@ -110,7 +110,7 @@ describe('fromProseMirror', () => {
     })
   })
 
-  it('keeps the span of a merged table cell, so checking reports it', () => {
+  it('keeps the span of a merged table cell, but not its widths or spans of 1', () => {
     const doc = fromProseMirror({
       type: 'doc',
       content: [
@@ -141,9 +141,7 @@ describe('fromProseMirror', () => {
         },
       ],
     })
-    expect(checkDocument(doc).map((problem) => problem.path)).toEqual([
-      'content[0].content[0].content[0].attrs',
-    ])
+    expect(checkDocument(doc)).toEqual([])
   })
 
   it('passes on anything the format does not know, so checking reports it', () => {

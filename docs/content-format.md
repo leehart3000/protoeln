@@ -21,7 +21,7 @@ can be introduced alongside this one.
 | `bulletList`, `orderedList` | List items (`listItem`), each holding blocks; an ordered list may set `attrs.start` |
 | `blockquote` | Blocks |
 | `codeBlock` | Plain text, without formatting |
-| `table` | Rows (`tableRow`) of cells (`tableCell` or `tableHeader`), each holding blocks; cells have no attributes, so there are no merged cells |
+| `table` | Rows (`tableRow`) of cells (`tableCell` or `tableHeader`), each holding blocks. A merged cell has `attrs.colspan` (the columns it spans) and/or `attrs.rowspan` (the rows), each from 2 to 100; the cells it covers aren't in the rows at all, as in HTML. Cells have no other attributes |
 | `dataBlock` | Shows a data item: `attrs.dataItemId` |
 | `fileBlock` | Shows an image or links to a file: `attrs.fileId`, the file's SHA-256 in hex (so a version's hash covers the file too), optional `attrs.caption` (shown with it) and `attrs.alt` (describing an image for people who can't see it) |
 | `protocolStep` | A step that can be ticked off: `attrs.done`; once ticked, `attrs.doneBy` (the ORCID iD of who ticked it) and `attrs.doneAt` (when, in UTC, ISO 8601), both set by the server; inline content |

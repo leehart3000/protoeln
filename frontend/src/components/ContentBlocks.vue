@@ -87,13 +87,21 @@ const placeholder = 'rounded-md border border-dashed border-line px-4 py-3 text-
     ><code>{{ (block.content ?? []).map((node) => node.text).join('') }}</code></pre>
     <div v-else-if="block.type === 'table'" :class="tableWrapper">
       <table :class="table">
-        <tbody class="divide-y divide-line">
+        <!-- Lines between rows are drawn on each cell (not each row), so a cell merged over
+             several rows has no line through it -->
+        <tbody>
           <tr v-for="(row, r) in block.content" :key="r">
             <component
               :is="cell.type === 'tableHeader' ? 'th' : 'td'"
               v-for="(cell, c) in row.content"
               :key="c"
-              :class="[tableCell, cell.type === 'tableHeader' && 'bg-line/40 font-semibold']"
+              :colspan="cell.attrs?.colspan"
+              :rowspan="cell.attrs?.rowspan"
+              :class="[
+                tableCell,
+                r > 0 && 'border-t border-line',
+                cell.type === 'tableHeader' && 'bg-line/40 font-semibold',
+              ]"
             >
               <ContentBlocks
                 :blocks="cell.content"

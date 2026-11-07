@@ -1,4 +1,5 @@
 import type { BlockNode, DocNode, InlineNode, Mark, TableNode, TextNode } from './types.ts'
+import { tableGrid } from './tables.ts'
 
 // A Markdown copy of a document (CommonMark with GitHub's tables and task lists), so that
 // content stays readable and portable without any editor. Subscript and superscript, which
@@ -45,9 +46,11 @@ function indent(text: string, spaces: number): string {
     .join('\n')
 }
 
+// Markdown tables can't merge cells, so a merged cell's text is in its first place, and the
+// places it covers are empty (see tableGrid)
 function tableMarkdown(table: TableNode): string {
-  const rows = table.content.map((row) =>
-    row.content.map((cell) => blocksMarkdown(cell.content, ' ').replaceAll('\n', ' ')),
+  const rows = tableGrid(table).map((row) =>
+    row.map((cell) => (cell ? blocksMarkdown(cell.content, ' ').replaceAll('\n', ' ') : '')),
   )
   const width = Math.max(...rows.map((row) => row.length))
   const line = (cells: string[]) =>

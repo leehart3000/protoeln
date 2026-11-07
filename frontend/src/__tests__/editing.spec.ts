@@ -170,6 +170,15 @@ describe('editing an entry', () => {
       'aria-pressed',
       'true',
     )
+    // With the cursor in one cell, there's nothing to merge or split
+    expect(within(tools).getByRole('button', { name: 'Merge cells' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
+    expect(within(tools).getByRole('button', { name: 'Split cell' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    )
     await user.click(screen.getByRole('button', { name: 'Save' }))
     await screen.findByText('Saved')
 

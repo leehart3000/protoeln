@@ -136,15 +136,27 @@ function listContent(value: unknown, path: string, problems: Problem[]) {
   checkList(node.content, at(path, 'content'), problems, checkListItem, { nonEmpty: true })
 }
 
-// A cell holds blocks, and has no attributes: the format has no merged cells
+// A cell holds blocks, and may be merged across columns (colspan) or rows (rowspan), each a
+// whole number from 2 to 100; it has no other attributes
 function cellContent(value: unknown, path: string, problems: Problem[]) {
-  const node = value as Record<string, unknown>
-  if (node.attrs !== undefined) {
-    problems.push({
-      path: at(path, 'attrs'),
-      message: "should not be there: a cell can't span several columns or rows (split it first)",
-    })
-  }
+  checkAttrs(
+    value as Record<string, unknown>,
+    path,
+    problems,
+    (attrs, attrsPath) => {
+      for (const [key, span] of Object.entries(attrs)) {
+        if (key !== 'colspan' && key !== 'rowspan') {
+          problems.push({ path: at(attrsPath, key), message: 'should not be there' })
+        } else if (!Number.isInteger(span) || (span as number) < 2 || (span as number) > 100) {
+          problems.push({
+            path: at(attrsPath, key),
+            message: 'should be a whole number from 2 to 100',
+          })
+        }
+      }
+    },
+    true,
+  )
   blockContent(value, path, problems)
 }
 

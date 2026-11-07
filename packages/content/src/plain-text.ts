@@ -1,4 +1,5 @@
 import type { BlockNode, DocNode, InlineNode, TableNode } from './types.ts'
+import { tableGrid } from './tables.ts'
 
 // A plain-text copy of a document, for search and for reading without any editor. Blocks are
 // separated by blank lines; formatting is dropped, but every word of text is kept.
@@ -7,9 +8,11 @@ function inlineText(content: InlineNode[] = []): string {
   return content.map((node) => (node.type === 'text' ? node.text : '\n')).join('')
 }
 
+// A merged cell's text is in its first place, and the places it covers are empty, so the
+// columns line up (see tableGrid)
 function tableText(table: TableNode): string {
-  return table.content
-    .map((row) => row.content.map((cell) => blocksText(cell.content, ' ')).join('\t'))
+  return tableGrid(table)
+    .map((row) => row.map((cell) => (cell ? blocksText(cell.content, ' ') : '')).join('\t'))
     .join('\n')
 }
 

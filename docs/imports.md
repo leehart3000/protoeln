@@ -37,9 +37,7 @@ authors (as CC BY 4.0 asks). Each entry gets a first version, noting where it wa
    ```
 
    The converter's notes say what it keeps and what it can't. Pictures in old Windows formats
-   (EMF) are drawn as JPEG or PNG, with Word's cropping applied. Merged table cells are split,
-   with their text in the first cell, and the converter says so (the record's changes should
-   too).
+   (EMF) are drawn as JPEG or PNG, with Word's cropping applied. Merged table cells stay merged.
 
 3. Describe each image in the content (`alt`), and add a caption if something in the original
    can't be shown.

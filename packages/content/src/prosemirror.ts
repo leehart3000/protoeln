@@ -144,8 +144,7 @@ function block(value: unknown): BlockNode {
               type: node.type === 'tableHeader' ? ('tableHeader' as const) : ('tableCell' as const),
               content: blocks(node.content),
             }
-            // The format has no merged cells, so a cell spanning several columns or rows keeps
-            // its span, for checking to report, rather than quietly losing it
+            // A merged cell keeps its span
             const span = spanOf(attrsOf(node))
             return span ? ({ ...kept, attrs: span } as typeof kept) : kept
           }),

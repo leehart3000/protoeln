@@ -89,6 +89,28 @@ describe('ContentBlocks', () => {
     expect(screen.getByText('To do:')).toBeInTheDocument()
   })
 
+  it('shows merged table cells merged', () => {
+    const cell = (text: string, attrs?: { colspan?: number; rowspan?: number }) => ({
+      type: 'tableCell' as const,
+      ...(attrs && { attrs }),
+      content: [{ type: 'paragraph' as const, content: [{ type: 'text' as const, text }] }],
+    })
+    show([
+      {
+        type: 'table',
+        content: [
+          { type: 'tableRow', content: [cell('Grid box', { colspan: 2 })] },
+          { type: 'tableRow', content: [cell('A', { rowspan: 2 }), cell('B')] },
+          { type: 'tableRow', content: [cell('C')] },
+        ],
+      },
+    ])
+
+    expect(screen.getByText('Grid box').closest('td')).toHaveAttribute('colspan', '2')
+    expect(screen.getByText('A').closest('td')).toHaveAttribute('rowspan', '2')
+    expect(screen.getByText('B').closest('td')).not.toHaveAttribute('colspan')
+  })
+
   it('shows an image from the API, with its description and caption', () => {
     const fileId = 'a'.repeat(64)
     show([{ type: 'fileBlock', attrs: { fileId, alt: 'A gel', caption: 'Figure 1' } }])

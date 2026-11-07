@@ -27,6 +27,7 @@ import {
   RedoIcon,
   RowAboveIcon,
   RowBelowIcon,
+  MergeCellsIcon,
   SplitCellIcon,
   SubscriptIcon,
   SuperscriptIcon,
@@ -310,7 +311,16 @@ const TABLE_GROUPS: TableGroup[] = [
     name: 'Cell',
     tools: [
       {
-        // Merged cells aren't in the content format; one pasted in can be split here
+        // Cells are selected together by dragging across them (or Shift and the arrow keys)
+        label: 'Merge cells',
+        icon: MergeCellsIcon,
+        run: () => chain().mergeCells().run(),
+        unavailable: () =>
+          props.editor.can().mergeCells()
+            ? undefined
+            : 'Select two or more cells to merge, by dragging across them.',
+      },
+      {
         label: 'Split cell',
         icon: SplitCellIcon,
         run: () => chain().splitCell().run(),

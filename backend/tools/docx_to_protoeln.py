@@ -18,8 +18,7 @@ lists, tables and pictures. A paragraph of the write-up's own (not in a table or
 only bold text, such as "Background:", becomes a heading, with its words unchanged. What it
 can't keep: arrows and text boxes drawn over a picture in Word; and underlining, which the
 content format doesn't have. The first paragraph is left out when it only repeats the record's
-title. Merged table cells are split (the format has none): their text stays in the first
-cell, and the converter says so. Anything else it doesn't recognise stops the conversion,
+title. Merged table cells stay merged. Anything else it doesn't recognise stops the conversion,
 rather than being dropped.
 """
 
@@ -242,40 +241,19 @@ def cell_blocks(blocks, context):
 def table(item, context):
     _attr, _caption, _specs, head, bodies, foot = item['c']
     rows = []
-    # The content format has no merged cells, so a merged cell is split: its contents stay in
-    # its first (top left) cell, and the cells it covered are left empty. Columns still
-    # covered by a cell from a row above, and how many more rows they're covered for:
-    covered = {}
-
-    def empty(header):
-        return {'type': 'tableHeader' if header else 'tableCell', 'content': [{'type': 'paragraph'}]}
 
     def add(row, header):
         cells = []
-        column = 0
-
-        def skip_covered():
-            nonlocal column
-            while covered.get(column, 0) > 0:
-                cells.append(empty(header))
-                covered[column] -= 1
-                column += 1
-
         for cell in row[1]:
             _cell_attr, _align, row_span, col_span, blocks = cell
-            skip_covered()
-            if row_span != 1 or col_span != 1:
-                context['merged'] = True
-            cells.append({
-                'type': 'tableHeader' if header else 'tableCell',
-                'content': cell_blocks(blocks, context),
-            })
-            cells += [empty(header) for _ in range(col_span - 1)]
-            for spanned in range(column, column + col_span):
-                if row_span > 1:
-                    covered[spanned] = row_span - 1
-            column += col_span
-        skip_covered()
+            node = {'type': 'tableHeader' if header else 'tableCell'}
+            # A merged cell keeps its span; the cells it covers aren't listed, as in the format
+            span = {key: value for key, value in (('colspan', col_span), ('rowspan', row_span))
+                    if value != 1}
+            if span:
+                node['attrs'] = span
+            node['content'] = cell_blocks(blocks, context)
+            cells.append(node)
         rows.append({'type': 'tableRow', 'content': cells})
 
     for row in head[1]:
@@ -356,9 +334,6 @@ def main():
     # The first paragraph is the record's title, which the entry has already
     if content and content[0]['type'] == 'heading':
         content = content[1:]
-    if context.get('merged'):
-        print(f'{docx}: merged table cells were split (say so in the record\'s changes)',
-              file=sys.stderr)
     json.dump({'type': 'doc', 'content': content}, sys.stdout, ensure_ascii=False, indent=2)
     print()
 

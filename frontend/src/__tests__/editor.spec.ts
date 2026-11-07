@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { fromProseMirror } from '@protoeln/content'
+import { checkDocument, fromProseMirror } from '@protoeln/content'
 import { Editor, type JSONContent } from '@tiptap/core'
+import { CellSelection } from '@tiptap/pm/tables'
 
 import { editorExtensions } from '../editor/extensions'
 
@@ -26,6 +27,39 @@ function pressEnter(blocks: JSONContent[], position: number) {
   editor.commands.keyboardShortcut('Enter')
   return fromProseMirror(editor.getJSON()).content
 }
+
+describe('tables in the editor', () => {
+  it('merge cells, and keep them merged when saved', () => {
+    const cell = (text: string) => ({
+      type: 'tableCell',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
+    })
+    editor = new Editor({
+      element: document.createElement('div'),
+      extensions: editorExtensions(),
+      content: {
+        type: 'doc',
+        content: [
+          { type: 'table', content: [{ type: 'tableRow', content: [cell('A'), cell('B')] }] },
+        ],
+      },
+    })
+    // Select both cells: the table starts at 0, its row at 1, its first cell at 2
+    const { tr, doc } = editor.state
+    const firstCell = 2
+    const secondCell = firstCell + doc.nodeAt(firstCell)!.nodeSize
+    editor.view.dispatch(tr.setSelection(CellSelection.create(doc, firstCell, secondCell)))
+
+    expect(editor.can().mergeCells()).toBe(true)
+    editor.commands.mergeCells()
+
+    const saved = fromProseMirror(editor.getJSON())
+    const [table] = saved.content as { content: { content: { attrs?: unknown }[] }[] }[]
+    expect(table!.content[0]!.content).toHaveLength(1)
+    expect(table!.content[0]!.content[0]!.attrs).toEqual({ colspan: 2 })
+    expect(checkDocument(saved)).toEqual([])
+  })
+})
 
 describe('images in the editor', () => {
   it('are shown, and kept exactly as they are', () => {

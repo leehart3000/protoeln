@@ -9,6 +9,28 @@ describe('checkDocument', () => {
     expect(isDocument(example)).toBe(true)
   })
 
+  it('accepts merged table cells', () => {
+    const cell = (attrs?: { colspan?: number; rowspan?: number }) => ({
+      type: 'tableHeader',
+      ...(attrs && { attrs }),
+      content: [{ type: 'paragraph' }],
+    })
+    const merged = {
+      type: 'doc',
+      content: [
+        {
+          type: 'table',
+          content: [
+            { type: 'tableRow', content: [cell({ colspan: 2, rowspan: 2 }), cell()] },
+            { type: 'tableRow', content: [cell()] },
+          ],
+        },
+      ],
+    }
+
+    expect(checkDocument(merged)).toEqual([])
+  })
+
   it('accepts an empty document', () => {
     expect(checkDocument({ type: 'doc', content: [] })).toEqual([])
   })
@@ -124,7 +146,7 @@ describe('checkDocument', () => {
       'content[0].attrs.url',
     ],
     [
-      'a merged cell',
+      'a cell merged across one column, or with other attributes',
       {
         type: 'doc',
         content: [
@@ -134,14 +156,38 @@ describe('checkDocument', () => {
               {
                 type: 'tableRow',
                 content: [
-                  { type: 'tableCell', attrs: { colspan: 2 }, content: [{ type: 'paragraph' }] },
+                  {
+                    type: 'tableCell',
+                    attrs: { colspan: 1, width: 3 },
+                    content: [{ type: 'paragraph' }],
+                  },
                 ],
               },
             ],
           },
         ],
       },
-      'content[0].content[0].content[0].attrs',
+      'content[0].content[0].content[0].attrs.colspan',
+    ],
+    [
+      'a cell with an attribute other than its span',
+      {
+        type: 'doc',
+        content: [
+          {
+            type: 'table',
+            content: [
+              {
+                type: 'tableRow',
+                content: [
+                  { type: 'tableCell', attrs: { width: 3 }, content: [{ type: 'paragraph' }] },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      'content[0].content[0].content[0].attrs.width',
     ],
     [
       'formatting inside a code block',
