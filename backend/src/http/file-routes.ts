@@ -10,7 +10,8 @@ import { sitePublicRead, userOf } from './context.ts'
 // Serves the files entries show, such as images, to whoever can read an entry (a draft or a
 // version) that shows them; to anyone else, and on a site with no file store, a file is "not
 // found", as a private project is. Files are found by their SHA-256 and never change. Images
-// are shown in pages; anything else (a spreadsheet) is only ever downloaded, with its name.
+// are shown in pages; anything else (such as a spreadsheet or a PDF) is only ever downloaded,
+// with its name.
 
 // How a download is named: plainly for older browsers, and exactly (RFC 6266)
 function downloadAs(name: string) {
@@ -37,7 +38,7 @@ export function fileRoutes(store: FileStore | null) {
     }
 
     res.set({
-      // As recorded when it was added: an image type browsers show safely, or a spreadsheet
+      // As recorded when it was added: an image type browsers show safely, or a download
       'Content-Type': file.contentType,
       'Content-Disposition': isImage(file.contentType) ? 'inline' : downloadAs(file.name),
       // A file never changes, but who can see it can, so only the browser keeps a copy

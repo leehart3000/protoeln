@@ -97,7 +97,7 @@ export interface Entry extends EntrySummary {
   createdAt: string
 }
 
-// A file an entry shows: an image, or a spreadsheet to download
+// A file an entry shows: an image, or a file to download (such as a spreadsheet or PDF)
 export interface FileInfo {
   name: string
   contentType: string

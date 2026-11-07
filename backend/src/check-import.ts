@@ -19,5 +19,5 @@ const images = plan.files.filter((file) => isImage(file.contentType)).length
 const others = plan.files.length - images
 console.log(
   `${folder}: ${plan.records.length} records, ${images} images and ${others} other files` +
-    ' (such as spreadsheets), all fine',
+    ' (such as spreadsheets and PDFs), all fine',
 )

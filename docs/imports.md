@@ -15,10 +15,12 @@ This repository has the tools: the import command, a check, and a converter for 
   date, licence and citation, copied from the record's page, and what the import changed
   (licences such as CC BY 4.0 ask for any changes to be stated).
 - `content/ID.json`: each record's write-up, in ProtoELN's content format (protoeln-doc/1).
-- `files/`: the images the write-ups show, and the spreadsheets they offer for download, each
-  named by its SHA-256 (with `.png`, `.jpg`, `.gif`, `.webp`, `.xlsx`, `.xls` or `.csv`), and
-  listed in `files/files.json` with its type and name (and an image's size in pixels).
-  Spreadsheets with macros, and files over 25 MB, are refused.
+- `files/`: the images the write-ups show, and the other files they offer for download, each
+  named by its SHA-256 and listed in `files/files.json` with its type and name (and an image's
+  size in pixels). Images can be `.png`, `.jpg`, `.gif` or `.webp`; downloads can be
+  spreadsheets (`.xlsx`, `.xls` or `.csv`), PDFs (`.pdf`), Word documents (`.docx`) or
+  ChemDraw files (`.cdx` or `.cdxml`). Office files with macros, and files over 25 MB, are
+  refused.
 
 ## Credit
 
@@ -38,9 +40,9 @@ authors (as CC BY 4.0 asks). Each entry gets a first version, noting where it wa
    python3 tools/docx_to_protoeln.py RECORD.docx https://zenodo.org/records/ID FOLDER/files > FOLDER/content/ID.json
    ```
 
-   If the record also has spreadsheets, add `--attach` and their paths at the end of the
-   command (before `>`): they're kept unchanged and offered for download under a heading
-   "Files" at the end of the write-up.
+   If the record also has other files (such as spreadsheets or PDFs), add `--attach` and their
+   paths at the end of the command (before `>`): they're kept unchanged and offered for
+   download under a heading "Files" at the end of the write-up.
 
    The converter's notes say what it keeps and what it can't. Pictures in old Windows formats
    (EMF) are drawn as JPEG or PNG, with Word's cropping applied. Merged table cells stay merged.
@@ -54,7 +56,7 @@ authors (as CC BY 4.0 asks). Each entry gets a first version, noting where it wa
 
 The check reads the folder without connecting to any database. It finds content that isn't in
 the content format, files that are missing, don't match their names, aren't an allowed type,
-are too big or are spreadsheets with macros, and images with no description:
+are too big or are Office files with macros, and images with no description:
 
 ```sh
 pnpm --dir backend check-import FOLDER

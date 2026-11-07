@@ -27,7 +27,7 @@ const props = withDefaults(
     // Names of the people who ticked steps, by ORCID iD
     people?: Record<string, string>
     // The name, type and size of each file shown, by SHA-256: images are shown, and anything
-    // else (a spreadsheet) is offered as a download
+    // else (such as a spreadsheet or PDF) is offered as a download
     files?: Record<string, FileInfo>
     tick?: (path: number[], done: boolean) => void
     // Whether a tick is being saved

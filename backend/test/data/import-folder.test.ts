@@ -79,6 +79,6 @@ describe('checkImport', () => {
       ],
     })
 
-    expect(problems).toEqual([`files/${sha256Of(xlsm)}: Spreadsheets with macros are refused`])
+    expect(problems).toEqual([`files/${sha256Of(xlsm)}: Files with macros are refused`])
   })
 })

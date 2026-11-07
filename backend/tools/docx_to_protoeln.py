@@ -7,9 +7,10 @@ the site it's for, outside the repository; importing doesn't need this script or
     python3 tools/docx_to_protoeln.py WRITEUP.docx RECORD_URL FOLDER/files [--attach FILE ...] \
         > FOLDER/content/ID.json
 
-With --attach, the record's other files (spreadsheets: .xlsx, .xls or .csv) are saved in
-FOLDER/files too, unchanged, and offered for download at the end of the write-up, under a
-heading "Files". Spreadsheets with macros are refused when importing.
+With --attach, the record's other files (spreadsheets: .xlsx, .xls or .csv; PDFs; Word .docx;
+ChemDraw .cdx or .cdxml) are saved in FOLDER/files too, unchanged, and offered for download at
+the end of the write-up, under a heading "Files". Office files with macros are refused when
+importing.
 
 Images are saved in FOLDER/files, each named by its SHA-256 (its id in the content), and listed
 in FOLDER/files/files.json with their type and size. Pictures in old Windows formats (EMF and
@@ -221,10 +222,15 @@ def saved_image(path, crop, folder):
     })
 
 
-SPREADSHEETS = {
+# The kinds of file that can be offered for download (as in backend/src/data/models/file.ts)
+DOWNLOADS = {
     '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     '.xls': 'application/vnd.ms-excel',
     '.csv': 'text/csv',
+    '.pdf': 'application/pdf',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.cdx': 'chemical/x-cdx',
+    '.cdxml': 'chemical/x-cdxml',
 }
 
 
@@ -245,9 +251,9 @@ def attachment_blocks(paths, folder):
         return []
     blocks = [{'type': 'heading', 'attrs': {'level': 2}, 'content': [{'type': 'text', 'text': 'Files'}]}]
     for path in map(Path, paths):
-        content_type = SPREADSHEETS.get(path.suffix.lower())
+        content_type = DOWNLOADS.get(path.suffix.lower())
         if content_type is None:
-            sys.exit(f'{path}: only spreadsheets (.xlsx, .xls or .csv) can be attached')
+            sys.exit(f'{path}: only {", ".join(DOWNLOADS)} files can be attached')
         sha256 = listed_file(folder, path.read_bytes(), path.suffix.lower()[1:], {
             'name': path.name, 'contentType': content_type,
         })

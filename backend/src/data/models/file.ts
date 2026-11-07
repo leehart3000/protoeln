@@ -3,16 +3,23 @@ import mongoose, { type InferSchemaType } from 'mongoose'
 import { makeImmutable } from '../immutable.ts'
 
 // The kinds of file that can be shown in entries: images that browsers show safely (SVG isn't
-// one of them, as it can carry scripts), and spreadsheets, which are only ever downloaded
+// one of them, as it can carry scripts), and files that are only ever downloaded: spreadsheets,
+// PDFs (such as spectra), Word documents and ChemDraw files
 export const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'] as const
-export const SPREADSHEET_TYPES = [
+export const DOWNLOAD_TYPES = [
   // .xlsx (without macros: a workbook with macros is refused, see data/files.ts)
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   // .xls, the older Excel format
   'application/vnd.ms-excel',
   'text/csv',
+  'application/pdf',
+  // .docx (without macros, as for .xlsx)
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  // ChemDraw drawings, in its binary format and its XML format
+  'chemical/x-cdx',
+  'chemical/x-cdxml',
 ] as const
-export const FILE_TYPES = [...IMAGE_TYPES, ...SPREADSHEET_TYPES] as const
+export const FILE_TYPES = [...IMAGE_TYPES, ...DOWNLOAD_TYPES] as const
 export type FileType = (typeof FILE_TYPES)[number]
 
 // The file name extension for each kind of file, as files are named in import folders
@@ -24,6 +31,10 @@ export const EXTENSIONS: Record<FileType, string> = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
   'application/vnd.ms-excel': 'xls',
   'text/csv': 'csv',
+  'application/pdf': 'pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'chemical/x-cdx': 'cdx',
+  'chemical/x-cdxml': 'cdxml',
 }
 
 export function isImage(contentType: string) {

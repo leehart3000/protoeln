@@ -27,18 +27,19 @@ function contains(body: Uint8Array, text: string, encoding: 'latin1' | 'utf16le'
   )
 }
 
-// Why a file can't be kept, if it can't: it's too big, or it's a spreadsheet with macros
-// (programs that could run when it's opened). An .xlsx with macros holds xl/vbaProject.bin;
-// an .xls holds a _VBA_PROJECT part, named in UTF-16.
+// Why a file can't be kept, if it can't: it's too big, or it's an Office file with macros
+// (programs that could run when it's opened). An .xlsx or .docx with macros holds a
+// vbaProject.bin part; an .xls holds a _VBA_PROJECT part, named in UTF-16.
 export function refusal(body: Uint8Array, contentType: FileType): string | null {
   if (body.byteLength > MAX_FILE_BYTES) {
     return `Files can be at most ${MAX_FILE_BYTES / 1024 / 1024} MB`
   }
   const macros =
-    (contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' &&
+    ((contentType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      contentType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') &&
       contains(body, 'vbaProject.bin', 'latin1')) ||
     (contentType === 'application/vnd.ms-excel' && contains(body, '_VBA_PROJECT', 'utf16le'))
-  return macros ? 'Spreadsheets with macros are refused' : null
+  return macros ? 'Files with macros are refused' : null
 }
 
 // Keeps a file, if it isn't kept already, and records it. Returns its SHA-256, which is its id
@@ -88,7 +89,7 @@ export async function projectsShowing(sha256: string) {
 }
 
 // The name, type and size of each file a document shows, by SHA-256, so pages can show
-// spreadsheets as downloads with their names (and know which files are images)
+// other files as downloads with their names (and know which files are images)
 export async function fileInfoFor(sha256s: string[]) {
   if (sha256s.length === 0) return {}
   const files = await FileModel.find({ sha256: { $in: sha256s } })

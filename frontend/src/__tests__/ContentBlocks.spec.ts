@@ -129,6 +129,25 @@ describe('ContentBlocks', () => {
     expect(screen.getByText('B').closest('td')).not.toHaveAttribute('colspan')
   })
 
+  it('offers a PDF as a download, with its kind and size', () => {
+    const fileId = 'f'.repeat(64)
+    render(ContentBlocks, {
+      props: {
+        blocks: [{ type: 'fileBlock', attrs: { fileId } }],
+        files: {
+          [fileId]: { name: 'DMK171-1-A.pdf', contentType: 'application/pdf', size: 41_000 },
+        },
+      },
+      global: { stubs: { RouterLink: true } },
+    })
+
+    expect(screen.getByRole('link', { name: 'DMK171-1-A.pdf' })).toHaveAttribute(
+      'download',
+      'DMK171-1-A.pdf',
+    )
+    expect(screen.getByText('(PDF, 41 kB)')).toBeInTheDocument()
+  })
+
   it('offers a spreadsheet as a download, with its name, kind and size', () => {
     const fileId = 'd'.repeat(64)
     render(ContentBlocks, {

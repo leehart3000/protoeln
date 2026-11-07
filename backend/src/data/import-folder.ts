@@ -7,9 +7,9 @@ import type { ImportedFile, ImportedRecord, ImportPlan } from './imports.ts'
 import { EXTENSIONS, FILE_TYPES, isImage, type FileType } from './models/file.ts'
 
 // An import folder (see docs/imports.md): plan.json (the project, notebook and records),
-// content/ID.json (each record's write-up), and files/ (its images and spreadsheets, each
-// named by its SHA-256, listed in files/files.json). Import folders are kept outside the repository, with the site
-// they're for, as their data isn't part of ProtoELN.
+// content/ID.json (each record's write-up), and files/ (its images and downloads, each named
+// by its SHA-256, listed in files/files.json). Import folders are kept outside the repository,
+// with the site they're for, as their data isn't part of ProtoELN.
 
 type PlanFile = Omit<ImportPlan, 'records' | 'files'> & {
   records: (Omit<ImportedRecord, 'content'> & { id: string })[]
@@ -39,7 +39,7 @@ export async function readImportFolder(folder: string): Promise<ImportPlan> {
 }
 
 // What's wrong with an import, if anything: content not in the content format; files not in
-// the folder, not matching their names, of a kind that isn't allowed, too big, or spreadsheets
+// the folder, not matching their names, of a kind that isn't allowed, too big, or Office files
 // with macros; and images with no description (alt text)
 export function checkImport(plan: ImportPlan): string[] {
   const problems: string[] = []

@@ -162,7 +162,7 @@ describe('GET /api/v1/files/:sha256', () => {
   })
 })
 
-describe('spreadsheets', () => {
+describe('downloads', () => {
   it('are only ever downloaded, with their names', async () => {
     const response = await api({ files: store }).get(`/api/v1/files/${files.sheet}`)
 
@@ -187,15 +187,20 @@ describe('spreadsheets', () => {
       contentType:
         | 'application/vnd.ms-excel'
         | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         | 'text/csv',
     ) => storeFile({ store, body, contentType, name: 'x', userId: ids.member })
     const xlsm = new TextEncoder().encode('PK...xl/vbaProject.bin...') as Uint8Array<ArrayBuffer>
     const xls = new Uint8Array(Buffer.from('....\u0000_VBA_PROJECT....', 'utf16le'))
+    const docm = new TextEncoder().encode('PK..word/vbaProject.bin..') as Uint8Array<ArrayBuffer>
 
     await expect(
       keep(xlsm, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
     ).rejects.toThrow(/macros/)
     await expect(keep(xls, 'application/vnd.ms-excel')).rejects.toThrow(/macros/)
+    await expect(
+      keep(docm, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
+    ).rejects.toThrow(/macros/)
     await expect(keep(new Uint8Array(MAX_FILE_BYTES + 1), 'text/csv')).rejects.toThrow(/at most/)
   })
 })
